@@ -10,16 +10,7 @@ root.minsize(width=width, height=height)
 root.title("EZ machining")
 
 
-def create_frame(master, propagate, width, height, color, row, column, rowspan=None, columnspan=None, sticky='NSW' ):
-    name = tk.Frame(master, width=width, height=height, bg=color)
-    name.grid(row=row, column=column, rowspan=rowspan, columnspan=columnspan, sticky=sticky)
-    if propagate:
-        name.grid_propagate(0)
-        #name.pack_propagate(False)
-    #name.pack(side=place, anchor=tk.NW)
 
-
-    return name
 
 
 def dragbar_on_click(event):
@@ -67,6 +58,17 @@ class SideMenu(tk.Frame):
         self.dragbar.bind("<ButtonRelease-1>", dragbar_on_release)
 
 
+def create_frame(master, propagate, width, height, color, row, column, rowspan=None, columnspan=None, sticky='NSW' ):
+    name = tk.Frame(master, width=width, height=height, bg=color)
+    name.grid(row=row, column=column, rowspan=rowspan, columnspan=columnspan, sticky=sticky)
+    if propagate:
+        name.grid_propagate(0)
+        #name.pack_propagate(False)
+    #name.pack(side=place, anchor=tk.NW)
+
+
+    return name
+
 menu = create_frame(root, True, width, 60, "gray", 0, 0, columnspan=2, sticky='NWE')
 
 #gkod = create_frame(root, True, int(width/2.5), height, "yellow4", 1, 0)
@@ -80,5 +82,5 @@ tray = create_frame(root, True, width, 40, "red", 2, 0, columnspan=2, sticky='SW
 
 tool_bar = tk.Label(gkod, bg='gray', text="блять").grid(sticky='NSEW')
 
-#editor1 = editor(gkod, 608, 900, "green", tk.LEFT)
+editor1 = editor(gkod, 608, 900, "green", tk.LEFT)
 

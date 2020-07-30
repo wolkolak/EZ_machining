@@ -3,7 +3,7 @@ import tkinter as tk
 
 
 class editor:
-    def __init__(self, master, w, h, color, p=tk.LEFT):
+    def __init__(self, master, w, h, color, p=tk.LEFT):  #TODO grid
         self.mainframe = tk.Frame(master, width=w, height=h, bg=color)
         self.mainframe.pack_propagate(False)
         self.text = tk.Text(self.mainframe, width=67, height=60, bg="darkgreen", fg='white', wrap=tk.NONE)
