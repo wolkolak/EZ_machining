@@ -1,34 +1,25 @@
-import os
-import tkinter as tk
-import tkinter.ttk as ttk
+from tkinter import *
 
-class App(tk.Frame):
-    def __init__(self, master, path):
-        tk.Frame.__init__(self, master)
-        self.tree = ttk.Treeview(self)
-        ysb = ttk.Scrollbar(self, orient='vertical', command=self.tree.yview)
-        xsb = ttk.Scrollbar(self, orient='horizontal', command=self.tree.xview)
-        self.tree.configure(yscroll=ysb.set, xscroll=xsb.set)
-        self.tree.heading('#0', text=path, anchor='w')
+root = Tk()
+frame=Frame(root)
+Grid.rowconfigure(root, 0, weight=1)
+Grid.columnconfigure(root, 0, weight=1)
+frame.grid(row=0, column=0, sticky=N+S+E+W)
+grid=Frame(frame)
+grid.grid(sticky=N+S+E+W, column=0, row=7, columnspan=2)
+Grid.rowconfigure(frame, 7, weight=1)
+Grid.columnconfigure(frame, 0, weight=1)
 
-        abspath = os.path.abspath(path)
-        root_node = self.tree.insert('', 'end', text=abspath, open=True)
-        self.process_directory(root_node, abspath)
+#example values
+for x in range(10):
+    for y in range(5):
+        btn = Button(frame)
+        btn.grid(column=x, row=y, sticky=N+S+E+W)
 
-        self.tree.grid(row=0, column=0)
-        ysb.grid(row=0, column=1, sticky='ns')
-        xsb.grid(row=1, column=0, sticky='ew')
-        self.grid()
+for x in range(10):
+  Grid.columnconfigure(frame, x, weight=1)
 
-    def process_directory(self, parent, path):
-        for p in os.listdir(path):
-            abspath = os.path.join(path, p)
-            isdir = os.path.isdir(abspath)
-            oid = self.tree.insert(parent, 'end', text=p, open=False)
-            if isdir:
-                self.process_directory(oid, abspath)
+for y in range(5):
+  Grid.rowconfigure(frame, y, weight=1)
 
-root = tk.Tk()
-path_to_my_project = "D:"
-app = App(root, path=path_to_my_project)
-app.mainloop()
+root.mainloop()

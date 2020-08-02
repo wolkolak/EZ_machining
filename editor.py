@@ -3,37 +3,23 @@ import tkinter as tk
 
 
 class editor:
-    def __init__(self, master, w, h, color, p=tk.LEFT):  #TODO grid
-        self.mainframe = tk.Frame(master, width=w, height=h, bg=color)
-        self.mainframe.pack_propagate(False)
-        self.text = tk.Text(self.mainframe, width=67, height=60, bg="darkgreen", fg='white', wrap=tk.NONE)
+    def __init__(self, master, w, h, color):
+        self.mainframe = tk.Frame(master,  bg=color)#width=w, height=h,
+        self.mainframe.grid_propagate(1)
+        self.text = tk.Text(self.mainframe,  bg="darkgreen", fg='white', wrap=tk.NONE, width=20,)# height=30,
         self.scrolly = tk.Scrollbar(self.mainframe, command=self.text.yview, orient=tk.VERTICAL)
         self.scrollx = tk.Scrollbar(self.mainframe, command=self.text.xview, orient=tk.HORIZONTAL)
+        #self.text.config(yscrollcommand=self.scrolly.set, )
         self.text.config(yscrollcommand=self.scrolly.set, xscrollcommand=self.scrollx.set)
 
+        self.mainframe.grid(row=0, column=0, sticky='NSWE')
+        self.text.grid(row=0, column=0, rowspan=1, sticky="NSWE")
+        self.scrollx.grid(row=1, column=0, sticky="WE", columnspan=1)
+        self.scrolly.grid(row=0, column=1, sticky="NS", rowspan=1)
 
-        self.mainframe.pack(side=p, anchor=tk.NW)
-        self.scrollx.pack(side=tk.BOTTOM, fill=tk.X)
-        self.text.pack(side=tk.LEFT, anchor=tk.NW)
-        self.scrolly.pack(side=tk.LEFT, fill=tk.Y)
-
-
+        self.mainframe.rowconfigure(0, weight=1)
+        self.mainframe.columnconfigure(0, weight=1)
 
 
 print("editor working")
 
-class Block:
-    def __init__(self, master):
-        self.e = tk.Entry(master, width=40)
-        self.b = tk.Button(master, text="Преобразовать")
-        self.l = tk.Label(master, bg='black', fg='white', width=40)
-        self.b['command'] = self.strToSortlist
-        self.e.pack(side=tk.LEFT)
-        self.b.pack(side=tk.TOP)
-        self.l.pack(side=tk.TOP)
-
-    def strToSortlist(self):
-        s = self.e.get()
-        s = s.split()
-        s.sort()
-        self.l['text'] = ' '.join(s)

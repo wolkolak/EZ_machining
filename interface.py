@@ -1,16 +1,13 @@
 import tkinter as tk
 from editor import editor
-import copy
+import tkinter.ttk as ttk
 
 #main window
 root = tk.Tk()
 width = 1450
 height = 900
-root.minsize(width=width, height=height)
+#root.minsize(width=width, height=height)
 root.title("EZ machining")
-
-
-
 
 
 def dragbar_on_click(event):
@@ -18,12 +15,12 @@ def dragbar_on_click(event):
     root.config(cursor="tcross")
 
 def dragbar_on_release(event):
-    if event.widget.mouse_x != 0:
-        width = event.widget.parent.winfo_width() + event.x - event.widget.mouse_x
-        if width < 10:
-            width = 10
-        if width > root.winfo_width() - 10:
-            width = root.winfo_width()
+    #if event.widget.mouse_x != 0:
+    width = event.widget.parent.winfo_width() + event.x - event.widget.mouse_x
+    if width < 10:
+        width = 10
+    if width > root.winfo_width() - 10:
+        width = root.winfo_width()
     event.widget.parent.config(width=width)
     event.widget.mouse_x = 0
     x = root.winfo_width()
@@ -40,16 +37,15 @@ class SideMenu(tk.Frame):
     def __init__(self, parent, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
 
-        self.config(bg='red', width=300, height=500)
+        self.config(bg='blue', width=300, height=400)#
         self.rowconfigure(0, weight=1)
-        self.grid(row=1, column=0, sticky='NSEW')
+        self.grid(row=1, column=0, sticky='NEWS')
         self.grid_propagate(0)
 
-        self.frame = tk.Frame(self, bg='purple')
+        self.frame = tk.Frame(self, bg='purple', width=200, height=200)
         self.columnconfigure(0, weight=1)
         self.frame.grid(row=0, column=0, sticky='NSEW')
-
-        self.dragbar = DragBar(self, bg='green', width=10)
+        self.dragbar = DragBar(self, bg='orange', width=10)
         self.dragbar.mouse_x = 0
         self.dragbar.grid(row=0, column=1, sticky='NSW')
 
@@ -58,29 +54,35 @@ class SideMenu(tk.Frame):
         self.dragbar.bind("<ButtonRelease-1>", dragbar_on_release)
 
 
-def create_frame(master, propagate, width, height, color, row, column, rowspan=None, columnspan=None, sticky='NSW' ):
-    name = tk.Frame(master, width=width, height=height, bg=color)
+def create_frame(master, propagate, width, height, color, row, column, rowspan=None, columnspan=None, sticky='NSWE'):
+    name = tk.Frame(master, width=width, height=height, bg=color)#
     name.grid(row=row, column=column, rowspan=rowspan, columnspan=columnspan, sticky=sticky)
-    if propagate:
-        name.grid_propagate(0)
-        #name.pack_propagate(False)
-    #name.pack(side=place, anchor=tk.NW)
-
-
+    name.grid_propagate(propagate)
     return name
 
-menu = create_frame(root, True, width, 60, "gray", 0, 0, columnspan=2, sticky='NWE')
+menu = create_frame(root, False, width, 60, "gray", 0, 0, columnspan=2, sticky='NWE')
 
 #gkod = create_frame(root, True, int(width/2.5), height, "yellow4", 1, 0)
-#screen = create_frame(root, True, width - width/2.5, height, "green4", 1, 1)
+gkod = create_frame(root, True, width - width/2.5, height, "green4", 1, 1, sticky='NSWE')
 
 
-root.rowconfigure(0, weight=1)
+
+root.rowconfigure(1, weight=1)
 root.columnconfigure(1, weight=1)
-gkod = SideMenu(root)
-tray = create_frame(root, True, width, 40, "red", 2, 0, columnspan=2, sticky='SWE')
 
-tool_bar = tk.Label(gkod, bg='gray', text="блять").grid(sticky='NSEW')
+gkod.columnconfigure(0, weight=1)
+gkod.rowconfigure(0, weight=1)
 
-editor1 = editor(gkod, 608, 900, "green", tk.LEFT)
+screen = SideMenu(root)
+screen.frame.columnconfigure(0, weight=1)
+screen.frame.rowconfigure(0, weight=1)
+
+#screen = create_frame(root, True, width/2.5, height-300, "yellow4", 1, 0)
+#screen.rowconfigure(0, weight=1)
+tray = create_frame(root, False, width, 40, "gray", 2, 0, columnspan=2, sticky='SWE')
+
+#tool_bar = tk.Label(gkod.frame, bg='gray', text="блять").grid(columnspan=2, sticky='NSEW')
+
+editor1 = editor(gkod, 508, 800, "cyan")
+editor2 = editor(screen.frame, 508, 800, "cyan")
 

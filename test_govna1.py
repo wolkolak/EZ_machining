@@ -1,26 +1,22 @@
 from tkinter import *
-
-
-def b1(event):
-    root.title("Левая кнопка мыши")
-
-
-def b3(event):
-    root.title("Правая кнопка мыши")
-
-
-def move(event):
-    x = event.x
-    y = event.y
-    s = "Движение мышью {}x{}".format(x, y)
-    root.title(s)
-
+import tkinter.ttk as ttk
 
 root = Tk()
-root.minsize(width=500, height=400)
+root.title('test')
+#root.grid_propagate(0)
 
-root.bind('<Button-1>', b1)
-root.bind('<Button-3>', b3)
-root.bind('<Motion>', move)
+root.columnconfigure(0, weight=1)
+root.columnconfigure(1, weight=0)
+nb = ttk.Notebook(root)
+nb.grid(row=0, column=0, sticky="we", columnspan=1)
+
+
+f1 = Text(root)
+f2 = Text(root)
+f3 = Text(root)
+
+nb.add(f1, text='page1')
+nb.add(f2, text='page2')
+nb.add(f3, text='page3')
 
 root.mainloop()
