@@ -6,7 +6,7 @@ import tkinter.ttk as ttk
 root = tk.Tk()
 width = 1450
 height = 900
-#root.minsize(width=width, height=height)
+root.minsize(width=width, height=height)
 root.title("EZ machining")
 
 
@@ -15,7 +15,6 @@ def dragbar_on_click(event):
     root.config(cursor="tcross")
 
 def dragbar_on_release(event):
-    #if event.widget.mouse_x != 0:
     width = event.widget.parent.winfo_width() + event.x - event.widget.mouse_x
     if width < 10:
         width = 10
@@ -37,7 +36,7 @@ class SideMenu(tk.Frame):
     def __init__(self, parent, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
 
-        self.config(bg='blue', width=300, height=400)#
+        self.config(bg='blue', width=700, height=400)
         self.rowconfigure(0, weight=1)
         self.grid(row=1, column=0, sticky='NEWS')
         self.grid_propagate(0)
@@ -49,7 +48,6 @@ class SideMenu(tk.Frame):
         self.dragbar.mouse_x = 0
         self.dragbar.grid(row=0, column=1, sticky='NSW')
 
-        #self.dragbar.bind("<Motion>", dragbar_on_motion)
         self.dragbar.bind("<Button-1>", dragbar_on_click)
         self.dragbar.bind("<ButtonRelease-1>", dragbar_on_release)
 
@@ -62,7 +60,7 @@ def create_frame(master, propagate, width, height, color, row, column, rowspan=N
 
 menu = create_frame(root, False, width, 60, "gray", 0, 0, columnspan=2, sticky='NWE')
 
-#gkod = create_frame(root, True, int(width/2.5), height, "yellow4", 1, 0)
+
 gkod = create_frame(root, True, width - width/2.5, height, "green4", 1, 1, sticky='NSWE')
 
 
@@ -77,12 +75,16 @@ screen = SideMenu(root)
 screen.frame.columnconfigure(0, weight=1)
 screen.frame.rowconfigure(0, weight=1)
 
-#screen = create_frame(root, True, width/2.5, height-300, "yellow4", 1, 0)
-#screen.rowconfigure(0, weight=1)
 tray = create_frame(root, False, width, 40, "gray", 2, 0, columnspan=2, sticky='SWE')
 
-#tool_bar = tk.Label(gkod.frame, bg='gray', text="блять").grid(columnspan=2, sticky='NSEW')
 
+"""nb = ttk.Notebook(gkod)
+nb.grid(row=0, column=0, sticky="nswe", columnspan=1)
+f1 = tk.Text(gkod)
+f2 = tk.Text(gkod)
+nb.add(f1, text='page1')
+nb.add(f2, text='page2')"""
 editor1 = editor(gkod, 508, 800, "cyan")
+
 editor2 = editor(screen.frame, 508, 800, "cyan")
 
