@@ -34,26 +34,36 @@ class MyTabs(ttk.Notebook):
         self.grid(row=0, column=0, sticky="nswe", columnspan=1)
         self.field1 = Editor(self)
         self.add(self.field1, text='page1')
-        self.new_tab_button = tk.Button(self, width=1, height=1, text="UDOLI", font="Arial 32")
+        self.new_tab_button = tk.Frame(self)
         self.add(self.new_tab_button, text='NEW')
         #self.new_tab_button.bind("<Button-1>", self.press_for_new_tab)
         #self.select(1).bind("<Button-1>", self.press_for_new_tab)
         self.tabs_nom_generator = self.generate()
         self.bind("<<NotebookTabChanged>>", self.selected_new_tab)
+        self.number = 1
 
     def new_tab(self):
-        self.f2 = Editor(self)
-        self.add(self.f2, text='page{}'.format(next(self.tabs_nom_generator)))
+        self.new_field = Editor(self)
 
+        #number = next(self.tabs_nom_generator)
+        self.add(self.new_field, text='page{}'.format(self.number))
+        #return number
 
     def generate(self):
-        for value in range(2, 1000):
+        for value in range(2, 10000):
             yield value
 
     #@staticmethod
-    def selected_new_tab(self,event):
-        if True :
+    def selected_new_tab(self, event):
+        if self.index(self.select()) == self.number:
+            # todo delete new
+            self.forget(self.select())
             self.new_tab()
+            self.select(self.number)
+            # todo create new
+            self.number = next(self.tabs_nom_generator)
+            self.new_tab_button = tk.Frame(self)
+            self.add(self.new_tab_button, text='NEW')
         print("new tab activaited!!")
 
 

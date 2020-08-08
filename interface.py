@@ -89,11 +89,11 @@ nb.add(f2, text='page2')"""
 editor2 = MyTabs(gkod)
 
 #вывод всякого мусора
-l1 = tk.Button(text=editor2.select(), font="Arial 32")
+#l1 = tk.Button(text=editor2.select(), font="Arial 32")
 def printi():
     l1['text'] = editor2.select(1)
     #print(editor2.tab.index(tk.all_tabs[0]))
     print(editor2.tab(1))
-l1.config(command=printi)
-l1.grid(row=1, column=0, sticky="NSWE", rowspan=1)
+#l1.config(command=printi)
+#l1.grid(row=1, column=0, sticky="NSWE", rowspan=1)
 
