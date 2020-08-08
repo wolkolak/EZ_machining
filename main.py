@@ -1,6 +1,6 @@
 
 from interface import *
-from geometry import *
+#from geometry import *
 
 
 

@@ -1,5 +1,5 @@
 import tkinter as tk
-from editor import editor
+from editor import MyTabs
 import tkinter.ttk as ttk
 
 #main window
@@ -84,7 +84,16 @@ f1 = tk.Text(gkod)
 f2 = tk.Text(gkod)
 nb.add(f1, text='page1')
 nb.add(f2, text='page2')"""
-editor1 = editor(gkod, 508, 800, "cyan")
 
-editor2 = editor(screen.frame, 508, 800, "cyan")
+
+editor2 = MyTabs(gkod)
+
+#вывод всякого мусора
+l1 = tk.Button(text=editor2.select(), font="Arial 32")
+def printi():
+    l1['text'] = editor2.select(1)
+    #print(editor2.tab.index(tk.all_tabs[0]))
+    print(editor2.tab(1))
+l1.config(command=printi)
+l1.grid(row=1, column=0, sticky="NSWE", rowspan=1)
 
