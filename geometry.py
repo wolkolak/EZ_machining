@@ -1,38 +1,106 @@
-from tkinter import *
-from tkinter.ttk import *
-from tkinter.scrolledtext import ScrolledText
+try:
+       import Tkinter as tk
+       import ttk
+except ImportError:  # Python 3
+       import tkinter as tk
+       from tkinter import ttk
 
-root = Tk()
+class CustomNotebook(ttk.Notebook):
+       """A ttk Notebook with close buttons on each tab"""
 
+       __initialized = False
 
-class F(Frame):
-    def __init__(self):
-        super().__init__()
-        root.geometry("500x500")
-        self.master.resizable(False,False)
+       def __init__(self, *args, **kwargs):
+           if not self.__initialized:
+               self.__initialize_custom_style()
+               self.__inititialized = True
 
+           kwargs["style"] = "CustomNotebook"
+           ttk.Notebook.__init__(self, *args, **kwargs)
 
-        self.tab = Notebook(root)
-        self.tab.grid(row=1, column=33, columnspan=10, rowspan=50, padx=5, pady=5, sticky='NS')
+           self._active = None
 
-        self.mb = Menu( root )
-        root.config( menu=self.mb )
-        self.sub_mb = Menu( self.mb, tearoff=0 )
-        self.mb.add_command( label='create tab', command = self.create_tab )
-        self.mb.add_command( label='print', command=self.print_contents_of_all_tabs )
+           self.bind("<ButtonPress-1>", self.on_close_press, True)
+           self.bind("<ButtonRelease-1>", self.on_close_release)
 
-    def create_tab(self):
-        self.new_tab = ScrolledText(height=20, width=50)
-        self.tab.add( self.new_tab, text='tab' )
+       def on_close_press(self, event):
+           """Called when the button is pressed over the close button"""
 
-    #this should print the contents inside all the tabs**
-    def print_contents_of_all_tabs(self):
-        all_tabs = self.tab.tabs()            # get frame name of all tabs
-        for x in range(len(all_tabs)):
-            print(self.tab.index(all_tabs[x])) # print the index using frame name
-            print(self.new_tab.get(1.0, END))  # This prints only the content of recently created tab
+           element = self.identify(event.x, event.y)
 
-def main():
-    F().mainloop()
+           if "close" in element:
+               index = self.index("@%d,%d" % (event.x, event.y))
+               self.state(['pressed'])
+               self._active = index
 
-main()
+       def on_close_release(self, event):
+           """Called when the button is released over the close button"""
+           if not self.instate(['pressed']):
+               return
+
+           element =  self.identify(event.x, event.y)
+           index = self.index("@%d,%d" % (event.x, event.y))
+
+           if "close" in element and self._active == index:
+               self.forget(index)
+               self.event_generate("<<NotebookTabClosed>>")
+
+           self.state(["!pressed"])
+           self._active = None
+
+       def __initialize_custom_style(self):
+           style = ttk.Style()
+           self.images = (
+               tk.PhotoImage("img_close", data='''
+                   R0lGODlhCAAIAMIBAAAAADs7O4+Pj9nZ2Ts7Ozs7Ozs7Ozs7OyH+EUNyZWF0ZWQg
+                   d2l0aCBHSU1QACH5BAEKAAQALAAAAAAIAAgAAAMVGDBEA0qNJyGw7AmxmuaZhWEU
+                   5kEJADs=
+                   '''),
+               tk.PhotoImage("img_closeactive", data='''
+                   R0lGODlhCAAIAMIEAAAAAP/SAP/bNNnZ2cbGxsbGxsbGxsbGxiH5BAEKAAQALAAA
+                   AAAIAAgAAAMVGDBEA0qNJyGw7AmxmuaZhWEU5kEJADs=
+                   '''),
+               tk.PhotoImage("img_closepressed", data='''
+                   R0lGODlhCAAIAMIEAAAAAOUqKv9mZtnZ2Ts7Ozs7Ozs7Ozs7OyH+EUNyZWF0ZWQg
+                   d2l0aCBHSU1QACH5BAEKAAQALAAAAAAIAAgAAAMVGDBEA0qNJyGw7AmxmuaZhWEU
+                   5kEJADs=
+               ''')
+           )
+
+           style.element_create("close", "image", "img_close",
+                               ("active", "pressed", "!disabled", "img_closepressed"),
+                               ("active", "!disabled", "img_closeactive"), border=8, sticky='')
+           style.layout("CustomNotebook", [("CustomNotebook.client", {"sticky": "nswe"})])
+           style.layout("CustomNotebook.Tab", [
+               ("CustomNotebook.tab", {
+                   "sticky": "nswe",
+                   "children": [
+                       ("CustomNotebook.padding", {
+                           "side": "top",
+                           "sticky": "nswe",
+                           "children": [
+                               ("CustomNotebook.focus", {
+                                   "side": "top",
+                                   "sticky": "nswe",
+                                   "children": [
+                                       ("CustomNotebook.label", {"side": "left", "sticky": ''}),
+                                       ("CustomNotebook.close", {"side": "left", "sticky": ''}),
+                                   ]
+                           })
+                       ]
+                   })
+               ]
+           })
+       ])
+
+if __name__ == "__main__":
+       root = tk.Tk()
+
+       notebook = CustomNotebook(width=200, height=200)
+       notebook.pack(side="top", fill="both", expand=True)
+
+       for color in ("red", "orange", "green", "blue", "violet"):
+           frame = tk.Frame(notebook, background=color)
+           notebook.add(frame, text=color)
+
+       root.mainloop()
