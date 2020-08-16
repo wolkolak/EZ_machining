@@ -1,99 +1,65 @@
-import tkinter as tk
-from editor import MyTabs
-import tkinter.ttk as ttk
+from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QGridLayout, QTextEdit, QWidget, QSplitter
+from PyQt5.QtGui import QIcon
+from PyQt5.QtCore import Qt
+from main import settings
+class Example(QMainWindow):
 
-#main window
-root = tk.Tk()
-width = 1450
-height = 900
-root.minsize(width=width, height=height)
-root.title("EZ machining")
+    def __init__(self):
+        super().__init__()
 
+        self.initUI()
 
-def dragbar_on_click(event):
-    event.widget.mouse_x = event.x
-    root.config(cursor="tcross")
+    def ololo(self):
+        print('ololo')
 
-def dragbar_on_release(event):
-    width = event.widget.parent.winfo_width() + event.x - event.widget.mouse_x
-    if width < 10:
-        width = 10
-    if width > root.winfo_width() - 10:
-        width = root.winfo_width()
-    event.widget.parent.config(width=width)
-    event.widget.mouse_x = 0
-    x = root.winfo_width()
-    y = root.winfo_height()
-    root.geometry("{}x{}".format(x, y))
-    root.config(cursor="")
+    def initUI(self):
 
-class DragBar(tk.Frame):
-    def __init__(self, parent, *args, **kwargs):
-        super().__init__(parent, *args, **kwargs)
-        self.parent = parent
+        printAction = QAction(QIcon('exit24.png'), 'ololo', self)
+        printAction.triggered.connect(self.ololo)
 
-class SideMenu(tk.Frame):
-    def __init__(self, parent, *args, **kwargs):
-        super().__init__(parent, *args, **kwargs)
+        exitAction = QAction(QIcon('exit24.png'), 'Exit', self)
+        exitAction.setShortcut('Ctrl+Q')
+        exitAction.setStatusTip('Exit application')
+        exitAction.triggered.connect(qApp.quit)
+        self.statusBar()
+        centr = QWidget()
+        centr_grid = QGridLayout()
+        centr.setLayout(centr_grid)
+        self.setCentralWidget(centr)
+        centr.setStyleSheet("background-color: gray")
 
-        self.config(bg='blue', width=700, height=400)
-        self.rowconfigure(0, weight=1)
-        self.grid(row=1, column=0, sticky='NEWS')
-        self.grid_propagate(0)
+        menubar = self.menuBar()
+        fileMenu = menubar.addMenu('&File')
+        fileMenu.addAction(exitAction)
+        fileMenu.addAction(printAction)
 
-        self.frame = tk.Frame(self, bg='purple', width=200, height=200)
-        self.columnconfigure(0, weight=1)
-        self.frame.grid(row=0, column=0, sticky='NSEW')
-        self.dragbar = DragBar(self, bg='orange', width=10)
-        self.dragbar.mouse_x = 0
-        self.dragbar.grid(row=0, column=1, sticky='NSW')
-
-        self.dragbar.bind("<Button-1>", dragbar_on_click)
-        self.dragbar.bind("<ButtonRelease-1>", dragbar_on_release)
-
-
-def create_frame(master, propagate, width, height, color, row, column, rowspan=None, columnspan=None, sticky='NSWE'):
-    name = tk.Frame(master, width=width, height=height, bg=color)#
-    name.grid(row=row, column=column, rowspan=rowspan, columnspan=columnspan, sticky=sticky)
-    name.grid_propagate(propagate)
-    return name
-
-menu = create_frame(root, False, width, 60, "gray", 0, 0, columnspan=2, sticky='NWE')
-
-
-gkod = create_frame(root, True, width - width/2.5, height, "green4", 1, 1, sticky='NSWE')
+        self.toolbar = self.addToolBar('Exit')
+        self.toolbar.addAction(exitAction)
 
 
 
-root.rowconfigure(1, weight=1)
-root.columnconfigure(1, weight=1)
-
-gkod.columnconfigure(0, weight=1)
-gkod.rowconfigure(0, weight=1)
-
-screen = SideMenu(root)
-screen.frame.columnconfigure(0, weight=1)
-screen.frame.rowconfigure(0, weight=1)
-
-tray = create_frame(root, False, width, 40, "gray", 2, 0, columnspan=2, sticky='SWE')
+        self.setGeometry(100, 100, settings['main_width'], settings['main_height'])
+        self.setWindowTitle('EZ machining')
 
 
-"""nb = ttk.Notebook(gkod)
-nb.grid(row=0, column=0, sticky="nswe", columnspan=1)
-f1 = tk.Text(gkod)
-f2 = tk.Text(gkod)
-nb.add(f1, text='page1')
-nb.add(f2, text='page2')"""
+        splitter = QSplitter(Qt.Horizontal)
+        splitter.setStyleSheet('background-color:green')
+
+        centr_grid.addWidget(splitter)
 
 
-editor2 = MyTabs(gkod)
 
-#вывод всякого мусора
-#l1 = tk.Button(text=editor2.select(), font="Arial 32")
-def printi():
-    l1['text'] = editor2.select(1)
-    #print(editor2.tab.index(tk.all_tabs[0]))
-    print(editor2.tab(1))
-#l1.config(command=printi)
-#l1.grid(row=1, column=0, sticky="NSWE", rowspan=1)
+        self.left = QWidget()
+        self.left.setStyleSheet("background-color: cyan")
+        splitter.addWidget(self.left )
 
+        self.right = QWidget()
+        self.right.setStyleSheet("background-color: yellow")
+        splitter.addWidget(self.right )
+
+        self.textEdit = QTextEdit(self)
+        grid_right = QGridLayout()
+        self.right.setLayout(grid_right)
+        grid_right.addWidget(self.textEdit, 0, 0)
+
+        splitter.setSizes([100, 200])

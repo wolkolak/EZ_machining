@@ -1,21 +1,38 @@
-class Singleton:
-    __instance = None
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+
+import sys
+from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit,
+    QTextEdit, QGridLayout, QApplication)
+
+
+class Example(QWidget):
+
     def __init__(self):
-        if not Singleton.__instance:
-            print(" __init__ method called..")
-            #self.her = 0
-        else:
-            print("Instance already created:", self.getInstance())
-    @classmethod
-    def getInstance(cls):
-        if not cls.__instance:
-            cls.__instance = Singleton()
-        return cls.__instance
-s = Singleton() ## class initialized, but object not created
-print(s)
-print("Object created", Singleton.getInstance()) # Object gets created here
-print(s)
-s = Singleton() ## instance already created
+        super().__init__()
+
+        self.initUI()
 
 
-print(s)
+    def initUI(self):
+
+        title = QLabel('Title')
+
+
+        grid = QGridLayout()
+        grid.setSpacing(10)
+
+        grid.addWidget(title, 1, 0)
+
+
+        self.setLayout(grid)
+
+        self.setGeometry(300, 300, 350, 300)
+        self.setWindowTitle('Review')
+        self.show()
+
+if __name__ == '__main__':
+
+    app = QApplication(sys.argv)
+    ex = Example()
+    sys.exit(app.exec_())

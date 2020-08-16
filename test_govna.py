@@ -1,29 +1,37 @@
-from tkinter import *
-
-root=Tk()
-
-framic_left = Frame(root, width=100, height=100, bg='cyan')
-framic_left.grid(row=0, column=0, sticky='nswe')
-
-framic_right = Frame(root, width=100, height=100, bg='green')
-framic_right.grid(row=0, column=1, sticky='nswe')
-
-
-framic1 = Frame(framic_right, width=100, height=100, bg='red')
-framic1.grid(row=0, column=0, sticky='nswe')
-
-text = Text(framic_right, wrap=NONE)
-vscrollbar = Scrollbar(framic_right,orient='vert', command=text.yview)
-text['yscrollcommand'] = vscrollbar.set
-hscrollbar = Scrollbar(framic_right, orient='hor', command=text.xview)
-text['xscrollcommand'] = hscrollbar.set
-
-# размещаем виджеты
-text.grid(row=0, column=0, sticky='nsew')
-vscrollbar.grid(row=0, column=1, sticky='ns')
-hscrollbar.grid(row=1, column=0, sticky='ew')
-
-# конфигурируем упаковщик, чтобы текстовый виджет расширялся
-root.rowconfigure(0, weight=1)
-root.columnconfigure(0, weight=1)
-root.mainloop()
+from PyQt5 import QtGui
+from PyQt5.QtWidgets import QApplication, QWidget, QFrame, QLineEdit, QHBoxLayout, QSplitter
+import sys
+from PyQt5.QtCore import Qt
+class Window(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.title = "PyQt5 Splitter"
+        self.top = 200
+        self.left = 500
+        self.width = 400
+        self.height = 300
+        hbox = QHBoxLayout()
+        left = QFrame()
+        left.setFrameShape(QFrame.StyledPanel)
+        bottom = QFrame()
+        bottom.setFrameShape(QFrame.StyledPanel)
+        splitter1 = QSplitter(Qt.Horizontal)
+        splitter1.setStyleSheet('background-color:red')
+        lineedit = QLineEdit()
+        lineedit.setStyleSheet('background-color:green')
+        splitter1.addWidget(left)
+        splitter1.addWidget(lineedit)
+        splitter1.setSizes([200,200])
+        spliiter2 = QSplitter(Qt.Vertical)
+        spliiter2.addWidget(splitter1)
+        spliiter2.addWidget(bottom)
+        spliiter2.setStyleSheet('background-color:yellow')
+        hbox.addWidget(spliiter2)
+        self.setLayout(hbox)
+        self.setWindowIcon(QtGui.QIcon("icon.png"))
+        self.setWindowTitle(self.title)
+        self.setGeometry(self.left, self.top, self.width, self.height)
+        self.show()
+App = QApplication(sys.argv)
+window = Window()
+sys.exit(App.exec())
