@@ -1,7 +1,34 @@
-from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QGridLayout, QTextEdit, QWidget, QSplitter
-from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QGridLayout, QTextEdit, QWidget, QSplitter, QTabWidget, QScrollBar
+from PyQt5.QtGui import QIcon, QTextOption
 from PyQt5.QtCore import Qt
 from main import settings
+
+
+
+def count_tab(num):
+    print('Starting')
+    while True:
+        yield num
+        num += 1
+
+
+class Tabs(QTabWidget):
+    number_tab = count_tab(2)
+    def __init__(self):
+        super().__init__()
+
+        self.textEdit1 = QTextEdit()
+        self.textEdit1.setWordWrapMode(QTextOption.NoWrap)
+
+        self.textEdit2 = QTextEdit()
+        self.textEdit2.setWordWrapMode(QTextOption.NoWrap)
+
+        self.addTab(self.textEdit1, "File1")
+        self.addTab(self.textEdit2, "File{}".format(next(self.number_tab)))
+
+
+
+
 
 
 
@@ -27,12 +54,15 @@ class CenterWindow(QWidget):
         self.right.setStyleSheet("background-color: yellow")
         splitter.addWidget(self.right)
 
-        self.textEdit = QTextEdit(self)
+
+        self.note = Tabs()
+
         grid_right = QGridLayout()
         self.right.setLayout(grid_right)
-        grid_right.addWidget(self.textEdit, 0, 0)
+        grid_right.addWidget(self.note, 0, 0)
 
         splitter.setSizes([100, 200])
+
 
 class Example(QMainWindow):
 
@@ -44,6 +74,10 @@ class Example(QMainWindow):
 
 
     def initUI(self):
+        self.setWindowTitle('EZ machining')
+        self.setGeometry(100, 100, settings['main_width'], settings['main_height'])
+
+
 
         printAction = QAction(QIcon('exit24.png'), 'ololo', self)
         printAction.triggered.connect(self.ololo)
@@ -52,7 +86,7 @@ class Example(QMainWindow):
         exitAction.setShortcut('Ctrl+Q')
         exitAction.setStatusTip('Exit application')
         exitAction.triggered.connect(qApp.quit)
-        self.statusBar()
+
 
 
         menubar = self.menuBar()
@@ -63,11 +97,9 @@ class Example(QMainWindow):
         self.toolbar = self.addToolBar('Exit')
         self.toolbar.addAction(exitAction)
 
-        self.setGeometry(100, 100, settings['main_width'], settings['main_height'])
-        self.setWindowTitle('EZ machining')
-
         centre = CenterWindow()
         self.setCentralWidget(centre)
+        self.statusBar()
 
     def ololo(self):
         print('ololo')
