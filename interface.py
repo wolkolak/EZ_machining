@@ -1,32 +1,44 @@
-from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QGridLayout, QTextEdit, QWidget, QSplitter, QTabWidget, QScrollBar
+from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QGridLayout, QTextEdit, QWidget, QSplitter, QTabWidget, QScrollBar, QLabel, QHBoxLayout, QPushButton
 from PyQt5.QtGui import QIcon, QTextOption
 from PyQt5.QtCore import Qt
 from main import settings
 
 
 
-def count_tab(num):
-    print('Starting')
-    while True:
-        yield num
-        num += 1
-
-
 class Tabs(QTabWidget):
-    number_tab = count_tab(2)
+
+    quantity = 10
+    tabs = [["File" + str(i), None] for i in range(1, quantity)]
+    print(tabs)
     def __init__(self):
         super().__init__()
 
-        self.textEdit1 = QTextEdit()
-        self.textEdit1.setWordWrapMode(QTextOption.NoWrap)
+        self.new_tab()
+        self.new_tab()
+        self.new_tab()
 
-        self.textEdit2 = QTextEdit()
-        self.textEdit2.setWordWrapMode(QTextOption.NoWrap)
-
-        self.addTab(self.textEdit1, "File1")
-        self.addTab(self.textEdit2, "File{}".format(next(self.number_tab)))
+        self.setTabsClosable(True)
+        self.setMovable(True)
 
 
+    def delite_tab(self, n):
+        self.removeTab(2)
+        self.tabs[n][1] = None
+
+    def new_tab(self):
+        i = 0
+        flag = False
+        while flag is False & (i < self.quantity):
+            if self.tabs[i][1] is None:
+                self.tabs[i][1] = QTextEdit()
+                self.tabs[i][1].setWordWrapMode(QTextOption.NoWrap)
+                self.addTab(self.tabs[i][1], self.tabs[i][0])
+                print(flag)
+                flag = True
+
+            i += 1
+        if not flag:
+            print('Памяти мало, карл')
 
 
 
@@ -34,8 +46,8 @@ class Tabs(QTabWidget):
 
 class CenterWindow(QWidget):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         centr_grid = QGridLayout()
         self.setLayout(centr_grid)
@@ -62,6 +74,8 @@ class CenterWindow(QWidget):
         grid_right.addWidget(self.note, 0, 0)
 
         splitter.setSizes([100, 200])
+
+
 
 
 class Example(QMainWindow):
@@ -97,9 +111,16 @@ class Example(QMainWindow):
         self.toolbar = self.addToolBar('Exit')
         self.toolbar.addAction(exitAction)
 
+
+
+        self.toolbar = self.addToolBar('New')
+        self.toolbar.addAction(exitAction)
+
         centre = CenterWindow()
+
         self.setCentralWidget(centre)
         self.statusBar()
+
 
     def ololo(self):
         print('ololo')
