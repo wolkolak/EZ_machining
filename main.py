@@ -19,7 +19,7 @@ settings = copy.deepcopy(default_settings)
 if __name__ == '__main__':
 
     app = QApplication(sys.argv)
-    ex = interface.Example()
+    ex = interface.MyMainWindow()
 
     title = QLabel('Title')
 
