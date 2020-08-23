@@ -1,10 +1,12 @@
 from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QGridLayout, QTextEdit, QWidget, QSplitter, QTabWidget,\
-    QScrollBar, QLabel, QHBoxLayout, QPushButton, QFrame, QTabBar
+    QScrollBar, QLabel, QHBoxLayout, QPushButton, QFrame, QTabBar, QToolBar
 from PyQt5.QtGui import QIcon, QTextOption
 from PyQt5.QtCore import Qt
 from main import settings
 
-
+color1 = 'rgb(22,222,222)'
+color2 = 'rgb(222,222,22)'
+color3 = 'rgb(135, 108, 153)'
 
 class Tabs(QTabWidget):
 
@@ -13,30 +15,31 @@ class Tabs(QTabWidget):
     print(tabs)
     def __init__(self):
         super().__init__()
-        self.new_button = QFrame()
-        self.addTab(self.new_button, "NEW")
-        self.new_tab()
-        self.new_tab()
 
         self.setTabsClosable(True)
         self.setMovable(True)
 
+        self.little_widget = QFrame()
 
-        # Tab button's
-        self.tabBar().setTabButton(0, self.tabBar().RightSide, None)
-        #self.tabBar().setTabPosition(0, self.tabBar().RightSide, None)
-        self.tabBar().RightSide
+        little_layout = QHBoxLayout()
+        self.little_widget.setLayout(little_layout )
+        self.setCornerWidget(self.little_widget)
+
+        self.new_tab_button = QPushButton("NEW")
+        little_layout.addWidget(self.new_tab_button)
+        self.new_tab_button.setStyleSheet("background-color: {}".format(color1))
+
+        self.save_tab = QPushButton("SAVE")
+        little_layout.addWidget(self.save_tab )
+        self.save_tab.setStyleSheet("background-color: {}".format(color1))
+
+        self.cornerWidget().setMinimumSize(20, 40)
 
         self.tabCloseRequested.connect(self.delete_tab)
-        self.currentChanged.connect(self.change_new_tab)
+        self.new_tab_button.clicked.connect(self.new_tab)
 
-    def change_new_tab(self):
-        if self.currentIndex() == 0:
-            print('new')
-        print('change')
 
     def delete_tab(self, n):
-
         self.removeTab(n)
         self.tabs[n][1] = None
 
@@ -56,9 +59,6 @@ class Tabs(QTabWidget):
             print('Ну хорош уже вкладки создавать, надоел')
 
 
-
-
-
 class CenterWindow(QWidget):
 
     def __init__(self, *args, **kwargs):
@@ -68,18 +68,18 @@ class CenterWindow(QWidget):
         self.setLayout(centr_grid)
         self.setStyleSheet("background-color: gray")
 
-        splitter = QSplitter(Qt.Horizontal)
-        splitter.setStyleSheet('background-color:green')
+        self.splitter = QSplitter(Qt.Horizontal)
+        self.splitter.setStyleSheet('background-color:green')
 
-        centr_grid.addWidget(splitter)
+        centr_grid.addWidget(self.splitter)
 
         self.left = QWidget()
-        self.left.setStyleSheet("background-color: cyan")
-        splitter.addWidget(self.left)
+        self.left.setStyleSheet("background-color: {}".format(color1))
+        self.splitter.addWidget(self.left)
 
         self.right = QWidget()
-        self.right.setStyleSheet("background-color: yellow")
-        splitter.addWidget(self.right)
+        self.right.setStyleSheet("background-color: {}".format(color2))
+        self.splitter.addWidget(self.right)
 
 
         self.note = Tabs()
@@ -88,7 +88,7 @@ class CenterWindow(QWidget):
         self.right.setLayout(grid_right)
         grid_right.addWidget(self.note, 0, 0)
 
-        splitter.setSizes([100, 200])
+        self.splitter.setSizes([100, 200])
 
 
 
@@ -100,16 +100,16 @@ class Example(QMainWindow):
 
         self.initUI()
 
-
-
     def initUI(self):
+        self.splitter_flag = 1
+
         self.setWindowTitle('EZ machining')
         self.setGeometry(100, 100, settings['main_width'], settings['main_height'])
 
 
 
         printAction = QAction(QIcon('exit24.png'), 'ololo', self)
-        printAction.triggered.connect(self.ololo)
+        printAction.triggered.connect(self.close_half)
 
         exitAction = QAction(QIcon('exit24.png'), 'Exit', self)
         exitAction.setShortcut('Ctrl+Q')
@@ -123,19 +123,32 @@ class Example(QMainWindow):
         fileMenu.addAction(exitAction)
         fileMenu.addAction(printAction)
 
-        self.toolbar = self.addToolBar('Exit')
-        self.toolbar.addAction(exitAction)
+        toolbar1 = QToolBar(self)
+        self.addToolBar( Qt.LeftToolBarArea, toolbar1)
+        toolbar1.setStyleSheet("background-color: {}".format(color3))
+        toolbar1.addAction(exitAction)
 
+        txt_tools = QToolBar(self)
+        self.addToolBar( Qt.RightToolBarArea, txt_tools)
+        txt_tools.setStyleSheet("background-color: {}".format(color3))
+        txt_tools.addAction(printAction)
 
+        self.centre = CenterWindow()
 
-        self.toolbar = self.addToolBar('New')
-        self.toolbar.addAction(exitAction)
-
-        centre = CenterWindow()
-
-        self.setCentralWidget(centre)
+        self.setCentralWidget(self.centre)
         self.statusBar()
 
 
-    def ololo(self):
-        print('ololo')
+
+    def close_half(self):
+
+        if self.splitter_flag == 1:
+            self.centre.splitter.setSizes([100, 0])
+            self.splitter_flag = self.splitter_flag + 1
+        elif self.splitter_flag == 2:
+            self.centre.splitter.setSizes([100, 100])
+            self.splitter_flag = self.splitter_flag + 1
+        else:
+            self.centre.splitter.setSizes([0, 100])
+            self.splitter_flag = 1
+        print(self.splitter_flag )
