@@ -1,4 +1,5 @@
-from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QGridLayout, QTextEdit, QWidget, QSplitter, QTabWidget, QScrollBar, QLabel, QHBoxLayout, QPushButton
+from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QGridLayout, QTextEdit, QWidget, QSplitter, QTabWidget,\
+    QScrollBar, QLabel, QHBoxLayout, QPushButton, QFrame, QTabBar
 from PyQt5.QtGui import QIcon, QTextOption
 from PyQt5.QtCore import Qt
 from main import settings
@@ -12,8 +13,8 @@ class Tabs(QTabWidget):
     print(tabs)
     def __init__(self):
         super().__init__()
-
-        self.new_tab()
+        self.new_button = QFrame()
+        self.addTab(self.new_button, "NEW")
         self.new_tab()
         self.new_tab()
 
@@ -21,8 +22,22 @@ class Tabs(QTabWidget):
         self.setMovable(True)
 
 
-    def delite_tab(self, n):
-        self.removeTab(2)
+        # Tab button's
+        self.tabBar().setTabButton(0, self.tabBar().RightSide, None)
+        #self.tabBar().setTabPosition(0, self.tabBar().RightSide, None)
+        self.tabBar().RightSide
+
+        self.tabCloseRequested.connect(self.delete_tab)
+        self.currentChanged.connect(self.change_new_tab)
+
+    def change_new_tab(self):
+        if self.currentIndex() == 0:
+            print('new')
+        print('change')
+
+    def delete_tab(self, n):
+
+        self.removeTab(n)
         self.tabs[n][1] = None
 
     def new_tab(self):
@@ -38,7 +53,7 @@ class Tabs(QTabWidget):
 
             i += 1
         if not flag:
-            print('Памяти мало, карл')
+            print('Ну хорош уже вкладки создавать, надоел')
 
 
 
