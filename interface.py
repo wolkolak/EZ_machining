@@ -1,16 +1,8 @@
-from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QGridLayout, QTextEdit, QWidget, QSplitter, QTabWidget,\
-    QScrollBar, QLabel, QHBoxLayout, QPushButton, QFrame, QTabBar, QToolBar
+from PyQt5.QtWidgets import QMainWindow, QAction, qApp,  QToolBar, QFileDialog
 from PyQt5.QtGui import QIcon, QTextOption
 from PyQt5.QtCore import Qt
 from main import settings
 import gui_classes
-
-
-
-
-
-
-
 
 
 class MyMainWindow(QMainWindow):
@@ -26,28 +18,32 @@ class MyMainWindow(QMainWindow):
         self.setWindowTitle('EZ machining')
         self.setGeometry(100, 100, settings['main_width'], settings['main_height'])
 
+        openAction = QAction(QIcon('icons\open.png'), 'Open', self)
+        openAction.setStatusTip('Open GM Fail')
+        openAction.triggered.connect(self.open_file)
 
-
-        splitterMove = QAction(QIcon('icons\splitter.png'), 'shift', self)
-        splitterMove.triggered.connect(self.close_half)
-
-        exitAction = QAction(QIcon('exit24.png'), 'Exit', self)
+        exitAction = QAction(QIcon('icons\exit24.png'), 'Exit', self)
         exitAction.setShortcut('Ctrl+Q')
         exitAction.setStatusTip('Exit application')
         exitAction.triggered.connect(qApp.quit)
 
 
+        splitterMove = QAction(QIcon('icons\splitter.png'), 'shift', self)
+        splitterMove.triggered.connect(self.close_half)
 
         menubar = self.menuBar()
         fileMenu = menubar.addMenu('&File')
+        fileMenu.addAction(openAction)
+        fileMenu.addAction(exitAction)
+
+
         viewMenu = menubar.addMenu('&View')
+        viewMenu.addAction(splitterMove)
+
         toolsMenu = menubar.addMenu('&Tools')
         inportMenu = menubar.addMenu('&Import')
         optionsMenu = menubar.addMenu('&Options')
 
-        fileMenu.addAction(exitAction)
-
-        viewMenu.addAction(splitterMove)
 
 
 
@@ -66,6 +62,11 @@ class MyMainWindow(QMainWindow):
         self.setCentralWidget(self.centre)
         self.statusBar()
 
+
+    def open_file(self):
+        fname = QFileDialog.getOpenFileName(self,
+    "Open Image", "/home/examples", "Text files (*.txt);;All files (*.*)")
+        #self.centre.note.
 
 
     def close_half(self):

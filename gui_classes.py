@@ -9,16 +9,26 @@ color2 = 'rgb(222,222,22)'
 color3 = 'rgb(135, 108, 153)'
 
 
+class MyTabBar(QTabBar):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+
+
 class Tabs(QTabWidget):
 
-    quantity = 10
-    tabs = [["File" + str(i), None] for i in range(1, quantity)]
+    quantity = 15
+    tabs = [["File" + str(i), None] for i in range(0, quantity)]
     print(tabs)
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
+        #my_tab_bar = MyTabBar()
+        #self.setTabBar( my_tab_bar)
         self.setTabsClosable(True)
         self.setMovable(True)
+        #self.setAttribute(Qt.WA_DeleteOnClose) #useless
 
         self.little_widget = QFrame()
 
@@ -40,19 +50,39 @@ class Tabs(QTabWidget):
         self.new_tab_button.clicked.connect(self.new_tab)
 
 
+
     def delete_tab(self, n):
+
+        # gets the widget
+        widget = self.widget(n)
+        print("widget1:", widget)
+        #print("widget2:", self.tabs[n][1])
+        #print(type(widget))
+        for i in range(1, self.quantity):
+            print("wideget:", widget, "self.tabs[{}][1]:".format(i), self.tabs[i][1])
+            if widget is self.tabs[i][1]:
+                print('удаляем self.tabs[{}][1]'.format(i))
+                self.tabs[n][1] = None
+        widget = None
+
         self.removeTab(n)
-        self.tabs[n][1] = None
+        #print(self.tabs)
 
     def new_tab(self):
-        i = 0
+        i = 1
         flag = False
         while flag is False & (i < self.quantity):
             if self.tabs[i][1] is None:
                 self.tabs[i][1] = QTextEdit()
+                #self.tabs[i][1].setAttribute(Qt.WA_DeleteOnClose)
                 self.tabs[i][1].setWordWrapMode(QTextOption.NoWrap)
                 self.addTab(self.tabs[i][1], self.tabs[i][0])
-                print(flag)
+                #print(self.tabs[i][1])
+                #self.addTab(QTextEdit(), self.tabs[i][0])
+                #self.cu
+
+                #self.tabBar().setAttribute(Qt.WA_DeleteOnClose)
+                #print(flag)
                 flag = True
 
             i += 1
