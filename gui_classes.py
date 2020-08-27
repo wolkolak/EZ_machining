@@ -9,11 +9,6 @@ color2 = 'rgb(222,222,22)'
 color3 = 'rgb(135, 108, 153)'
 
 
-class MyTabBar(QTabBar):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-
 
 
 class Tabs(QTabWidget):
@@ -53,41 +48,32 @@ class Tabs(QTabWidget):
 
     def delete_tab(self, n):
 
+        print(type(n))
         # gets the widget
-        widget = self.widget(n)
-        print("widget1:", widget)
-        #print("widget2:", self.tabs[n][1])
-        #print(type(widget))
-        for i in range(1, self.quantity):
-            print("wideget:", widget, "self.tabs[{}][1]:".format(i), self.tabs[i][1])
-            if widget is self.tabs[i][1]:
-                print('удаляем self.tabs[{}][1]'.format(i))
-                self.tabs[n][1] = None
-        widget = None
-
+        #widget = self.widget(n)
+        for i in range(1, self.quantity-1):
+            #print('udol', self.accessibleName(n-1))
+            if self.tabs[i][0] == self.tabText(n):
+                print("вкладку удалил")
+                self.tabs[i][1] = None
+                break
         self.removeTab(n)
         #print(self.tabs)
 
+
     def new_tab(self):
         i = 1
-        flag = False
-        while flag is False & (i < self.quantity):
-            if self.tabs[i][1] is None:
-                self.tabs[i][1] = QTextEdit()
-                #self.tabs[i][1].setAttribute(Qt.WA_DeleteOnClose)
-                self.tabs[i][1].setWordWrapMode(QTextOption.NoWrap)
-                self.addTab(self.tabs[i][1], self.tabs[i][0])
-                #print(self.tabs[i][1])
-                #self.addTab(QTextEdit(), self.tabs[i][0])
-                #self.cu
-
-                #self.tabBar().setAttribute(Qt.WA_DeleteOnClose)
-                #print(flag)
-                flag = True
-
+        print(i,"____",self.tabs[i][1])
+        while (i < self.quantity-1) & (self.tabs[i][1] is not None):
             i += 1
-        if not flag:
-            print('Ну хорош уже вкладки создавать, надоел')
+            print('i=',i)
+        print('itog:', i)
+        if self.tabs[i][1] is None:
+            self.tabs[i][1] = 1
+            self.addTab(QTextEdit(), self.tabs[i][0])
+        else:
+            print('too many new files, go away')
+
 
 class CenterWindow(QWidget):
 
