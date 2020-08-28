@@ -3,19 +3,24 @@ from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QGridLayout, QTextEdit, 
 
 from PyQt5.QtGui import QIcon, QTextOption
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import  QTextOption
 
 color1 = 'rgb(22,222,222)'
 color2 = 'rgb(222,222,22)'
 color3 = 'rgb(135, 108, 153)'
 
+class MyEdit(QTextEdit):
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setWordWrapMode(QTextOption.NoWrap)
 
 
 class Tabs(QTabWidget):
 
     quantity = 15
     tabs = [["File" + str(i), None] for i in range(0, quantity)]
-    print(tabs)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -45,20 +50,14 @@ class Tabs(QTabWidget):
         self.new_tab_button.clicked.connect(self.new_tab)
 
 
-
     def delete_tab(self, n):
-
-        print(type(n))
-        # gets the widget
-        #widget = self.widget(n)
         for i in range(1, self.quantity-1):
-            #print('udol', self.accessibleName(n-1))
             if self.tabs[i][0] == self.tabText(n):
                 print("вкладку удалил")
                 self.tabs[i][1] = None
                 break
         self.removeTab(n)
-        #print(self.tabs)
+
 
 
     def new_tab(self):
@@ -70,7 +69,7 @@ class Tabs(QTabWidget):
         print('itog:', i)
         if self.tabs[i][1] is None:
             self.tabs[i][1] = 1
-            self.addTab(QTextEdit(), self.tabs[i][0])
+            self.addTab(MyEdit(), self.tabs[i][0])
         else:
             print('too many new files, go away')
 

@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QMainWindow, QAction, qApp,  QToolBar, QFileDialog
-from PyQt5.QtGui import QIcon, QTextOption
+from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt
 from main import settings
 import gui_classes
@@ -64,11 +64,20 @@ class MyMainWindow(QMainWindow):
 
 
     def open_file(self):
-        fname = QFileDialog.getOpenFileName(self,
-    "Open Image", "/home/examples", "Text files (*.txt);;All files (*.*)")
-        #self.centre.note.
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        path, _ = QFileDialog.getOpenFileName(self,
+        "Open файлик", "D:\Py_try\EZ_machining\examples", "Text files (*.txt);;All files (*.*)")
+        nya = gui_classes.MyEdit()
+        print(path)
+        text = open(path).read()
+
+        self.centre.note.addTab(nya, 'open_file')
+        nya.setText(text)
+        #self.centre.note.currentWidget().append(fname)
 
 
+        
     def close_half(self):
 
         if self.splitter_flag == 1:
