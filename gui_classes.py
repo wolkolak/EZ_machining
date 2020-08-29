@@ -1,13 +1,48 @@
 from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QGridLayout, QTextEdit, QWidget, QSplitter, QTabWidget,\
-    QScrollBar, QLabel, QHBoxLayout, QPushButton, QFrame, QTabBar, QToolBar, QMessageBox
+    QScrollBar, QLabel, QHBoxLayout, QPushButton, QFrame, QTabBar, QToolBar, QMessageBox, QStyle, QStylePainter,\
+    QStyleOption, QStyleOptionTab
 
-from PyQt5.QtGui import QIcon, QTextOption
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import  QTextOption
+from PyQt5.QtGui import QTextOption, QColor, QPainter, QPalette, QBrush
 
-color1 = 'rgb(22,222,222)'
-color2 = 'rgb(222,222,22)'
-color3 = 'rgb(135, 108, 153)'
+color1 = 'rgb(145,191,204)'
+color2 = 'rgb(72,128,143)'
+color3 = 'rgb(47, 69, 82)'
+color4 = 'rgb(195,221,234)' #бледный
+
+
+class coloredTabBar(QTabBar):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        #TODO PaintEvent
+        self.__coloredTabs = []
+        self.setProperty("colorToggle", False)
+
+
+    def colorTab(self, index):
+        if (index >= self.count()) or (index < 0) or (index in self.__coloredTabs):
+            return
+        self.__coloredTabs.append(index)
+        self.update()
+
+    def paintEvent(self, event):
+        print('paint event')
+        p = QStylePainter(self)
+        painter = QPainter(self)
+        for index in range(self.count()):  # for all tabs
+            tab = QStyleOptionTab()  # create styled tab
+            self.initStyleOption(tab, index)  # initialize with default values
+            # change background color to red
+            tab.palette.setColor(QPalette.Window, QColor(255, 0, 0))
+            p.drawControl(QStyle.CE_TabBarTab, tab)  # draw tab
+
+        """        self.pr(1)
+        def pr(self, n):
+        print("recta:",self.tabRect(n))
+        print(type(self.tabRect(n)))
+        #self.tabRect(2)
+        tab_color = QColor(255, 0, 0)"""
+
 
 class MyEdit(QTextEdit):
 
@@ -15,7 +50,9 @@ class MyEdit(QTextEdit):
         super().__init__(*args, **kwargs)
         self.setWordWrapMode(QTextOption.NoWrap)
         self.existing = existing
+        self.setStyleSheet("background-color: {}".format(color4))
         self.setText(text)
+
 
 
 class Tabs(QTabWidget):
@@ -25,7 +62,8 @@ class Tabs(QTabWidget):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
+        self.colored_tabbar = coloredTabBar()
+        self.setTabBar(self.colored_tabbar)
         self.setTabsClosable(True)
         self.setMovable(True)
 
@@ -50,20 +88,22 @@ class Tabs(QTabWidget):
         self.currentChanged.connect(self.change_title)
 
     def change_title(self, n):
-        if self.currentWidget().existing is False:
-            title2 = self.tabText(n)
-        else:
-            title2 = self.currentWidget().existing
-        if title2 is not None:
+        print('tab change')
+
+        if self.currentIndex() != -1:
+            if self.currentWidget().existing is False:
+                title2 = self.tabText(n)
+            else:
+                title2 = self.currentWidget().existing
             self.window().setWindowTitle('EZ machining:  {}'.format(title2))
         else:
             self.window().setWindowTitle('EZ machining')
 
     def delete_tab(self, n):
+        print('tab delete')
         if self.widget(n).existing is False:
             for i in range(1, self.quantity-1):
                 if self.tabs[i][0] == self.tabText(n):
-                    print("вкладку удалил")
                     self.tabs[i][1] = None
                     break
         self.removeTab(n)
@@ -71,6 +111,7 @@ class Tabs(QTabWidget):
 
 
     def new_tab(self):
+        print('tab create')
         i = 1
         while (i < self.quantity-1) & (self.tabs[i][1] is not None):
             i += 1
