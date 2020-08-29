@@ -54,15 +54,18 @@ class Tabs(QTabWidget):
             title2 = self.tabText(n)
         else:
             title2 = self.currentWidget().existing
-
-        self.window().setWindowTitle('EZ machining:  {}'.format(title2))
+        if title2 is not None:
+            self.window().setWindowTitle('EZ machining:  {}'.format(title2))
+        else:
+            self.window().setWindowTitle('EZ machining')
 
     def delete_tab(self, n):
-        for i in range(1, self.quantity-1):
-            if self.tabs[i][0] == self.tabText(n):
-                print("вкладку удалил")
-                self.tabs[i][1] = None
-                break
+        if self.widget(n).existing is False:
+            for i in range(1, self.quantity-1):
+                if self.tabs[i][0] == self.tabText(n):
+                    print("вкладку удалил")
+                    self.tabs[i][1] = None
+                    break
         self.removeTab(n)
 
 
@@ -72,8 +75,9 @@ class Tabs(QTabWidget):
         while (i < self.quantity-1) & (self.tabs[i][1] is not None):
             i += 1
         if self.tabs[i][1] is None:
-            self.tabs[i][1] = 1
-            self.addTab(MyEdit(None, existing=False), self.tabs[i][0])
+            self.tabs[i][1] = True
+            self.insertTab(self.currentIndex()+1, MyEdit(None, existing=False), self.tabs[i][0])
+            self.setCurrentIndex(self.currentIndex()+1)
         else:
             simple_warning('warning', "Притормози \n ¯\_(ツ)_/¯")
 

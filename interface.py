@@ -78,7 +78,8 @@ class MyMainWindow(QMainWindow):
                 name_open_file = path[path.rindex('/') + 1:-1]
             except ValueError:
                 name_open_file = path
-            self.centre.note.addTab(gui_classes.MyEdit(text, existing=path), name_open_file)
+            self.centre.note.insertTab(self.centre.note.currentIndex()+1, gui_classes.MyEdit(text, existing=path), name_open_file)
+            self.centre.note.setCurrentIndex(self.centre.note.currentIndex()+1)
 
             flag = True
         except BaseException:
