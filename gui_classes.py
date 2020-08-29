@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QGridLayout, QTextEdit, QWidget, QSplitter, QTabWidget,\
-    QScrollBar, QLabel, QHBoxLayout, QPushButton, QFrame, QTabBar, QToolBar
+    QScrollBar, QLabel, QHBoxLayout, QPushButton, QFrame, QTabBar, QToolBar, QMessageBox
 
 from PyQt5.QtGui import QIcon, QTextOption
 from PyQt5.QtCore import Qt
@@ -11,9 +11,11 @@ color3 = 'rgb(135, 108, 153)'
 
 class MyEdit(QTextEdit):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, text, existing, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setWordWrapMode(QTextOption.NoWrap)
+        self.existing = existing
+        self.setText(text)
 
 
 class Tabs(QTabWidget):
@@ -24,11 +26,8 @@ class Tabs(QTabWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        #my_tab_bar = MyTabBar()
-        #self.setTabBar( my_tab_bar)
         self.setTabsClosable(True)
         self.setMovable(True)
-        #self.setAttribute(Qt.WA_DeleteOnClose) #useless
 
         self.little_widget = QFrame()
 
@@ -48,7 +47,15 @@ class Tabs(QTabWidget):
 
         self.tabCloseRequested.connect(self.delete_tab)
         self.new_tab_button.clicked.connect(self.new_tab)
+        self.currentChanged.connect(self.change_title)
 
+    def change_title(self, n):
+        if self.currentWidget().existing is False:
+            title2 = self.tabText(n)
+        else:
+            title2 = self.currentWidget().existing
+
+        self.window().setWindowTitle('EZ machining:  {}'.format(title2))
 
     def delete_tab(self, n):
         for i in range(1, self.quantity-1):
@@ -62,16 +69,14 @@ class Tabs(QTabWidget):
 
     def new_tab(self):
         i = 1
-        print(i,"____",self.tabs[i][1])
         while (i < self.quantity-1) & (self.tabs[i][1] is not None):
             i += 1
-            print('i=',i)
-        print('itog:', i)
         if self.tabs[i][1] is None:
             self.tabs[i][1] = 1
-            self.addTab(MyEdit(), self.tabs[i][0])
+            self.addTab(MyEdit(None, existing=False), self.tabs[i][0])
         else:
-            print('too many new files, go away')
+            simple_warning('warning', "Притормози \n ¯\_(ツ)_/¯")
+
 
 
 class CenterWindow(QWidget):
@@ -103,3 +108,9 @@ class CenterWindow(QWidget):
         grid_right.addWidget(self.note, 0, 0)
 
         self.splitter.setSizes([100, 200])
+
+def simple_warning(title, text):
+    warning = QMessageBox()
+    warning.setWindowTitle(title)
+    warning.setText(text)
+    warning.exec()

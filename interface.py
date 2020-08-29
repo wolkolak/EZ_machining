@@ -63,18 +63,29 @@ class MyMainWindow(QMainWindow):
         self.statusBar()
 
 
+
+
     def open_file(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         path, _ = QFileDialog.getOpenFileName(self,
         "Open файлик", "D:\Py_try\EZ_machining\examples", "Text files (*.txt);;All files (*.*)")
-        nya = gui_classes.MyEdit()
         print(path)
-        text = open(path).read()
+        flag = False
+        try:
+            text = open(path).read()
+            try:
+                name_open_file = path[path.rindex('/') + 1:-1]
+            except ValueError:
+                name_open_file = path
+            self.centre.note.addTab(gui_classes.MyEdit(text, existing=path), name_open_file)
 
-        self.centre.note.addTab(nya, 'open_file')
-        nya.setText(text)
-        #self.centre.note.currentWidget().append(fname)
+            flag = True
+        except BaseException:
+            if flag is not True:
+                gui_classes.simple_warning('warning', "У файла формат не тот \n ¯\_(ツ)_/¯ ")
+
+
 
 
         
