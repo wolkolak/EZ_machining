@@ -17,10 +17,25 @@ class MyMainWindow(QMainWindow):
 
         self.setWindowTitle('EZ machining')
         self.setGeometry(100, 100, settings['main_width'], settings['main_height'])
+        self.centre = gui_classes.CenterWindow()
+        self.setCentralWidget(self.centre)
+        self.statusBar()
+
 
         openAction = QAction(QIcon('icons\open.png'), 'Open', self)
-        openAction.setStatusTip('Open GM Fail')
+        openAction.setStatusTip('Open GM File')
         openAction.triggered.connect(self.open_file)
+
+        newTabAction = QAction(QIcon(r'icons\new_tab.png'), 'New', self)
+        newTabAction.setShortcut('Ctrl+N')
+        newTabAction.setStatusTip('New File')
+        newTabAction.triggered.connect(self.centre.note.new_tab)
+
+        saveAction = QAction(QIcon('icons\save.png'), 'Save', self)
+        saveAction.setShortcut('Ctrl+S')
+        saveAction.setStatusTip('Save current File')
+        saveAction.triggered.connect(self.save_file)
+        self.centre.note.save_tab_button.clicked.connect(self.save_file)
 
         exitAction = QAction(QIcon('icons\exit24.png'), 'Exit', self)
         exitAction.setShortcut('Ctrl+Q')
@@ -34,6 +49,8 @@ class MyMainWindow(QMainWindow):
         menubar = self.menuBar()
         fileMenu = menubar.addMenu('&File')
         fileMenu.addAction(openAction)
+        fileMenu.addAction(newTabAction)
+        fileMenu.addAction(saveAction)
         fileMenu.addAction(exitAction)
 
 
@@ -57,10 +74,6 @@ class MyMainWindow(QMainWindow):
         txt_tools.setStyleSheet("background-color: {}".format(gui_classes.color3))
         txt_tools.addAction(splitterMove)
 
-        self.centre = gui_classes.CenterWindow()
-
-        self.setCentralWidget(self.centre)
-        self.statusBar()
 
 
 
@@ -82,11 +95,18 @@ class MyMainWindow(QMainWindow):
             self.centre.note.setCurrentIndex(self.centre.note.currentIndex()+1)
 
             flag = True
+            self.centre.note.colorTab(0)
         except BaseException:
             if flag is not True:
                 gui_classes.simple_warning('warning', "У файла формат не тот \n ¯\_(ツ)_/¯ ")
 
-
+    def save_file(self):
+        print('saving')
+        name = QFileDialog.getSaveFileName(self, 'Save File')
+        file = open(name,'w')
+        text = self.textEdit.toPlainText()
+        file.write(text)
+        file.close()
 
 
         

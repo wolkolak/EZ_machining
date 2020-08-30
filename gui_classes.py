@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QGridLayout, QTextEdit, QWidget, QSplitter, QTabWidget,\
     QScrollBar, QLabel, QHBoxLayout, QPushButton, QFrame, QTabBar, QToolBar, QMessageBox, QStyle, QStylePainter,\
-    QStyleOption, QStyleOptionTab
-
+    QStyleOption, QStyleOptionTab, QFileDialog
+import gui_classes
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QTextOption, QColor, QPainter, QPalette, QBrush
 
@@ -11,37 +11,11 @@ color3 = 'rgb(47, 69, 82)'
 color4 = 'rgb(195,221,234)' #бледный
 
 
+
+
 class coloredTabBar(QTabBar):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        #TODO PaintEvent
-        self.__coloredTabs = []
-        self.setProperty("colorToggle", False)
-
-
-    def colorTab(self, index):
-        if (index >= self.count()) or (index < 0) or (index in self.__coloredTabs):
-            return
-        self.__coloredTabs.append(index)
-        self.update()
-
-    def paintEvent(self, event):
-        print('paint event')
-        p = QStylePainter(self)
-        painter = QPainter(self)
-        for index in range(self.count()):  # for all tabs
-            tab = QStyleOptionTab()  # create styled tab
-            self.initStyleOption(tab, index)  # initialize with default values
-            # change background color to red
-            tab.palette.setColor(QPalette.Window, QColor(255, 0, 0))
-            p.drawControl(QStyle.CE_TabBarTab, tab)  # draw tab
-
-        """        self.pr(1)
-        def pr(self, n):
-        print("recta:",self.tabRect(n))
-        print(type(self.tabRect(n)))
-        #self.tabRect(2)
-        tab_color = QColor(255, 0, 0)"""
 
 
 class MyEdit(QTextEdit):
@@ -76,16 +50,21 @@ class Tabs(QTabWidget):
         self.new_tab_button = QPushButton("NEW")
         little_layout.addWidget(self.new_tab_button)
         self.new_tab_button.setStyleSheet("background-color: {}".format(color1))
+        self.new_tab_button.clicked.connect(self.new_tab)
 
-        self.save_tab = QPushButton("SAVE")
-        little_layout.addWidget(self.save_tab )
-        self.save_tab.setStyleSheet("background-color: {}".format(color1))
+        self.save_tab_button = QPushButton("SAVE")
+        little_layout.addWidget(self.save_tab_button )
+        self.save_tab_button.setStyleSheet("background-color: {}".format(color1))
+        #save_tab_button connected from interface
 
         self.cornerWidget().setMinimumSize(20, 40)
-
         self.tabCloseRequested.connect(self.delete_tab)
-        self.new_tab_button.clicked.connect(self.new_tab)
         self.currentChanged.connect(self.change_title)
+
+
+
+    def colorTab(self, index):
+        self.myTabBar.colorTab(index)
 
     def change_title(self, n):
         print('tab change')
@@ -121,6 +100,28 @@ class Tabs(QTabWidget):
             self.setCurrentIndex(self.currentIndex()+1)
         else:
             simple_warning('warning', "Притормози \n ¯\_(ツ)_/¯")
+
+    def open_file(self):
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        path, _ = QFileDialog.getOpenFileName(self,
+        "Open файлик", "D:\Py_try\EZ_machining\examples", "Text files (*.txt);;All files (*.*)")
+        print(path)
+        flag = False
+        try:
+            text = open(path).read()
+            try:
+                name_open_file = path[path.rindex('/') + 1:-1]
+            except ValueError:
+                name_open_file = path
+            self.centre.note.insertTab(self.centre.note.currentIndex()+1, gui_classes.MyEdit(text, existing=path), name_open_file)
+            self.centre.note.setCurrentIndex(self.centre.note.currentIndex()+1)
+
+            flag = True
+            self.centre.note.colorTab(0)
+        except BaseException:
+            if flag is not True:
+                gui_classes.simple_warning('warning', "У файла формат не тот \n ¯\_(ツ)_/¯ ")
 
 
 

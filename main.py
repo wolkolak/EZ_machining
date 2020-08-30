@@ -3,7 +3,7 @@
 
 
 import sys
-from PyQt5.QtWidgets import QApplication, QLabel
+from PyQt5.QtWidgets import QApplication, QLabel, QStyleFactory
 
 import copy
 import interface
@@ -19,6 +19,7 @@ settings = copy.deepcopy(default_settings)
 if __name__ == '__main__':
 
     app = QApplication(sys.argv)
+    #QApplication.setStyle(QStyleFactory.create('windows'))
     ex = interface.MyMainWindow()
 
     title = QLabel('Title')
