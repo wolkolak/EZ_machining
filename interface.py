@@ -95,18 +95,36 @@ class MyMainWindow(QMainWindow):
             self.centre.note.setCurrentIndex(self.centre.note.currentIndex()+1)
 
             flag = True
-            self.centre.note.colorTab(0)
+            #self.centre.note.colorTab(0)
         except BaseException:
             if flag is not True:
                 gui_classes.simple_warning('warning', "У файла формат не тот \n ¯\_(ツ)_/¯ ")
 
     def save_file(self):
         print('saving')
-        name = QFileDialog.getSaveFileName(self, 'Save File')
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+
+        fileName, _ = QFileDialog.getSaveFileName(self, "Open bleat", "D:\Py_try\EZ_machining\examples",
+                                                  "All Files (*);;Text Files (*.txt)", options=options)
+        print('fdfddf')
+        if fileName:
+            text = self.centre.note.currentWidget().toPlainText()
+            file = open(fileName, 'w')
+            file.write(text)
+            file.close()
+            print(fileName)
+
+
+
+        """        name = QFileDialog.getSaveFileName(self, 'Save File')
+        print('1')
         file = open(name,'w')
-        text = self.textEdit.toPlainText()
+        print('2')
+        text = self.centre.note.currentWidget().toPlainText()
+        print('3')
         file.write(text)
-        file.close()
+        file.close()"""
 
 
         
