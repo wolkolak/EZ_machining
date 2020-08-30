@@ -37,6 +37,10 @@ class MyMainWindow(QMainWindow):
         saveAction.triggered.connect(self.save_file)
         self.centre.note.save_tab_button.clicked.connect(self.save_file)
 
+        saveAsAction = QAction(QIcon('icons\save_as.png'), 'Save As', self)
+        saveAsAction.setStatusTip('Save File As')
+        saveAsAction.triggered.connect(self.save_file_as)
+
         exitAction = QAction(QIcon('icons\exit24.png'), 'Exit', self)
         exitAction.setShortcut('Ctrl+Q')
         exitAction.setStatusTip('Exit application')
@@ -48,9 +52,10 @@ class MyMainWindow(QMainWindow):
 
         menubar = self.menuBar()
         fileMenu = menubar.addMenu('&File')
-        fileMenu.addAction(openAction)
         fileMenu.addAction(newTabAction)
+        fileMenu.addAction(openAction)
         fileMenu.addAction(saveAction)
+        fileMenu.addAction(saveAsAction)
         fileMenu.addAction(exitAction)
 
 
@@ -84,49 +89,62 @@ class MyMainWindow(QMainWindow):
         path, _ = QFileDialog.getOpenFileName(self,
         "Open файлик", "D:\Py_try\EZ_machining\examples", "Text files (*.txt);;All files (*.*)")
         print(path)
+        self.make_open_DRY(path, None)
+
+    def save_file_as(self):
+        print('saving as')
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+
+        path, _ = QFileDialog.getSaveFileName(self, "Save As", "D:\Py_try\EZ_machining\examples",
+                                              "All Files (*);;Text Files (*.txt)", options=options)
+        if path:
+            text = self.centre.note.currentWidget().toPlainText()
+            file = open(path, 'w')
+            file.write(text)
+            file.close()
+            n = self.centre.note.currentIndex()
+            self.make_open_DRY(path, n)
+
+            # todo  расширение прикрутить, сделать save и save as
+            print(path)
+
+    def save_file(self):
+
+        print(self.centre.note.currentWidget().existing)
+        if self.centre.note.currentWidget().existing is False:
+            self.save_file_as()
+            return
+        print('saving file')
+        path = self.centre.note.currentWidget().existing
+        if path:
+            text = self.centre.note.currentWidget().toPlainText()
+            file = open(path, 'w')
+            file.write(text)
+            file.close()
+            n = self.centre.note.currentIndex()
+            self.make_open_DRY(path, n)
+
+            #todo  расширение прикрутить, сделать save и save as
+            print(path)
+
+
+    def make_open_DRY(self, path, n):
         flag = False
         try:
             text = open(path).read()
             try:
-                name_open_file = path[path.rindex('/') + 1:-1]
+                name_open_file = path[path.rindex('/') + 1:]
             except ValueError:
                 name_open_file = path
             self.centre.note.insertTab(self.centre.note.currentIndex()+1, gui_classes.MyEdit(text, existing=path), name_open_file)
             self.centre.note.setCurrentIndex(self.centre.note.currentIndex()+1)
-
+            if n is not None:
+                self.centre.note.removeTab(n)
             flag = True
-            #self.centre.note.colorTab(0)
         except BaseException:
             if flag is not True:
                 gui_classes.simple_warning('warning', "У файла формат не тот \n ¯\_(ツ)_/¯ ")
-
-    def save_file(self):
-        print('saving')
-        options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
-
-        fileName, _ = QFileDialog.getSaveFileName(self, "Open bleat", "D:\Py_try\EZ_machining\examples",
-                                                  "All Files (*);;Text Files (*.txt)", options=options)
-        print('fdfddf')
-        if fileName:
-            text = self.centre.note.currentWidget().toPlainText()
-            file = open(fileName, 'w')
-            file.write(text)
-            file.close()
-            print(fileName)
-
-
-
-        """        name = QFileDialog.getSaveFileName(self, 'Save File')
-        print('1')
-        file = open(name,'w')
-        print('2')
-        text = self.centre.note.currentWidget().toPlainText()
-        print('3')
-        file.write(text)
-        file.close()"""
-
-
         
     def close_half(self):
 

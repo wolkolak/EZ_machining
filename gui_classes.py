@@ -63,8 +63,6 @@ class Tabs(QTabWidget):
 
 
 
-    def colorTab(self, index):
-        self.myTabBar.colorTab(index)
 
     def change_title(self, n):
         print('tab change')
