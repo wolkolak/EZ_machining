@@ -26,8 +26,12 @@ class MyEdit(QTextEdit):
         self.existing = existing
         self.setStyleSheet("background-color: {}".format(color4))
         self.setText(text)
+        self.changed = False
+        self.textChanged.connect(self.changing)
 
 
+    def changing(self):
+        self.changed = True
 
 class Tabs(QTabWidget):
 
@@ -61,9 +65,6 @@ class Tabs(QTabWidget):
         self.tabCloseRequested.connect(self.delete_tab)
         self.currentChanged.connect(self.change_title)
 
-
-
-
     def change_title(self, n):
         print('tab change')
 
@@ -78,12 +79,16 @@ class Tabs(QTabWidget):
 
     def delete_tab(self, n):
         print('tab delete')
-        if self.widget(n).existing is False:
-            for i in range(1, self.quantity-1):
-                if self.tabs[i][0] == self.tabText(n):
-                    self.tabs[i][1] = None
-                    break
-        self.removeTab(n)
+        if self.currentWidget().changed == False:
+            if self.widget(n).existing is False:
+                for i in range(1, self.quantity-1):
+                    if self.tabs[i][0] == self.tabText(n):
+                        self.tabs[i][1] = None
+                        break
+            self.removeTab(n)
+        else:
+            #print(type(self.parent()))
+            print(self.__dict__['little_widget'].__dict__)
 
 
 
@@ -99,27 +104,7 @@ class Tabs(QTabWidget):
         else:
             simple_warning('warning', "Притормози \n ¯\_(ツ)_/¯")
 
-    def open_file(self):
-        options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
-        path, _ = QFileDialog.getOpenFileName(self,
-        "Open файлик", "D:\Py_try\EZ_machining\examples", "Text files (*.txt);;All files (*.*)")
-        print(path)
-        flag = False
-        try:
-            text = open(path).read()
-            try:
-                name_open_file = path[path.rindex('/') + 1:-1]
-            except ValueError:
-                name_open_file = path
-            self.centre.note.insertTab(self.centre.note.currentIndex()+1, gui_classes.MyEdit(text, existing=path), name_open_file)
-            self.centre.note.setCurrentIndex(self.centre.note.currentIndex()+1)
 
-            flag = True
-            self.centre.note.colorTab(0)
-        except BaseException:
-            if flag is not True:
-                gui_classes.simple_warning('warning', "У файла формат не тот \n ¯\_(ツ)_/¯ ")
 
 
 

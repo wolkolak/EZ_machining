@@ -7,6 +7,14 @@ import gui_classes
 
 class MyMainWindow(QMainWindow):
 
+
+    filter_files = "Text files (*.txt);;All files (*.*)"
+    file_formats = [filter_files.split(';;')]
+    ff = file_formats[0][0]
+    ff = ff[ff.rindex('*') + 1:-1]
+    #file_formats = ['a','b']
+    print('format are :', ff)
+    #path[path.rindex('/') + 1:-1]
     def __init__(self):
         super().__init__()
 
@@ -41,6 +49,14 @@ class MyMainWindow(QMainWindow):
         saveAsAction.setStatusTip('Save File As')
         saveAsAction.triggered.connect(self.save_file_as)
 
+        closeTab = QAction(QIcon('icons\save_as.png'), 'Close Tab', self)
+        closeTab.setStatusTip('Close Current')
+        closeTab.triggered.connect(self.close_current)
+
+        closeAll = QAction(QIcon('icons\save_as.png'), 'Close All', self)
+        closeAll.setStatusTip('Close All Tabs')
+        closeAll.triggered.connect(self.close_all)
+
         exitAction = QAction(QIcon('icons\exit24.png'), 'Exit', self)
         exitAction.setShortcut('Ctrl+Q')
         exitAction.setStatusTip('Exit application')
@@ -56,6 +72,8 @@ class MyMainWindow(QMainWindow):
         fileMenu.addAction(openAction)
         fileMenu.addAction(saveAction)
         fileMenu.addAction(saveAsAction)
+        fileMenu.addAction(closeTab)
+        fileMenu.addAction(closeAll)
         fileMenu.addAction(exitAction)
 
 
@@ -79,15 +97,19 @@ class MyMainWindow(QMainWindow):
         txt_tools.setStyleSheet("background-color: {}".format(gui_classes.color3))
         txt_tools.addAction(splitterMove)
 
+    def close_all(self):
+        while self.centre.note.currentIndex() != -1:
+            self.close_current()
 
 
-
+    def close_current(self):
+        self.centre.note.delete_tab(self.centre.note.currentIndex())
 
     def open_file(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         path, _ = QFileDialog.getOpenFileName(self,
-        "Open файлик", "D:\Py_try\EZ_machining\examples", "Text files (*.txt);;All files (*.*)")
+        "Open файлик", "D:\Py_try\EZ_machining\examples", self.filter_files)
         print(path)
         self.make_open_DRY(path, None)
 
@@ -95,9 +117,12 @@ class MyMainWindow(QMainWindow):
         print('saving as')
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-
-        path, _ = QFileDialog.getSaveFileName(self, "Save As", "D:\Py_try\EZ_machining\examples",
-                                              "All Files (*);;Text Files (*.txt)", options=options)
+        #todo
+        path, _ = QFileDialog.getSaveFileName(self, "Save As", "D:\Py_try\EZ_machining\examples\\"+
+                                              self.centre.note.tabText(self.centre.note.currentIndex())+str(self.ff),
+                                              self.filter_files, options=options)
+        #path[path.rindex('/') + 1:-1]
+        print('___:', _)
         if path:
             text = self.centre.note.currentWidget().toPlainText()
             file = open(path, 'w')
@@ -106,7 +131,7 @@ class MyMainWindow(QMainWindow):
             n = self.centre.note.currentIndex()
             self.make_open_DRY(path, n)
 
-            # todo  расширение прикрутить, сделать save и save as
+            # todo  расширение прикрутить
             print(path)
 
     def save_file(self):
@@ -124,8 +149,6 @@ class MyMainWindow(QMainWindow):
             file.close()
             n = self.centre.note.currentIndex()
             self.make_open_DRY(path, n)
-
-            #todo  расширение прикрутить, сделать save и save as
             print(path)
 
 
@@ -135,6 +158,7 @@ class MyMainWindow(QMainWindow):
             text = open(path).read()
             try:
                 name_open_file = path[path.rindex('/') + 1:]
+                print(name_open_file)
             except ValueError:
                 name_open_file = path
             self.centre.note.insertTab(self.centre.note.currentIndex()+1, gui_classes.MyEdit(text, existing=path), name_open_file)
