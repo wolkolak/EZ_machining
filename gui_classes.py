@@ -35,6 +35,13 @@ class MyEdit(QTextEdit):
 
 class Tabs(QTabWidget):
 
+    filter_files = "Text files (*.txt);;All files (*.*)"
+    file_formats = [filter_files.split(';;')]
+    ff = file_formats[0][0]
+    ff = ff[ff.rindex('*') + 1:-1]
+    #file_formats = ['a','b']
+    print('format are :', ff)
+
     quantity = 15
     tabs = [["File" + str(i), None] for i in range(0, quantity)]
 
@@ -87,7 +94,6 @@ class Tabs(QTabWidget):
                         break
             self.removeTab(n)
         else:
-            #print(type(self.parent()))
             print(self.__dict__['little_widget'].__dict__)
 
 
@@ -105,7 +111,81 @@ class Tabs(QTabWidget):
             simple_warning('warning', "Притормози \n ¯\_(ツ)_/¯")
 
 
+    def close_all(self):
+        while self.currentIndex() != -1:
+            self.close_current()
 
+
+    def close_current(self):
+        self.delete_tab(self.currentIndex())
+
+    def open_file(self):
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        print('QFileDialog.DontUseNativeDialog')
+        path, _ = QFileDialog.getOpenFileName(None,
+        "Open файлик", "D:\Py_try\EZ_machining\examples", self.filter_files)
+        print(path)
+        if path:
+            self.make_open_DRY(path, True)
+
+    def save_file_as(self):
+        print('saving as')
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        name = "D:\Py_try\EZ_machining\examples\\"+ self.tabText(self.currentIndex())
+        if self.currentWidget().existing is False:
+            name += str(self.ff)
+        path, _ = QFileDialog.getSaveFileName(None, "Save As", name,
+                                              self.filter_files, options=options)
+        print('___:', _)
+        print('path', path)
+        if path:
+            text = self.currentWidget().toPlainText()
+            with open(path, 'w') as file:
+
+                file.write(text)
+
+            self.currentWidget().changed = False
+            self.currentWidget().existing = path
+            try:
+                name_open_file = path[path.rindex('/') + 1:]
+            except ValueError:
+                name_open_file = path
+            self.setTabText(self.currentIndex(), name_open_file)
+            self.window().setWindowTitle(path)
+            print(path)
+
+    def save_file(self):
+
+        print(self.currentWidget().existing)
+        if self.currentWidget().existing is False:
+            print('is false')
+            self.save_file_as()
+            return
+        print('saving file')
+        path = self.currentWidget().existing
+        if path:
+            text = self.currentWidget().toPlainText()
+            with open(path, 'w') as file:
+                file.write(text)
+            self.currentWidget().changed = False
+            print(path)
+
+
+    def make_open_DRY(self, path, open1):
+        try:
+            text = open(path).read()
+            try:
+                name_open_file = path[path.rindex('/') + 1:]
+            except ValueError:
+                name_open_file = path
+
+            self.insertTab(self.currentIndex()+1, MyEdit(text, existing=path), name_open_file)
+            self.setCurrentIndex(self.currentIndex()+1)
+            self.currentWidget().existing = path
+        except BaseException:
+            gui_classes.simple_warning('warning', "У файла формат не тот \n ¯\_(ツ)_/¯ ")
 
 
 class CenterWindow(QWidget):
