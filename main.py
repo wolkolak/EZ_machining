@@ -5,16 +5,7 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QLabel, QStyleFactory
 
-import copy
 import interface
-
-
-#todo from settings
-default_settings = {'main_width': 1450, 'main_height': 900, 'font_txt': "nyaa", 'txt_width': 600}
-settings = copy.deepcopy(default_settings)
-
-
-
 
 if __name__ == '__main__':
 

@@ -1,15 +1,15 @@
 from PyQt5.QtWidgets import QMainWindow, QAction, qApp,  QToolBar, QFileDialog
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt
-from main import settings
 import gui_classes
+from settings import interface_settings, default_interface_settings
+import re
+import fileinput
+import os
 
 
 class MyMainWindow(QMainWindow):
 
-
-
-    #path[path.rindex('/') + 1:-1]
     def __init__(self):
         super().__init__()
 
@@ -19,12 +19,13 @@ class MyMainWindow(QMainWindow):
         self.splitter_flag = 1
 
         self.setWindowTitle('EZ machining')
-        self.setGeometry(100, 100, settings['main_width'], settings['main_height'])
+        self.setGeometry(100, 100, interface_settings['main_width'], interface_settings['main_height'])
         self.centre = gui_classes.CenterWindow()
         self.setCentralWidget(self.centre)
         self.statusBar()
+        menubar = self.menuBar()
 
-
+        #file
         openAction = QAction(QIcon('icons\open.png'), 'Open', self)
         openAction.setStatusTip('Open GM File')
         openAction.triggered.connect(self.centre.note.open_file)
@@ -58,10 +59,9 @@ class MyMainWindow(QMainWindow):
         exitAction.triggered.connect(qApp.quit)
 
 
-        splitterMove = QAction(QIcon('icons\splitter.png'), 'shift', self)
-        splitterMove.triggered.connect(self.close_half)
 
-        menubar = self.menuBar()
+
+
         fileMenu = menubar.addMenu('&File')
         fileMenu.addAction(newTabAction)
         fileMenu.addAction(openAction)
@@ -72,28 +72,68 @@ class MyMainWindow(QMainWindow):
         fileMenu.addAction(exitAction)
 
 
+        #View
+        splitterMove = QAction(QIcon('icons\splitter.png'), 'shift', self)
+        splitterMove.triggered.connect(self.close_half)
         viewMenu = menubar.addMenu('&View')
         viewMenu.addAction(splitterMove)
 
         toolsMenu = menubar.addMenu('&Tools')
         inportMenu = menubar.addMenu('&Import')
-        optionsMenu = menubar.addMenu('&Options')
 
+        #options
+
+        saveOptionsAction = QAction(QIcon('icons\open.png'), 'Save Options', self)
+        saveOptionsAction.setStatusTip('save options')
+        saveOptionsAction.triggered.connect(self.save_options)
+
+        restoreOptionsAction = QAction(QIcon('icons\open.png'), 'Restore Default', self)
+        restoreOptionsAction.setStatusTip('restore default options')
+        restoreOptionsAction.triggered.connect(lambda: self.restore_options('interface_settings', 'default_interface_settings'))
+        optionsMenu = menubar.addMenu('&Options')
+        optionsMenu.addAction(saveOptionsAction)
+        optionsMenu.addAction(restoreOptionsAction)
 
 
 
         toolbar1 = QToolBar(self)
-        self.addToolBar( Qt.LeftToolBarArea, toolbar1)
+        self.addToolBar(Qt.LeftToolBarArea, toolbar1)
         toolbar1.setStyleSheet("background-color: {}".format(gui_classes.color3))
         toolbar1.addAction(exitAction)
 
         txt_tools = QToolBar(self)
-        self.addToolBar( Qt.RightToolBarArea, txt_tools)
+        self.addToolBar(Qt.RightToolBarArea, txt_tools)
         txt_tools.setStyleSheet("background-color: {}".format(gui_classes.color3))
         txt_tools.addAction(splitterMove)
 
+    def save_options(self):
+        pass
 
-        
+    def restore_options(self, name, defaultname):
+        x = None
+        y = None
+        name = name + ' '
+        defaultname = defaultname + ' '
+
+        with open('settings.py') as settings:
+            for index, line in enumerate(settings):
+                if re.match(name, line):
+                    x, cur_line = index, line
+                if re.match(defaultname, line):
+                    y, def_line = index, line
+                if x and y:
+                    print('x=', x, 'y=', y)
+                    break
+        try:
+            with fileinput.FileInput('settings.py', inplace=True, backup='.bak') as settings:
+                for index, line in enumerate(settings):
+                    if index != x:
+                        print(line, end='')
+                    else:
+                        print(name + def_line[len(defaultname):])
+            os.unlink('settings.py' + '.bak')
+        except OSError:
+            gui_classes.simple_warning('Ooh', 'Something went wrong \n ¯\_(ツ)_/¯')
     def close_half(self):
 
         if self.splitter_flag == 1:
@@ -105,4 +145,4 @@ class MyMainWindow(QMainWindow):
         else:
             self.centre.splitter.setSizes([0, 100])
             self.splitter_flag = 1
-        print(self.splitter_flag )
+        print(self.splitter_flag)

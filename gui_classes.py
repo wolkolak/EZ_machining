@@ -1,14 +1,10 @@
 from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QGridLayout, QTextEdit, QWidget, QSplitter, QTabWidget,\
     QScrollBar, QLabel, QHBoxLayout, QPushButton, QFrame, QTabBar, QToolBar, QMessageBox, QStyle, QStylePainter,\
-    QStyleOption, QStyleOptionTab, QFileDialog
-import gui_classes
+    QStyleOption, QStyleOptionTab, QFileDialog, QPlainTextEdit, QDialog
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QTextOption, QColor, QPainter, QPalette, QBrush
 
-color1 = 'rgb(145,191,204)'
-color2 = 'rgb(72,128,143)'
-color3 = 'rgb(47, 69, 82)'
-color4 = 'rgb(195,221,234)' #бледный
+from settings import *
 
 
 
@@ -18,17 +14,16 @@ class coloredTabBar(QTabBar):
         super().__init__(*args, **kwargs)
 
 
-class MyEdit(QTextEdit):
+class MyEdit(QPlainTextEdit):# QPlainTextEdit
 
     def __init__(self, text, existing, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setWordWrapMode(QTextOption.NoWrap)
         self.existing = existing
         self.setStyleSheet("background-color: {}".format(color4))
-        self.setText(text)
+        self.setPlainText(text)
         self.changed = False
         self.textChanged.connect(self.changing)
-
 
     def changing(self):
         self.changed = True
@@ -39,9 +34,7 @@ class Tabs(QTabWidget):
     file_formats = [filter_files.split(';;')]
     ff = file_formats[0][0]
     ff = ff[ff.rindex('*') + 1:-1]
-    #file_formats = ['a','b']
     print('format are :', ff)
-
     quantity = 15
     tabs = [["File" + str(i), None] for i in range(0, quantity)]
 
@@ -66,7 +59,6 @@ class Tabs(QTabWidget):
         self.save_tab_button = QPushButton("SAVE")
         little_layout.addWidget(self.save_tab_button )
         self.save_tab_button.setStyleSheet("background-color: {}".format(color1))
-        #save_tab_button connected from interface
 
         self.cornerWidget().setMinimumSize(20, 40)
         self.tabCloseRequested.connect(self.delete_tab)
@@ -87,16 +79,18 @@ class Tabs(QTabWidget):
     def delete_tab(self, n):
         print('tab delete')
         if self.currentWidget().changed == False:
-            if self.widget(n).existing is False:
-                for i in range(1, self.quantity-1):
-                    if self.tabs[i][0] == self.tabText(n):
-                        self.tabs[i][1] = None
-                        break
+            self.close_only(n)
             self.removeTab(n)
         else:
-            print(self.__dict__['little_widget'].__dict__)
+            simple_2_dialog(self.save_file, lambda: self.close_only(n), "Save changes")
+            self.removeTab(n)
 
-
+    def close_only(self, n):
+        if self.widget(n).existing is False:
+            for i in range(1, self.quantity - 1):
+                if self.tabs[i][0] == self.tabText(n):
+                    self.tabs[i][1] = None
+                    break
 
     def new_tab(self):
         print('tab create')
@@ -105,7 +99,9 @@ class Tabs(QTabWidget):
             i += 1
         if self.tabs[i][1] is None:
             self.tabs[i][1] = True
+            print('new tab1')
             self.insertTab(self.currentIndex()+1, MyEdit(None, existing=False), self.tabs[i][0])
+            print('new tab1')
             self.setCurrentIndex(self.currentIndex()+1)
         else:
             simple_warning('warning', "Притормози \n ¯\_(ツ)_/¯")
@@ -114,7 +110,6 @@ class Tabs(QTabWidget):
     def close_all(self):
         while self.currentIndex() != -1:
             self.close_current()
-
 
     def close_current(self):
         self.delete_tab(self.currentIndex())
@@ -127,7 +122,7 @@ class Tabs(QTabWidget):
         "Open файлик", "D:\Py_try\EZ_machining\examples", self.filter_files)
         print(path)
         if path:
-            self.make_open_DRY(path, True)
+            self.make_open_DRY(path)
 
     def save_file_as(self):
         print('saving as')
@@ -145,7 +140,6 @@ class Tabs(QTabWidget):
             with open(path, 'w') as file:
 
                 file.write(text)
-
             self.currentWidget().changed = False
             self.currentWidget().existing = path
             try:
@@ -173,7 +167,7 @@ class Tabs(QTabWidget):
             print(path)
 
 
-    def make_open_DRY(self, path, open1):
+    def make_open_DRY(self, path):
         try:
             text = open(path).read()
             try:
@@ -185,7 +179,7 @@ class Tabs(QTabWidget):
             self.setCurrentIndex(self.currentIndex()+1)
             self.currentWidget().existing = path
         except BaseException:
-            gui_classes.simple_warning('warning', "У файла формат не тот \n ¯\_(ツ)_/¯ ")
+            simple_warning('warning', "У файла формат не тот \n ¯\_(ツ)_/¯ ")
 
 
 class CenterWindow(QWidget):
@@ -223,3 +217,15 @@ def simple_warning(title, text):
     warning.setWindowTitle(title)
     warning.setText(text)
     warning.exec()
+
+def simple_2_dialog(func1, func2, title):
+   save_or_throw = QMessageBox()
+   save_or_throw.setWindowTitle(title)
+   #save_or_throw.setText(text)
+   save_or_throw.setStandardButtons(QMessageBox.Yes)
+   save_or_throw.addButton(QMessageBox.No)
+   if (save_or_throw.exec() == QMessageBox.Yes):
+       func1()
+   else:
+       func2()
+
