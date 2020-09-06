@@ -2,11 +2,11 @@ from PyQt5.QtWidgets import QMainWindow, QAction, qApp,  QToolBar, QFileDialog
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt
 import gui_classes
-from settings import interface_settings, default_interface_settings
+from settings import interface_settings, splitter_parameters
 import re
 import fileinput
 import os
-
+import shutil
 
 class MyMainWindow(QMainWindow):
 
@@ -16,7 +16,7 @@ class MyMainWindow(QMainWindow):
         self.initUI()
 
     def initUI(self):
-        self.splitter_flag = 1
+        self.splitter_flag = splitter_parameters['flag']
 
         self.setWindowTitle('EZ machining')
         self.setGeometry(100, 100, interface_settings['main_width'], interface_settings['main_height'])
@@ -89,7 +89,8 @@ class MyMainWindow(QMainWindow):
 
         restoreOptionsAction = QAction(QIcon('icons\open.png'), 'Restore Default', self)
         restoreOptionsAction.setStatusTip('restore default options')
-        restoreOptionsAction.triggered.connect(lambda: self.restore_options('interface_settings', 'default_interface_settings'))
+        restoreOptionsAction.triggered.connect(self.restore_all_options)
+
         optionsMenu = menubar.addMenu('&Options')
         optionsMenu.addAction(saveOptionsAction)
         optionsMenu.addAction(restoreOptionsAction)
@@ -107,42 +108,41 @@ class MyMainWindow(QMainWindow):
         txt_tools.addAction(splitterMove)
 
     def save_options(self):
-        pass
-
-    def restore_options(self, name, defaultname):
-        x = None
-        y = None
-        name = name + ' '
-        defaultname = defaultname + ' '
-
-        with open('settings.py') as settings:
-            for index, line in enumerate(settings):
-                if re.match(name, line):
-                    x, cur_line = index, line
-                if re.match(defaultname, line):
-                    y, def_line = index, line
-                if x and y:
-                    print('x=', x, 'y=', y)
-                    break
+        """
+        :return: changing exact values of exact names
+        """
+        name1 = 'interface_settings '
+        name2 = 'splitter_parameters '
+        print(self.centre.splitter.sizes())
         try:
             with fileinput.FileInput('settings.py', inplace=True, backup='.bak') as settings:
-                for index, line in enumerate(settings):
-                    if index != x:
-                        print(line, end='')
+                for line in settings:
+                    if re.match(name1, line):
+                        print("interface_settings = {{'main_width': {}, 'main_height':{} }}".format(self.width(), self.height()))
+                    elif re.match(name2, line):
+                        print("splitter_parameters = {{'lefty': {}, 'righty': {}, 'flag': {} }}".format(self.centre.splitter.sizes()[0],
+                        self.centre.splitter.sizes()[1], self.splitter_flag))
                     else:
-                        print(name + def_line[len(defaultname):])
+                        print(line, end='')
             os.unlink('settings.py' + '.bak')
         except OSError:
             gui_classes.simple_warning('Ooh', 'Something went wrong \n ¯\_(ツ)_/¯')
-    def close_half(self):
 
+    def restore_all_options(self):
+        shutil.copyfile('default_settings.py', 'settings.py', follow_symlinks=True)
+        from settings import interface_settings
+        self.setGeometry(100, 100, interface_settings['main_width'], interface_settings['main_height'])
+        self.centre.splitter.setSizes([splitter_parameters['lefty'], splitter_parameters['righty']])
+        self.splitter_flag = 2
+
+    def close_half(self):
+        print(self.splitter_flag)
         if self.splitter_flag == 1:
             self.centre.splitter.setSizes([100, 0])
             self.splitter_flag = self.splitter_flag + 1
         elif self.splitter_flag == 2:
-            self.centre.splitter.setSizes([100, 100])
+            self.centre.splitter.setSizes([splitter_parameters['lefty'], splitter_parameters['righty']])
             self.splitter_flag = self.splitter_flag + 1
         else:
             self.centre.splitter.setSizes([0, 100])
             self.splitter_flag = 1
-        print(self.splitter_flag)

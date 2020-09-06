@@ -26,3 +26,36 @@ class coloredTabBar(QTabBar):
 
 #main.py
 QApplication.setStyle(QStyleFactory.create('windows'))
+
+connect(lambda: self.restore_options('interface_settings', 'default_interface_settings'))
+def restore_some_options(self, name, defaultname):
+    """
+    :param name: string
+    :param defaultname: string
+    :return: change value of the 'name' to the value of 'defaultname'
+    """
+    x = None
+    y = None
+    name = name + ' '
+    defaultname = defaultname + ' '
+
+    with open('settings.py') as settings:
+        for index, line in enumerate(settings):
+            if re.match(name, line):
+                x, cur_line = index, line
+            if re.match(defaultname, line):
+                y, def_line = index, line
+            if x and y:
+                print('x=', x, 'y=', y)
+                break
+    try:
+        with fileinput.FileInput('settings.py', inplace=True, backup='.bak') as settings:
+            for index, line in enumerate(settings):
+                if index != x:
+                    print(line, end='')
+                else:
+                    print(name + def_line[len(defaultname):])
+        os.unlink('settings.py' + '.bak')
+    except OSError:
+        gui_classes.simple_warning('Ooh', 'Something went wrong \n ¯\_(ツ)_/¯')
+    self.setGeometry(100, 100, interface_settings['main_width'], interface_settings['main_height'])

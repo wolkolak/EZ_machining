@@ -210,7 +210,7 @@ class CenterWindow(QWidget):
         self.right.setLayout(grid_right)
         grid_right.addWidget(self.note, 0, 0)
 
-        self.splitter.setSizes([100, 200])
+        self.splitter.setSizes([splitter_parameters['lefty'], splitter_parameters['righty']])
 
 def simple_warning(title, text):
     warning = QMessageBox()
