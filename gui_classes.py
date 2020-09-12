@@ -2,8 +2,8 @@ from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QGridLayout, QTextEdit, 
     QScrollBar, QLabel, QHBoxLayout, QPushButton, QFrame, QTabBar, QToolBar, QMessageBox, QStyle, QStylePainter,\
     QStyleOption, QStyleOptionTab, QFileDialog, QPlainTextEdit, QDialog
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QTextOption, QColor, QPainter, QPalette, QBrush
-
+from PyQt5.QtGui import QTextOption, QColor, QPainter, QPalette, QBrush, QTextCursor
+from redactor import *
 from settings import *
 
 
@@ -14,19 +14,6 @@ class coloredTabBar(QTabBar):
         super().__init__(*args, **kwargs)
 
 
-class MyEdit(QPlainTextEdit):# QPlainTextEdit
-
-    def __init__(self, text, existing, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.setWordWrapMode(QTextOption.NoWrap)
-        self.existing = existing
-        self.setStyleSheet("background-color: {}".format(color4))
-        self.setPlainText(text)
-        self.changed = False
-        self.textChanged.connect(self.changing)
-
-    def changing(self):
-        self.changed = True
 
 class Tabs(QTabWidget):
 
@@ -62,19 +49,7 @@ class Tabs(QTabWidget):
 
         self.cornerWidget().setMinimumSize(20, 40)
         self.tabCloseRequested.connect(self.delete_tab)
-        self.currentChanged.connect(self.change_title)
 
-    def change_title(self, n):
-        print('tab change')
-
-        if self.currentIndex() != -1:
-            if self.currentWidget().existing is False:
-                title2 = self.tabText(n)
-            else:
-                title2 = self.currentWidget().existing
-            self.window().setWindowTitle('EZ machining:  {}'.format(title2))
-        else:
-            self.window().setWindowTitle('EZ machining')
 
     def delete_tab(self, n):
         print('tab delete')
@@ -82,8 +57,8 @@ class Tabs(QTabWidget):
             self.close_only(n)
             self.removeTab(n)
         else:
-            simple_2_dialog(self.save_file, lambda: self.close_only(n), "Save changes")
-            self.removeTab(n)
+            if 'Cancel' != simple_2_dialog(self.save_file, lambda: self.close_only(n), "Save changes in {}?".format(self.tabText(n))):
+                self.removeTab(n)
 
     def close_only(self, n):
         if self.widget(n).existing is False:
@@ -125,6 +100,8 @@ class Tabs(QTabWidget):
             self.make_open_DRY(path)
 
     def save_file_as(self):
+        if self.currentIndex() == -1:
+            return
         print('saving as')
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
@@ -212,6 +189,10 @@ class CenterWindow(QWidget):
 
         self.splitter.setSizes([splitter_parameters['lefty'], splitter_parameters['righty']])
 
+
+
+
+
 def simple_warning(title, text):
     warning = QMessageBox()
     warning.setWindowTitle(title)
@@ -222,10 +203,12 @@ def simple_2_dialog(func1, func2, title):
    save_or_throw = QMessageBox()
    save_or_throw.setWindowTitle(title)
    #save_or_throw.setText(text)
-   save_or_throw.setStandardButtons(QMessageBox.Yes)
-   save_or_throw.addButton(QMessageBox.No)
-   if (save_or_throw.exec() == QMessageBox.Yes):
+   save_or_throw.setStandardButtons(QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
+   rez = save_or_throw.exec()
+   if rez == QMessageBox.Yes:
        func1()
-   else:
+   elif rez == QMessageBox.No:
        func2()
+   else:
+       return 'Cancel'
 

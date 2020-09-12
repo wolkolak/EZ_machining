@@ -1,5 +1,6 @@
-from PyQt5.QtWidgets import QMainWindow, QAction, qApp,  QToolBar, QFileDialog
-from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QMainWindow, QAction, qApp,  QToolBar, QFileDialog, QMessageBox, QDialog, QPlainTextEdit,\
+    QGridLayout, QPushButton, QLabel
+from PyQt5.QtGui import QIcon, QTextDocument
 from PyQt5.QtCore import Qt
 import gui_classes
 from settings import interface_settings, splitter_parameters
@@ -7,6 +8,7 @@ import re
 import fileinput
 import os
 import shutil
+
 
 class MyMainWindow(QMainWindow):
 
@@ -16,6 +18,7 @@ class MyMainWindow(QMainWindow):
         self.initUI()
 
     def initUI(self):
+        print('main window started')
         self.splitter_flag = splitter_parameters['flag']
 
         self.setWindowTitle('EZ machining')
@@ -23,89 +26,127 @@ class MyMainWindow(QMainWindow):
         self.centre = gui_classes.CenterWindow()
         self.setCentralWidget(self.centre)
         self.statusBar()
-        menubar = self.menuBar()
+        self.menubar = self.menuBar()
 
         #file
-        openAction = QAction(QIcon('icons\open.png'), 'Open', self)
-        openAction.setStatusTip('Open GM File')
-        openAction.triggered.connect(self.centre.note.open_file)
+        self.openAction = QAction(QIcon('icons\open.png'), 'Open', self)
+        self.openAction.setStatusTip('Open GM File')
+        self.openAction.triggered.connect(self.centre.note.open_file)
 
-        newTabAction = QAction(QIcon(r'icons\new_tab.png'), 'New', self)
-        newTabAction.setShortcut('Ctrl+N')
-        newTabAction.setStatusTip('New File')
-        newTabAction.triggered.connect(self.centre.note.new_tab)
+        self.newTabAction = QAction(QIcon(r'icons\new_tab.png'), 'New', self)
+        self.newTabAction.setShortcut('Ctrl+N')
+        self.newTabAction.setStatusTip('New File')
+        self.newTabAction.triggered.connect(self.centre.note.new_tab)
 
-        saveAction = QAction(QIcon('icons\save.png'), 'Save', self)
-        saveAction.setShortcut('Ctrl+S')
-        saveAction.setStatusTip('Save current File')
-        saveAction.triggered.connect(self.centre.note.save_file)
+        self.saveAction = QAction(QIcon('icons\save.png'), 'Save', self)
+        self.saveAction.setShortcut('Ctrl+S')
+        self.saveAction.setStatusTip('Save current File')
+        self.saveAction.triggered.connect(self.centre.note.save_file)
         self.centre.note.save_tab_button.clicked.connect(self.centre.note.save_file)
 
-        saveAsAction = QAction(QIcon('icons\save_as.png'), 'Save As', self)
-        saveAsAction.setStatusTip('Save File As')
-        saveAsAction.triggered.connect(self.centre.note.save_file_as)
 
-        closeTab = QAction(QIcon('icons\save_as.png'), 'Close Tab', self)
-        closeTab.setStatusTip('Close Current')
-        closeTab.triggered.connect(self.centre.note.close_current)
+        self.saveAsAction = QAction(QIcon('icons\save_as.png'), 'Save As', self)
+        self.saveAsAction.setStatusTip('Save File As')
+        self.saveAsAction.triggered.connect(self.centre.note.save_file_as)
 
-        closeAll = QAction(QIcon('icons\save_as.png'), 'Close All', self)
-        closeAll.setStatusTip('Close All Tabs')
-        closeAll.triggered.connect(self.centre.note.close_all)
+        self.closeTab = QAction(QIcon('icons\save_as.png'), 'Close Tab', self)
+        self.closeTab.setStatusTip('Close Current')
+        self.closeTab.triggered.connect(self.centre.note.close_current)
 
-        exitAction = QAction(QIcon('icons\exit24.png'), 'Exit', self)
-        exitAction.setShortcut('Ctrl+Q')
-        exitAction.setStatusTip('Exit application')
-        exitAction.triggered.connect(qApp.quit)
+        self.closeAll = QAction(QIcon('icons\save_as.png'), 'Close All', self)
+        self.closeAll.setStatusTip('Close All Tabs')
+        self.closeAll.triggered.connect(self.centre.note.close_all)
 
-
-
+        self.exitAction = QAction(QIcon('icons\exit24.png'), 'Exit', self)
+        self.exitAction.setShortcut('Ctrl+Q')
+        self.exitAction.setStatusTip('Exit application')
+        self.exitAction.triggered.connect(self.super_out)#qApp.quit
 
 
-        fileMenu = menubar.addMenu('&File')
-        fileMenu.addAction(newTabAction)
-        fileMenu.addAction(openAction)
-        fileMenu.addAction(saveAction)
-        fileMenu.addAction(saveAsAction)
-        fileMenu.addAction(closeTab)
-        fileMenu.addAction(closeAll)
-        fileMenu.addAction(exitAction)
+        fileMenu = self.menubar.addMenu('&File')
+        fileMenu.addAction(self.newTabAction)
+        fileMenu.addAction(self.openAction)
+        fileMenu.addAction(self.saveAction)
+        fileMenu.addAction(self.saveAsAction)
+        fileMenu.addAction(self.closeTab)
+        fileMenu.addAction(self.closeAll)
+        fileMenu.addAction(self.exitAction)
 
+        #Edit
+        self.findAction = QAction(QIcon('icons\open.png'), 'Find', self)
+        self.findAction.setStatusTip('find in current text')
+        self.findAction.triggered.connect(self.find_obertka)
+        self.findAction.setShortcut('Ctrl+F')
+        self.editMenu = self.menubar.addMenu('&Edit')
+        self.editMenu.addAction(self.findAction)
 
         #View
-        splitterMove = QAction(QIcon('icons\splitter.png'), 'shift', self)
-        splitterMove.triggered.connect(self.close_half)
-        viewMenu = menubar.addMenu('&View')
-        viewMenu.addAction(splitterMove)
+        self.splitterMove = QAction(QIcon('icons\splitter.png'), 'shift', self)
+        self.splitterMove.triggered.connect(self.close_half)
+        self.viewMenu = self.menubar.addMenu('&View')
+        self.viewMenu.addAction(self.splitterMove)
 
-        toolsMenu = menubar.addMenu('&Tools')
-        inportMenu = menubar.addMenu('&Import')
+        toolsMenu = self.menubar.addMenu('&Tools')
+        inportMenu = self.menubar.addMenu('&Import')
 
         #options
 
-        saveOptionsAction = QAction(QIcon('icons\open.png'), 'Save Options', self)
-        saveOptionsAction.setStatusTip('save options')
-        saveOptionsAction.triggered.connect(self.save_options)
+        self.saveOptionsAction = QAction(QIcon('icons\open.png'), 'Save Options', self)
+        self.saveOptionsAction.setStatusTip('save options')
+        self.saveOptionsAction.triggered.connect(self.save_options)
 
-        restoreOptionsAction = QAction(QIcon('icons\open.png'), 'Restore Default', self)
-        restoreOptionsAction.setStatusTip('restore default options')
-        restoreOptionsAction.triggered.connect(self.restore_all_options)
+        self.restoreOptionsAction = QAction(QIcon('icons\open.png'), 'Restore Default', self)
+        self.restoreOptionsAction.setStatusTip('restore default options')
+        self.restoreOptionsAction.triggered.connect(self.restore_all_options)
 
-        optionsMenu = menubar.addMenu('&Options')
-        optionsMenu.addAction(saveOptionsAction)
-        optionsMenu.addAction(restoreOptionsAction)
+        self.optionsMenu = self.menubar.addMenu('&Options')
+        self.optionsMenu.addAction(self.saveOptionsAction)
+        self.optionsMenu.addAction(self.restoreOptionsAction)
 
 
 
         toolbar1 = QToolBar(self)
         self.addToolBar(Qt.LeftToolBarArea, toolbar1)
         toolbar1.setStyleSheet("background-color: {}".format(gui_classes.color3))
-        toolbar1.addAction(exitAction)
+        toolbar1.addAction(self.exitAction)
 
         txt_tools = QToolBar(self)
         self.addToolBar(Qt.RightToolBarArea, txt_tools)
         txt_tools.setStyleSheet("background-color: {}".format(gui_classes.color3))
-        txt_tools.addAction(splitterMove)
+        txt_tools.addAction(self.splitterMove)
+
+        self.centre.note.currentChanged.connect(self.change_title)
+
+        self.light_out(False)
+
+    def super_out(self):
+        self.centre.note.close_all()
+
+    def find_obertka(self):
+        self.centre.note.currentWidget().find_in_text()
+
+    def change_title(self, n):
+        print('tab change')
+
+        if self.centre.note.currentIndex() != -1:
+            if self.centre.note.currentWidget().existing is False:
+                title2 = self.centre.note.tabText(n)
+            else:
+                title2 = self.centre.note.currentWidget().existing
+            self.setWindowTitle('EZ machining:  {}'.format(title2))
+            self.light_out(True)
+        else:
+            self.setWindowTitle('EZ machining')
+            self.light_out(False)
+
+    def light_out(self, gamlet):
+        self.saveAction.setEnabled(gamlet)
+        self.saveAsAction.setEnabled(gamlet)
+        self.centre.note.save_tab_button.setEnabled(gamlet)
+        self.findAction.setEnabled(gamlet)
+        self.editMenu.setEnabled(gamlet)
+
+
 
     def save_options(self):
         """
