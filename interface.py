@@ -81,10 +81,14 @@ class MyMainWindow(QMainWindow):
         self.editMenu.addAction(self.findAction)
 
         #View
+        self.viewMenu = self.menubar.addMenu('&View')
         self.splitterMove = QAction(QIcon('icons\splitter.png'), 'shift', self)
         self.splitterMove.triggered.connect(self.close_half)
-        self.viewMenu = self.menubar.addMenu('&View')
         self.viewMenu.addAction(self.splitterMove)
+
+
+
+        
 
         toolsMenu = self.menubar.addMenu('&Tools')
         inportMenu = self.menubar.addMenu('&Import')

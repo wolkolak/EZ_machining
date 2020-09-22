@@ -1,20 +1,109 @@
-from PyQt5.QtWidgets import  QGridLayout,  QLabel,  QPushButton, QPlainTextEdit, QDialog
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QTextOption, QColor, QPainter, QPalette, QBrush, QTextCursor, QTextDocument
-
+from PyQt5.QtWidgets import  QGridLayout,  QLabel,  QPushButton, QPlainTextEdit, QDialog,\
+    QCheckBox, QTextEdit, QWidget, QApplication
+from PyQt5.QtCore import Qt, QRect, QSize
+from PyQt5.QtGui import QTextOption, QColor, QPainter, QClipboard, QTextCursor, QTextDocument, QTextCharFormat,\
+    QTextFormat, QGuiApplication
 from settings import *
+from find_replace import finder
+
+class QLineNumberArea(QWidget):
+    def __init__(self, editor):
+        super().__init__(editor)
+        self.codeEditor = editor
+
+    def sizeHint(self):
+        return QSize(self.editor.lineNumberAreaWidth(), 0)
+
+    def paintEvent(self, event):
+        self.codeEditor.lineNumberAreaPaintEvent(event)
 
 
-class MyEdit(QPlainTextEdit):# QPlainTextEdit
+
+
+
+class MyEdit(QPlainTextEdit):# QPlainTextEdit пичаль кораска не фурычит что то
 
     def __init__(self, text, existing, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
         self.setWordWrapMode(QTextOption.NoWrap)
         self.existing = existing
         self.setStyleSheet("background-color: {}".format(color4))
         self.setPlainText(text)
         self.changed = False
         self.textChanged.connect(self.changing)
+        #self.setTextBackgroundColor(Qt.lightGray)
+
+        self.fmt = QTextCharFormat()
+        self.fmt.setUnderlineColor(Qt.red)
+        self.fmt.setUnderlineStyle(QTextCharFormat.SpellCheckUnderline)
+
+        #number line
+        self.lineNumberArea = QLineNumberArea(self)
+        self.blockCountChanged.connect(self.updateLineNumberAreaWidth)
+        self.updateRequest.connect(self.updateLineNumberArea)
+        self.cursorPositionChanged.connect(self.highlightCurrentLine)
+        self.updateLineNumberAreaWidth(0)
+
+    def lineNumberAreaWidth(self):
+        digits = 1
+        max_value = max(1, self.blockCount())
+        while max_value >= 10:
+            max_value /= 10
+            digits += 1
+        space = 3 + self.fontMetrics().width('9') * digits
+        return space
+
+    def updateLineNumberAreaWidth(self, _):
+        self.setViewportMargins(self.lineNumberAreaWidth(), 0, 0, 0)
+
+    def updateLineNumberArea(self, rect, dy):
+        if dy:
+            self.lineNumberArea.scroll(0, dy)
+        else:
+            self.lineNumberArea.update(0, rect.y(), self.lineNumberArea.width(), rect.height())
+        if rect.contains(self.viewport().rect()):
+            self.updateLineNumberAreaWidth(0)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        cr = self.contentsRect()
+        self.lineNumberArea.setGeometry(QRect(cr.left(), cr.top(), self.lineNumberAreaWidth(), cr.height()))
+
+    def highlightCurrentLine(self):
+        extraSelections = []
+        if not self.isReadOnly():
+            selection = QTextEdit.ExtraSelection()
+            lineColor = QColor(Qt.yellow).lighter(160)
+            selection.format.setBackground(lineColor)
+            selection.format.setProperty(QTextFormat.FullWidthSelection, True)
+            selection.cursor = self.textCursor()
+            selection.cursor.clearSelection()
+            extraSelections.append(selection)
+        self.setExtraSelections(extraSelections)
+
+    def lineNumberAreaPaintEvent(self, event):
+        painter = QPainter(self.lineNumberArea)
+
+        painter.fillRect(event.rect(), Qt.lightGray)
+
+        block = self.firstVisibleBlock()
+        blockNumber = block.blockNumber()
+        top = self.blockBoundingGeometry(block).translated(self.contentOffset()).top()
+        bottom = top + self.blockBoundingRect(block).height()
+
+        # Just to make sure I use the right font
+        height = self.fontMetrics().height()
+        while block.isValid() and (top <= event.rect().bottom()):
+            if block.isVisible() and (bottom >= event.rect().top()):
+                number = str(blockNumber + 1)
+                painter.setPen(Qt.black)
+                painter.drawText(0, top, self.lineNumberArea.width(), height, Qt.AlignRight, number)
+
+            block = block.next()
+            top = bottom
+            bottom = top + self.blockBoundingRect(block).height()
+            blockNumber += 1
 
     def changing(self):
         self.changed = True
@@ -23,59 +112,4 @@ class MyEdit(QPlainTextEdit):# QPlainTextEdit
         rez = finder(self).exec()
 
 
-class finder(QDialog):
-    def __init__(self, papka, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.papka = papka
-        grid = QGridLayout()
-        self.setLayout(grid)
-        self.setWindowTitle('Find')
-        self.string_to_find = QPlainTextEdit()
-        grid.addWidget(self.string_to_find, 0, 0, 1, 4)
-        self.string_to_find.setMaximumHeight(40)
-        self.find_next = QPushButton("NEXT")
-        self.find_next.setMaximumSize(80, 40)
-        grid.addWidget(self.find_next, 1, 0)
-        self.find_next.clicked.connect(lambda: self.naiv_find(None))
-        self.find_previous = QPushButton("PREV")
-        self.find_previous.setMaximumSize(80, 40)
-        grid.addWidget(self.find_previous, 1, 1)
-        self.find_previous.clicked.connect(lambda: self.naiv_find(True))
-        self.find_all = QPushButton("ALL")
-        grid.addWidget(self.find_all, 2, 0)
-        self.label_all = QLabel("")
-        self.label_all.setStyleSheet("QLabel {"
-                                 "border-style: solid;"
-                                 "border-width: 1px;"
-                                 "border-color: black; "
-                                 "}")
-        grid.addWidget(self.label_all, 2, 1)
 
-
-
-        self.setGeometry(800, 300, 600, 100)
-
-    def all_mention(self):
-        pass
-
-    def naiv_find(self, direction):
-        flag = None
-        all1 = [self.string_to_find.toPlainText()]
-        if direction:
-            flag = QTextDocument.FindBackward
-        if flag:
-            all1.append(flag)
-        start_position = self.papka.textCursor()
-
-        if self.papka.find(*all1):
-            self.setWindowTitle('Find: "{}"'.format(self.string_to_find.toPlainText()))
-            self.label_all.setText('"{}"'.format(self.string_to_find.toPlainText()))
-        else:
-            start_position.movePosition(QTextCursor.End if direction else QTextCursor.Start)
-            self.papka.setTextCursor(start_position)
-            if self.papka.find(*all1):
-                self.setWindowTitle('Find: "{}"'.format(self.string_to_find.toPlainText()))
-                self.label_all.setText('"{}"'.format(self.string_to_find.toPlainText()))
-            else:
-                self.setWindowTitle('Find: Found nothing')
-                self.label_all.setText('Found nothing')
