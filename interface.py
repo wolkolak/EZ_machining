@@ -1,9 +1,9 @@
 from PyQt5.QtWidgets import QMainWindow, QAction, qApp,  QToolBar, QFileDialog, QMessageBox, QDialog, QPlainTextEdit,\
     QGridLayout, QPushButton, QLabel
-from PyQt5.QtGui import QIcon, QTextDocument
+from PyQt5.QtGui import QIcon, QTextDocument, QFont
 from PyQt5.QtCore import Qt
 import gui_classes
-from settings import interface_settings, splitter_parameters
+from settings import interface_settings, splitter_parameters, font1, font2, font3
 import re
 import fileinput
 import os
@@ -84,7 +84,12 @@ class MyMainWindow(QMainWindow):
         self.viewMenu = self.menubar.addMenu('&View')
         self.splitterMove = QAction(QIcon('icons\splitter.png'), 'shift', self)
         self.splitterMove.triggered.connect(self.close_half)
+
+        self.change_font = QAction(QIcon('icons\open.png'), 'Font', self)
+        self.change_font.triggered.connect(gui_classes.my_font_diag)
+
         self.viewMenu.addAction(self.splitterMove)
+        self.viewMenu.addAction(self.change_font)
 
 
 
@@ -119,9 +124,12 @@ class MyMainWindow(QMainWindow):
         txt_tools.setStyleSheet("background-color: {}".format(gui_classes.color3))
         txt_tools.addAction(self.splitterMove)
 
-        self.centre.note.currentChanged.connect(self.change_title)
+        self.centre.note.currentChanged.connect(self.change_tab)
 
         self.light_out(False)
+
+        print('foninf:', self.fontInfo())
+        self.setFont(font1)
 
     def super_out(self):
         self.centre.note.close_all()
@@ -129,7 +137,7 @@ class MyMainWindow(QMainWindow):
     def find_obertka(self):
         self.centre.note.currentWidget().find_in_text()
 
-    def change_title(self, n):
+    def change_tab(self, n):
         print('tab change')
 
         if self.centre.note.currentIndex() != -1:
@@ -139,6 +147,7 @@ class MyMainWindow(QMainWindow):
                 title2 = self.centre.note.currentWidget().existing
             self.setWindowTitle('EZ machining:  {}'.format(title2))
             self.light_out(True)
+            self.centre.note.currentWidget().setFocus()
         else:
             self.setWindowTitle('EZ machining')
             self.light_out(False)

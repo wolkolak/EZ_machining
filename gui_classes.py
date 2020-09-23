@@ -1,17 +1,21 @@
 from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QGridLayout, QTextEdit, QWidget, QSplitter, QTabWidget,\
     QScrollBar, QLabel, QHBoxLayout, QPushButton, QFrame, QTabBar, QToolBar, QMessageBox, QStyle, QStylePainter,\
-    QStyleOption, QStyleOptionTab, QFileDialog, QPlainTextEdit, QDialog
+    QStyleOption, QStyleOptionTab, QFileDialog, QFontDialog
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QTextOption, QColor, QPainter, QPalette, QBrush, QTextCursor
+from PyQt5.QtGui import QFont
 from redactor import *
 from settings import *
 
 
-
+class My_Button(QPushButton):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setFont(font3)
 
 class coloredTabBar(QTabBar):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.setFont(font2)
 
 
 
@@ -38,17 +42,26 @@ class Tabs(QTabWidget):
         self.little_widget.setLayout(little_layout )
         self.setCornerWidget(self.little_widget)
 
-        self.new_tab_button = QPushButton("NEW")
+        self.new_tab_button = My_Button("NEW")
         little_layout.addWidget(self.new_tab_button)
         self.new_tab_button.setStyleSheet("background-color: {}".format(color1))
         self.new_tab_button.clicked.connect(self.new_tab)
 
-        self.save_tab_button = QPushButton("SAVE")
+        self.save_tab_button = My_Button("SAVE")
         little_layout.addWidget(self.save_tab_button )
         self.save_tab_button.setStyleSheet("background-color: {}".format(color1))
 
         self.cornerWidget().setMinimumSize(20, 40)
         self.tabCloseRequested.connect(self.delete_tab)
+
+        #todo remove
+        stylesheet = """ 
+               QTabBar::tab:selected {background: geen;}
+               QTabWidget>QWidget>QWidget{background: gray;}
+               """
+
+        self.setStyleSheet(stylesheet)
+
 
 
     def delete_tab(self, n):
@@ -105,13 +118,12 @@ class Tabs(QTabWidget):
         print('saving as')
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        name = "D:\Py_try\EZ_machining\examples\\"+ self.tabText(self.currentIndex())
+        name = "D:\Py_try\EZ_machining\examples\\" + self.tabText(self.currentIndex())
         if self.currentWidget().existing is False:
             name += str(self.ff)
         path, _ = QFileDialog.getSaveFileName(None, "Save As", name,
                                               self.filter_files, options=options)
-        print('___:', _)
-        print('path', path)
+
         if path:
             text = self.currentWidget().toPlainText()
             with open(path, 'w') as file:
@@ -158,6 +170,22 @@ class Tabs(QTabWidget):
         except BaseException:
             simple_warning('warning', "У файла формат не тот \n ¯\_(ツ)_/¯ ")
 
+class left1(QWidget):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setAttribute(Qt.WA_StyledBackground)
+        self.setStyleSheet("background-color: {}".format(color1))
+        self.setAcceptDrops(True)
+
+    def dropEvent(self, event):
+        print('drop')
+
+class right2(QWidget):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setAttribute(Qt.WA_StyledBackground)
+        self.setStyleSheet("background-color: {}".format(color2))
+
 
 class CenterWindow(QWidget):
 
@@ -172,25 +200,29 @@ class CenterWindow(QWidget):
         self.splitter.setStyleSheet('background-color:green')
 
         centr_grid.addWidget(self.splitter)
-
-        self.left = QWidget()
-        self.left.setStyleSheet("background-color: {}".format(color1))
+        self.left = left1()
         self.splitter.addWidget(self.left)
-
-        self.right = QWidget()
-        self.right.setStyleSheet("background-color: {}".format(color2))
+        self.right = right2()
         self.splitter.addWidget(self.right)
-
         self.note = Tabs()
-
         grid_right = QGridLayout()
         self.right.setLayout(grid_right)
         grid_right.addWidget(self.note, 0, 0)
 
         self.splitter.setSizes([splitter_parameters['lefty'], splitter_parameters['righty']])
 
+        self.setAcceptDrops(True)
+
+    def dropEvent(self, event):
+        print('drop')
+
+class m_f_d(QFontDialog):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
 
+def my_font_diag():
+    pass
 
 
 def simple_warning(title, text):

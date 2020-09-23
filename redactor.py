@@ -32,11 +32,13 @@ class MyEdit(QPlainTextEdit):# QPlainTextEdit пичаль кораска не �
         self.setPlainText(text)
         self.changed = False
         self.textChanged.connect(self.changing)
+        self.zoomIn(5)
         #self.setTextBackgroundColor(Qt.lightGray)
 
         self.fmt = QTextCharFormat()
         self.fmt.setUnderlineColor(Qt.red)
         self.fmt.setUnderlineStyle(QTextCharFormat.SpellCheckUnderline)
+        #self.setPlaceholderText('Enjoy your work, please!')
 
         #number line
         self.lineNumberArea = QLineNumberArea(self)
