@@ -14,3 +14,5 @@ color3 = 'rgb(47, 69, 82)'
 color4 = 'rgb(195,221,234)' #бледный
 splitter_parameters = {'lefty': 209, 'righty': 1184, 'flag': 1 }
 #self.splitter_flag
+
+last_5_files = []

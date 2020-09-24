@@ -62,12 +62,21 @@ class MyMainWindow(QMainWindow):
         self.exitAction.setStatusTip('Exit application')
         self.exitAction.triggered.connect(self.super_out)#qApp.quit
 
+        self.lastAllAction = QAction(QIcon('icons\exit24.png'), 'All', self)
+        self.lastAllAction.setStatusTip('All previous files')
+        self.lastAllAction.triggered.connect(self.return_files)
+
+
 
         fileMenu = self.menubar.addMenu('&File')
         fileMenu.addAction(self.newTabAction)
         fileMenu.addAction(self.openAction)
         fileMenu.addAction(self.saveAction)
         fileMenu.addAction(self.saveAsAction)
+        last = fileMenu.addMenu('&Previous')
+        last.addAction(self.lastAllAction)
+
+
         fileMenu.addAction(self.closeTab)
         fileMenu.addAction(self.closeAll)
         fileMenu.addAction(self.exitAction)
@@ -130,6 +139,9 @@ class MyMainWindow(QMainWindow):
 
         print('foninf:', self.fontInfo())
         self.setFont(font1)
+
+    def return_files(self):
+        pass
 
     def super_out(self):
         self.centre.note.close_all()

@@ -54,9 +54,9 @@ class Tabs(QTabWidget):
         self.cornerWidget().setMinimumSize(20, 40)
         self.tabCloseRequested.connect(self.delete_tab)
 
-        #todo remove
+        #todo унаследовать нормально
         stylesheet = """ 
-               QTabBar::tab:selected {background: geen;}
+               QTabBar::tab:selected {background: rgb(145,191,204)}
                QTabWidget>QWidget>QWidget{background: gray;}
                """
 
@@ -175,16 +175,17 @@ class left1(QWidget):
         super().__init__(*args, **kwargs)
         self.setAttribute(Qt.WA_StyledBackground)
         self.setStyleSheet("background-color: {}".format(color1))
-        self.setAcceptDrops(True)
 
-    def dropEvent(self, event):
-        print('drop')
+
+
 
 class right2(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setAttribute(Qt.WA_StyledBackground)
         self.setStyleSheet("background-color: {}".format(color2))
+
+
 
 
 class CenterWindow(QWidget):
@@ -213,8 +214,22 @@ class CenterWindow(QWidget):
 
         self.setAcceptDrops(True)
 
-    def dropEvent(self, event):
-        print('drop')
+        print('drop:', self.acceptDrops())
+
+    def dragEnterEvent(self, e):
+
+        if e.mimeData().hasText():
+            e.accept()
+        else:
+            e.ignore()
+
+    def dropEvent(self, e):
+        # self.addItem(e.mimeData().text())
+        nya = e.mimeData().text()
+        nya = nya[8:]
+        print(nya)
+
+        self.note.make_open_DRY(nya)
 
 class m_f_d(QFontDialog):
     def __init__(self, *args, **kwargs):
