@@ -23,9 +23,10 @@ class QLineNumberArea(QWidget):
 
 class MyEdit(QPlainTextEdit):# QPlainTextEdit пичаль кораска не фурычит что то
 
-    def __init__(self, text, existing, *args, **kwargs):
+    def __init__(self, text, base, existing, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.base = base
         self.setWordWrapMode(QTextOption.NoWrap)
         self.existing = existing
         self.setStyleSheet("background-color: {}".format(color4))
@@ -46,6 +47,29 @@ class MyEdit(QPlainTextEdit):# QPlainTextEdit пичаль кораска не �
         self.updateRequest.connect(self.updateLineNumberArea)
         self.cursorPositionChanged.connect(self.highlightCurrentLine)
         self.updateLineNumberAreaWidth(0)
+
+        self.setAcceptDrops(True)
+
+        print('drop:', self.acceptDrops())
+
+    def dragEnterEvent(self, e):
+
+        if e.mimeData().hasText():
+            e.accept()
+        else:
+            e.ignore()
+
+    def dropEvent(self, e):
+        # self.addItem(e.mimeData().text())
+        nya = e.mimeData().text()
+        if nya[:8] == 'file:///':
+            nya = nya[8:]
+            self.base.make_open_DRY(nya)
+        else:
+            QPlainTextEdit.dropEvent(self, e)
+        print(nya)
+
+
 
     def lineNumberAreaWidth(self):
         digits = 1

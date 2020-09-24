@@ -1,13 +1,13 @@
-from PyQt5.QtWidgets import QMainWindow, QAction, qApp,  QToolBar, QFileDialog, QMessageBox, QDialog, QPlainTextEdit,\
-    QGridLayout, QPushButton, QLabel
-from PyQt5.QtGui import QIcon, QTextDocument, QFont
+from PyQt5.QtWidgets import QMainWindow, QAction, qApp,  QToolBar
 from PyQt5.QtCore import Qt
 import gui_classes
-from settings import interface_settings, splitter_parameters, font1, font2, font3
+import settings
+import MyTxtToolBar, MyViewToolBar
 import re
 import fileinput
 import os
 import shutil
+import FileMenu, ViewMenu, OptionsMenu, EditMenu
 
 
 class MyMainWindow(QMainWindow):
@@ -19,126 +19,46 @@ class MyMainWindow(QMainWindow):
 
     def initUI(self):
         print('main window started')
-        self.splitter_flag = splitter_parameters['flag']
+        self.splitter_flag = settings.splitter_parameters['flag']
 
         self.setWindowTitle('EZ machining')
-        self.setGeometry(100, 100, interface_settings['main_width'], interface_settings['main_height'])
+        self.setGeometry(100, 100, settings.interface_settings['main_width'], settings.interface_settings['main_height'])
         self.centre = gui_classes.CenterWindow()
         self.setCentralWidget(self.centre)
         self.statusBar()
         self.menubar = self.menuBar()
 
         #file
-        self.openAction = QAction(QIcon('icons\open.png'), 'Open', self)
-        self.openAction.setStatusTip('Open GM File')
-        self.openAction.triggered.connect(self.centre.note.open_file)
-
-        self.newTabAction = QAction(QIcon(r'icons\new_tab.png'), 'New', self)
-        self.newTabAction.setShortcut('Ctrl+N')
-        self.newTabAction.setStatusTip('New File')
-        self.newTabAction.triggered.connect(self.centre.note.new_tab)
-
-        self.saveAction = QAction(QIcon('icons\save.png'), 'Save', self)
-        self.saveAction.setShortcut('Ctrl+S')
-        self.saveAction.setStatusTip('Save current File')
-        self.saveAction.triggered.connect(self.centre.note.save_file)
-        self.centre.note.save_tab_button.clicked.connect(self.centre.note.save_file)
-
-
-        self.saveAsAction = QAction(QIcon('icons\save_as.png'), 'Save As', self)
-        self.saveAsAction.setStatusTip('Save File As')
-        self.saveAsAction.triggered.connect(self.centre.note.save_file_as)
-
-        self.closeTab = QAction(QIcon('icons\save_as.png'), 'Close Tab', self)
-        self.closeTab.setStatusTip('Close Current')
-        self.closeTab.triggered.connect(self.centre.note.close_current)
-
-        self.closeAll = QAction(QIcon('icons\save_as.png'), 'Close All', self)
-        self.closeAll.setStatusTip('Close All Tabs')
-        self.closeAll.triggered.connect(self.centre.note.close_all)
-
-        self.exitAction = QAction(QIcon('icons\exit24.png'), 'Exit', self)
-        self.exitAction.setShortcut('Ctrl+Q')
-        self.exitAction.setStatusTip('Exit application')
-        self.exitAction.triggered.connect(self.super_out)#qApp.quit
-
-        self.lastAllAction = QAction(QIcon('icons\exit24.png'), 'All', self)
-        self.lastAllAction.setStatusTip('All previous files')
-        self.lastAllAction.triggered.connect(self.return_files)
-
-
-
-        fileMenu = self.menubar.addMenu('&File')
-        fileMenu.addAction(self.newTabAction)
-        fileMenu.addAction(self.openAction)
-        fileMenu.addAction(self.saveAction)
-        fileMenu.addAction(self.saveAsAction)
-        last = fileMenu.addMenu('&Previous')
-        last.addAction(self.lastAllAction)
-
-
-        fileMenu.addAction(self.closeTab)
-        fileMenu.addAction(self.closeAll)
-        fileMenu.addAction(self.exitAction)
-
+        FileMenu.file_open(self)
         #Edit
-        self.findAction = QAction(QIcon('icons\open.png'), 'Find', self)
-        self.findAction.setStatusTip('find in current text')
-        self.findAction.triggered.connect(self.find_obertka)
-        self.findAction.setShortcut('Ctrl+F')
-        self.editMenu = self.menubar.addMenu('&Edit')
-        self.editMenu.addAction(self.findAction)
-
+        EditMenu.edit_opt(self)
         #View
-        self.viewMenu = self.menubar.addMenu('&View')
-        self.splitterMove = QAction(QIcon('icons\splitter.png'), 'shift', self)
-        self.splitterMove.triggered.connect(self.close_half)
+        ViewMenu.view_opt(self)
 
-        self.change_font = QAction(QIcon('icons\open.png'), 'Font', self)
-        self.change_font.triggered.connect(gui_classes.my_font_diag)
-
-        self.viewMenu.addAction(self.splitterMove)
-        self.viewMenu.addAction(self.change_font)
-
-
-
-        
-
-        toolsMenu = self.menubar.addMenu('&Tools')
-        inportMenu = self.menubar.addMenu('&Import')
+        self.toolsMenu = self.menubar.addMenu('&Tools')
+        self.inportMenu = self.menubar.addMenu('&Import')
 
         #options
-
-        self.saveOptionsAction = QAction(QIcon('icons\open.png'), 'Save Options', self)
-        self.saveOptionsAction.setStatusTip('save options')
-        self.saveOptionsAction.triggered.connect(self.save_options)
-
-        self.restoreOptionsAction = QAction(QIcon('icons\open.png'), 'Restore Default', self)
-        self.restoreOptionsAction.setStatusTip('restore default options')
-        self.restoreOptionsAction.triggered.connect(self.restore_all_options)
-
-        self.optionsMenu = self.menubar.addMenu('&Options')
-        self.optionsMenu.addAction(self.saveOptionsAction)
-        self.optionsMenu.addAction(self.restoreOptionsAction)
-
-
+        OptionsMenu.options(self)
 
         toolbar1 = QToolBar(self)
         self.addToolBar(Qt.LeftToolBarArea, toolbar1)
         toolbar1.setStyleSheet("background-color: {}".format(gui_classes.color3))
         toolbar1.addAction(self.exitAction)
 
-        txt_tools = QToolBar(self)
-        self.addToolBar(Qt.RightToolBarArea, txt_tools)
-        txt_tools.setStyleSheet("background-color: {}".format(gui_classes.color3))
-        txt_tools.addAction(self.splitterMove)
+        self.view_f = MyViewToolBar.MyViewToolBar(self)
+        self.txt_tools = MyTxtToolBar.MyTextToolBar(self)
 
         self.centre.note.currentChanged.connect(self.change_tab)
 
         self.light_out(False)
 
         print('foninf:', self.fontInfo())
-        self.setFont(font1)
+        self.setFont(settings.font1)
+        try:
+            self.restoreState(settings.saved_toolbars)
+        finally:
+            pass
 
     def return_files(self):
         pass
@@ -179,26 +99,34 @@ class MyMainWindow(QMainWindow):
         """
         name1 = 'interface_settings '
         name2 = 'splitter_parameters '
+        name3 = 'saved_toolbars '
         print(self.centre.splitter.sizes())
         try:
             with fileinput.FileInput('settings.py', inplace=True, backup='.bak') as settings:
                 for line in settings:
                     if re.match(name1, line):
-                        print("interface_settings = {{'main_width': {}, 'main_height':{} }}".format(self.width(), self.height()))
+                        print("{}= {{'main_width': {}, 'main_height':{} }}".format(name1, self.width(), self.height()))
                     elif re.match(name2, line):
-                        print("splitter_parameters = {{'lefty': {}, 'righty': {}, 'flag': {} }}".format(self.centre.splitter.sizes()[0],
+                        print("{}= {{'lefty': {}, 'righty': {}, 'flag': {} }}".format(name2, self.centre.splitter.sizes()[0],
                         self.centre.splitter.sizes()[1], self.splitter_flag))
+                    elif re.match(name3, line):
+                        print("{}= {}".format(name3, self.saveState()))
+
                     else:
                         print(line, end='')
             os.unlink('settings.py' + '.bak')
         except OSError:
             gui_classes.simple_warning('Ooh', 'Something went wrong \n ¯\_(ツ)_/¯')
 
+        toolbars_plasemnt = self.saveState()
+        print('tolbars:', toolbars_plasemnt)
+        print('toolbasrs type', type(toolbars_plasemnt))
+
     def restore_all_options(self):
         shutil.copyfile('default_settings.py', 'settings.py', follow_symlinks=True)
-        from settings import interface_settings
-        self.setGeometry(100, 100, interface_settings['main_width'], interface_settings['main_height'])
-        self.centre.splitter.setSizes([splitter_parameters['lefty'], splitter_parameters['righty']])
+
+        self.setGeometry(100, 100, settings.interface_settings['main_width'], settings.interface_settings['main_height'])
+        self.centre.splitter.setSizes([settings.splitter_parameters['lefty'], settings.splitter_parameters['righty']])
         self.splitter_flag = 2
 
     def close_half(self):
@@ -207,7 +135,7 @@ class MyMainWindow(QMainWindow):
             self.centre.splitter.setSizes([100, 0])
             self.splitter_flag = self.splitter_flag + 1
         elif self.splitter_flag == 2:
-            self.centre.splitter.setSizes([splitter_parameters['lefty'], splitter_parameters['righty']])
+            self.centre.splitter.setSizes([settings.splitter_parameters['lefty'], settings.splitter_parameters['righty']])
             self.splitter_flag = self.splitter_flag + 1
         else:
             self.centre.splitter.setSizes([0, 100])
