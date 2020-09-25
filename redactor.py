@@ -10,6 +10,7 @@ class QLineNumberArea(QWidget):
     def __init__(self, editor):
         super().__init__(editor)
         self.codeEditor = editor
+        self.setFont(font1)
 
     def sizeHint(self):
         return QSize(self.editor.lineNumberAreaWidth(), 0)
@@ -43,6 +44,7 @@ class MyEdit(QPlainTextEdit):# QPlainTextEdit пичаль кораска не �
 
         #number line
         self.lineNumberArea = QLineNumberArea(self)
+
         self.blockCountChanged.connect(self.updateLineNumberAreaWidth)
         self.updateRequest.connect(self.updateLineNumberArea)
         self.cursorPositionChanged.connect(self.highlightCurrentLine)

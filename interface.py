@@ -140,3 +140,16 @@ class MyMainWindow(QMainWindow):
         else:
             self.centre.splitter.setSizes([0, 100])
             self.splitter_flag = 1
+
+    def start_point(self):
+        self.pos = self.centre.note.currentWidget().textCursor().position()
+        self.max_blocks = self.centre.note.currentWidget().blockCount()
+        print('nya1')
+        self.cur_block = self.centre.note.currentWidget().textCursor().blockNumber()
+        print('nya2')
+        print('max-cur:{} - {}'.format(self.max_blocks, self.cur_block))
+        #self.centre.note.currentWidget().setMaximumBlockCount(self.max_blocks - self.cur_block)
+
+    def drop_point(self):
+        print('dropping poine')
+        #self.centre.note.currentWidget().setMaximumBlockCount(0)

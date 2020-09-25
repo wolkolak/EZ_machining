@@ -11,3 +11,16 @@ def edit_opt(self):
     self.findAction.setShortcut('Ctrl+F')
     self.editMenu = self.menubar.addMenu('&Edit')
     self.editMenu.addAction(self.findAction)
+
+    self.textEdit = self.editMenu.addMenu('&Text Edit')
+    self.placeStartAction = QAction(QIcon('icons\scrap1.png'), 'Begin here', self)
+    self.placeStartAction.setShortcut('Ctrl+B')
+    self.placeStartAction.triggered.connect(self.start_point)
+    self.textEdit.addAction(self.placeStartAction)
+
+    self.unPlaceStartAction = QAction(QIcon('icons\open.png'), 'Discard Beginning Point', self)
+    self.unPlaceStartAction .setShortcut('Ctrl+E')
+    self.unPlaceStartAction.triggered.connect(self.drop_point)
+    self.textEdit.addAction(self.unPlaceStartAction)
+
+

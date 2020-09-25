@@ -54,7 +54,7 @@ class finder(QDialog):
 
 
 
-    def all_mention(self):
+    def all_mention(self):#todo
         pass
 
     def naiv_find(self, direction):
@@ -96,7 +96,7 @@ class finder(QDialog):
 
 
 
-        if self.papka.find(*all1):#todo
+        if self.papka.find(*all1):#todo не дпоисано. Позже
             self.setWindowTitle('Find: "{}"'.format(self.string_to_find.toPlainText()))
             self.label_all.setText('"{}"'.format(self.string_to_find.toPlainText()))
         else:
