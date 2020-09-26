@@ -90,6 +90,7 @@ class MyMainWindow(QMainWindow):
         self.centre.note.save_tab_button.setEnabled(gamlet)
         self.findAction.setEnabled(gamlet)
         self.editMenu.setEnabled(gamlet)
+        self.BackplotView.setEnabled(gamlet)
 
 
 
@@ -141,15 +142,16 @@ class MyMainWindow(QMainWindow):
             self.centre.splitter.setSizes([0, 100])
             self.splitter_flag = 1
 
-    def start_point(self):
-        self.pos = self.centre.note.currentWidget().textCursor().position()
-        self.max_blocks = self.centre.note.currentWidget().blockCount()
-        print('nya1')
-        self.cur_block = self.centre.note.currentWidget().textCursor().blockNumber()
-        print('nya2')
-        print('max-cur:{} - {}'.format(self.max_blocks, self.cur_block))
-        #self.centre.note.currentWidget().setMaximumBlockCount(self.max_blocks - self.cur_block)
+    def remeber_start_point(self):
+        self.centre.note.currentWidget().start_point = self.centre.note.currentWidget().textCursor().blockNumber()
+        #todo
+        print('start point:', self.centre.note.currentWidget().start_point)
+        # self.centre.note.currentWidget().setMaximumBlockCount(self.max_blocks - self.cur_block)
 
     def drop_point(self):
-        print('dropping poine')
+        print('dropping point')
+        #todo
         #self.centre.note.currentWidget().setMaximumBlockCount(0)
+
+
+

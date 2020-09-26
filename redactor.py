@@ -1,10 +1,11 @@
 from PyQt5.QtWidgets import  QGridLayout,  QLabel,  QPushButton, QPlainTextEdit, QDialog,\
-    QCheckBox, QTextEdit, QWidget, QApplication
+    QCheckBox, QTextEdit, QWidget, QApplication, QFrame
 from PyQt5.QtCore import Qt, QRect, QSize
 from PyQt5.QtGui import QTextOption, QColor, QPainter, QClipboard, QTextCursor, QTextDocument, QTextCharFormat,\
     QTextFormat, QGuiApplication
 from settings import *
 from find_replace import finder
+import HL_Syntax
 
 class QLineNumberArea(QWidget):
     def __init__(self, editor):
@@ -30,8 +31,10 @@ class MyEdit(QPlainTextEdit):# QPlainTextEdit пичаль кораска не �
         self.base = base
         self.setWordWrapMode(QTextOption.NoWrap)
         self.existing = existing
+        self.start_point = None
         self.setStyleSheet("background-color: {}".format(color4))
-        self.setPlainText(text)
+        if text:
+            self.setPlainText(text)
         self.changed = False
         self.textChanged.connect(self.changing)
         self.zoomIn(5)
@@ -40,10 +43,13 @@ class MyEdit(QPlainTextEdit):# QPlainTextEdit пичаль кораска не �
         self.fmt = QTextCharFormat()
         self.fmt.setUnderlineColor(Qt.red)
         self.fmt.setUnderlineStyle(QTextCharFormat.SpellCheckUnderline)
-        #self.setPlaceholderText('Enjoy your work, please!')
+        self.setPlaceholderText('Enjoy your work, please!')
 
         #number line
         self.lineNumberArea = QLineNumberArea(self)
+
+        #self.up_edit = UpperEdit(self)
+
 
         self.blockCountChanged.connect(self.updateLineNumberAreaWidth)
         self.updateRequest.connect(self.updateLineNumberArea)
@@ -52,7 +58,14 @@ class MyEdit(QPlainTextEdit):# QPlainTextEdit пичаль кораска не �
 
         self.setAcceptDrops(True)
 
+        self.highlight = HL_Syntax.PythonHighlighter(self.document())
+
         print('drop:', self.acceptDrops())
+
+        #self.rez = finder()
+
+    def find_in_text(self):
+        self.rez = finder(self).show()
 
     def dragEnterEvent(self, e):
 
@@ -97,6 +110,7 @@ class MyEdit(QPlainTextEdit):# QPlainTextEdit пичаль кораска не �
         super().resizeEvent(event)
         cr = self.contentsRect()
         self.lineNumberArea.setGeometry(QRect(cr.left(), cr.top(), self.lineNumberAreaWidth(), cr.height()))
+        #self.setGeometry(QRect(cr.left(), cr.top() + 100, 1000, cr.height()))
 
     def highlightCurrentLine(self):
         extraSelections = []
@@ -136,8 +150,9 @@ class MyEdit(QPlainTextEdit):# QPlainTextEdit пичаль кораска не �
     def changing(self):
         self.changed = True
 
-    def find_in_text(self):
-        rez = finder(self).exec()
+
+
+
 
 
 
