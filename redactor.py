@@ -5,7 +5,7 @@ from PyQt5.QtGui import QTextOption, QColor, QPainter, QClipboard, QTextCursor, 
     QTextFormat, QGuiApplication
 from settings import *
 from find_replace import finder
-import HL_Syntax
+import HL_Syntax1, HL_Syntax
 
 class QLineNumberArea(QWidget):
     def __init__(self, editor):
@@ -58,7 +58,7 @@ class MyEdit(QPlainTextEdit):# QPlainTextEdit пичаль кораска не �
 
         self.setAcceptDrops(True)
 
-        self.highlight = HL_Syntax.PythonHighlighter(self.document())
+        self.highlight = HL_Syntax.GMHighlighter(self.document())
 
         print('drop:', self.acceptDrops())
 

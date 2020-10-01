@@ -13,7 +13,7 @@ if __name__ == '__main__':
     #QApplication.setStyle(QStyleFactory.create('windows'))
     ex = interface.MyMainWindow()
 
-    title = QLabel('Title')
+    #title = QLabel('Title')
 
     ex.show()#иначе сохранять состояние окна нельзя будет
     sys.exit(app.exec_())

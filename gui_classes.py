@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import  QSplitter, QTabWidget, QHBoxLayout,  \
-    QFrame, QTabBar,  QMessageBox, QFileDialog, QFontDialog
-
-from redactor import *
+    QFrame, QTabBar,  QMessageBox, QFileDialog, QFontDialog, QPushButton, QWidget, QGridLayout
+from PyQt5.QtCore import Qt, QRect, QSize
+import redactor, left_part
 from settings import *
 
 
@@ -38,7 +38,7 @@ class Tabs(QTabWidget):
         self.little_widget = QFrame()
 
         little_layout = QHBoxLayout()
-        self.little_widget.setLayout(little_layout )
+        self.little_widget.setLayout(little_layout)
         self.setCornerWidget(self.little_widget)
 
         self.new_tab_button = My_Button("NEW")
@@ -96,7 +96,7 @@ class Tabs(QTabWidget):
         if self.tabs[i][1] is None:
             self.tabs[i][1] = True
             print('new tab1')
-            self.insertTab(self.currentIndex()+1, MyEdit(None, existing=False, base=self), self.tabs[i][0])
+            self.insertTab(self.currentIndex()+1, redactor.MyEdit(None, existing=False, base=self), self.tabs[i][0])
             print('new tab1')
             self.setCurrentIndex(self.currentIndex()+1)
             add_new_name(self.tabs[i][0])
@@ -179,18 +179,14 @@ class Tabs(QTabWidget):
             except ValueError:
                 name_open_file = path
 
-            self.insertTab(self.currentIndex()+1, MyEdit(text, existing=path, base=self), name_open_file)
+            self.insertTab(self.currentIndex()+1, redactor.MyEdit(text, existing=path, base=self), name_open_file)
             self.setCurrentIndex(self.currentIndex()+1)
             self.currentWidget().existing = path
             add_new_name(path)
         except BaseException:
             simple_warning('warning', "У файла формат не тот \n ¯\_(ツ)_/¯ ")
 
-class left1(QWidget):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.setAttribute(Qt.WA_StyledBackground)
-        self.setStyleSheet("background-color: {}".format(color1))
+
 
 def add_new_name(name):
     current_files.append(name)
@@ -236,7 +232,7 @@ class CenterWindow(QWidget):
         self.splitter.setStyleSheet('background-color:green')
 
         centr_grid.addWidget(self.splitter)
-        self.left = left1()
+        self.left = left_part.left1()
         self.splitter.addWidget(self.left)
         self.right = right2(self)
         self.splitter.addWidget(self.right)
