@@ -1,11 +1,11 @@
-from PyQt5.QtWidgets import  QGridLayout,  QLabel,  QPushButton, QPlainTextEdit, QDialog,\
-    QCheckBox, QTextEdit, QWidget, QApplication, QFrame
+from PyQt5.QtWidgets import QGridLayout,  QLabel,  QPushButton, QPlainTextEdit, QDialog,\
+    QCheckBox, QTextEdit, QWidget, QApplication, QFrame, QVBoxLayout, QBoxLayout
 from PyQt5.QtCore import Qt, QRect, QSize
 from PyQt5.QtGui import QTextOption, QColor, QPainter, QClipboard, QTextCursor, QTextDocument, QTextCharFormat,\
     QTextFormat, QGuiApplication
 from settings import *
 from find_replace import finder
-import HL_Syntax1, HL_Syntax
+import HLSyntax.HL_Syntax
 
 class QLineNumberArea(QWidget):
     def __init__(self, editor):
@@ -20,10 +20,7 @@ class QLineNumberArea(QWidget):
         self.codeEditor.lineNumberAreaPaintEvent(event)
 
 
-
-
-
-class MyEdit(QPlainTextEdit):# QPlainTextEdit пичаль кораска не фурычит что то
+class MyEdit(QPlainTextEdit):
 
     def __init__(self, text, base, existing, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -36,7 +33,7 @@ class MyEdit(QPlainTextEdit):# QPlainTextEdit пичаль кораска не �
         if text:
             self.setPlainText(text)
         self.changed = False
-        self.textChanged.connect(self.changing)
+        #self.textChanged.connect(self.changing)
         self.zoomIn(5)
         #self.setTextBackgroundColor(Qt.lightGray)
 
@@ -48,21 +45,27 @@ class MyEdit(QPlainTextEdit):# QPlainTextEdit пичаль кораска не �
         #number line
         self.lineNumberArea = QLineNumberArea(self)
 
-        #self.up_edit = UpperEdit(self)
 
 
         self.blockCountChanged.connect(self.updateLineNumberAreaWidth)
-        self.updateRequest.connect(self.updateLineNumberArea)
+
         self.cursorPositionChanged.connect(self.highlightCurrentLine)
         self.updateLineNumberAreaWidth(0)
 
         self.setAcceptDrops(True)
 
-        self.highlight = HL_Syntax.GMHighlighter(self.document())
 
-        print('drop:', self.acceptDrops())
+        self.updateRequest.connect(self.updateLineNumberArea)
 
+        #self.set_syntax()
         #self.rez = finder()
+
+
+
+
+    def set_syntax(self):
+
+        self.highlight = HLSyntax.HL_Syntax.GMHighlighter(self.document())
 
     def find_in_text(self):
         self.rez = finder(self).show()
@@ -103,8 +106,9 @@ class MyEdit(QPlainTextEdit):# QPlainTextEdit пичаль кораска не �
             self.lineNumberArea.scroll(0, dy)
         else:
             self.lineNumberArea.update(0, rect.y(), self.lineNumberArea.width(), rect.height())
-        if rect.contains(self.viewport().rect()):
-            self.updateLineNumberAreaWidth(0)
+            """        if rect.contains(self.viewport().rect()):
+            pass
+            self.updateLineNumberAreaWidth(0)"""
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -151,8 +155,18 @@ class MyEdit(QPlainTextEdit):# QPlainTextEdit пичаль кораска не �
         self.changed = True
 
 
+class MyEdit(QPlainTextEdit):
 
+    def __init__(self, text, base, existing, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
+class ParentOfMyEdit(QWidget):
+    def __init__(self, text, base, existing, *args, **kwargs):
+        super().__init__()
+        grid = QGridLayout()
+        self.setLayout(grid)
+        self.editor = MyEdit(text, existing=existing, base=base, *args, **kwargs)
+        grid.addWidget(self.editor, 0, 0)
 
 
 

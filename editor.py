@@ -1,7 +1,7 @@
 
 from PyQt5 import Qt
 import sys
-import HL_Syntax1, HL_Syntax
+import HL_Syntax1, HLSyntax.HL_Syntax
 from PyQt5.QtWidgets import QPushButton, QGridLayout, QPlainTextEdit, QApplication, QWidget, QLabel
 from PyQt5.QtGui import QFont
 
@@ -29,10 +29,10 @@ class MyW(QWidget):
         font = QFont()
         font.setPointSize(12)
         self.editor.setFont(font)
-        self.highlight = HL_Syntax.GMHighlighter(self.editor.document())
+        self.highlight = HLSyntax.HL_Syntax.GMHighlighter(self.editor.document())
         self.resize(700, 400)
         # Загрузите что-нибудь (например, editor_2.py) в редактор для демонстрации.
-        infile = open('test_govna.py', 'r')
+        infile = open('D:\Py_try\EZ_machining\examples\g1_billion.txt', 'r')
         self.editor.setPlainText(infile.read())
 
 if __name__ == '__main__':

@@ -8,7 +8,7 @@ import fileinput
 import os
 import shutil
 import FileMenu, ViewMenu, OptionsMenu, EditMenu
-
+import bigCustomizer
 
 class MyMainWindow(QMainWindow):
 
@@ -50,7 +50,7 @@ class MyMainWindow(QMainWindow):
         self.txt_tools = MyTxtToolBar.MyTextToolBar(self)
 
         self.centre.note.currentChanged.connect(self.change_tab)
-
+        self.custom = bigCustomizer.BigCustomizer(self)
         self.light_out(False)
 
         print('foninf:', self.fontInfo())
@@ -152,6 +152,9 @@ class MyMainWindow(QMainWindow):
         print('dropping point')
         #todo
         #self.centre.note.currentWidget().setMaximumBlockCount(0)
+
+    def customize(self):
+        self.custom.show()
 
 
 

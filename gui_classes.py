@@ -5,6 +5,8 @@ import redactor, left_part
 from settings import *
 
 
+
+
 class My_Button(QPushButton):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -97,6 +99,7 @@ class Tabs(QTabWidget):
             self.tabs[i][1] = True
             print('new tab1')
             self.insertTab(self.currentIndex()+1, redactor.MyEdit(None, existing=False, base=self), self.tabs[i][0])
+            self.currentWidget().set_syntax()
             print('new tab1')
             self.setCurrentIndex(self.currentIndex()+1)
             add_new_name(self.tabs[i][0])
@@ -116,7 +119,7 @@ class Tabs(QTabWidget):
         options |= QFileDialog.DontUseNativeDialog
         print('QFileDialog.DontUseNativeDialog')
         path, _ = QFileDialog.getOpenFileName(None,
-        "Open файлик", "D:\Py_try\EZ_machining\examples", self.filter_files)
+        "Open файлик", g_programs_folder, self.filter_files)
         print(path)
         if path:
             self.make_open_DRY(path)
@@ -127,7 +130,7 @@ class Tabs(QTabWidget):
         print('saving as')
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        name = "D:\Py_try\EZ_machining\examples\\" + self.tabText(self.currentIndex())
+        name = g_programs_folder + '\\' + self.tabText(self.currentIndex())
         if self.currentWidget().existing is False:
             name += str(self.ff)
         path, _ = QFileDialog.getSaveFileName(None, "Save As", name,
@@ -143,6 +146,7 @@ class Tabs(QTabWidget):
                 file.write(text)
             self.currentWidget().changed = False
             self.currentWidget().existing = path
+            self.currentWidget().set_syntax()
             try:
                 name_open_file = path[path.rindex('/') + 1:]
             except ValueError:
@@ -180,6 +184,7 @@ class Tabs(QTabWidget):
                 name_open_file = path
 
             self.insertTab(self.currentIndex()+1, redactor.MyEdit(text, existing=path, base=self), name_open_file)
+            self.currentWidget().set_syntax()
             self.setCurrentIndex(self.currentIndex()+1)
             self.currentWidget().existing = path
             add_new_name(path)

@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import QApplication, QLabel, QStyleFactory
 import interface
 
 if __name__ == '__main__':
-
+    #sys.setswitchinterval(1000)
     app = QApplication(sys.argv)
     #QApplication.setStyle(QStyleFactory.create('windows'))
     ex = interface.MyMainWindow()
