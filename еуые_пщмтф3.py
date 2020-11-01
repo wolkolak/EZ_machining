@@ -1,159 +1,95 @@
-# vimode -- Vi Mode package for QPlainTextEdit
+
+from PyQt5        import QtCore, QtWidgets, QtGui, uic
+from PyQt5.QtCore import QThread, pyqtSignal, QTimer
+
+#import os
+#import yadisk
+import sys
+
+#y = yadisk.YaDisk(token="токен яндекс диска")
+
+class ThreadClass(QThread):
+    stastSignal = pyqtSignal(int)
+    finishSignal = pyqtSignal(str)
+
+    def __init__(self, parent=None):
+        super(ThreadClass, self).__init__(parent)
+
+    def run(self):
+#   это ваша длительная задача, 
+#   попробуйте ее ракомментировать, а то что между  `# +++ str` и `# +++ end` убрать
 #
-# Copyright (c) 2012 by Wilbert Berendsen
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-# See http://www.gnu.org/licenses/ for more information.
+#        if os.path.exists('test.zip'):
+#            print('Удаление...')
+#            os.remove('test.zip')
+#        print('Загрузка...')
+###        value = 1000                  # какое-то значение, которое можем использовать для progressBar
+###                                      # например размер загружаемого 'test.zip'
+###        self.stastSignal.emit(value)
+#        y.download("/Загрузки/test.zip", 'test.zip')
 
-"""
-ViMode implements a Vi-like mode for QPlainTextEdit.
-"""
+# +++ str        
+        value = 1000 # 
+        self.stastSignal.emit(value)
+        while value:
+            value -= 10
+            self.msleep(100)  
+# +++ end    
 
-from PyQt5.QtCore import QEvent, QObject, Qt
-from PyQt5.QtGui import QFont, QPalette
-from PyQt5.QtWidgets import QApplication, QTextEdit
-
-# the Vi modes
-NORMAL = 0
-VISUAL = 1
-INSERT = 2
-REPLACE = 3
+        # этот сигнал сработает когда загрузка закончится
+        self.finishSignal.emit("Готово!")
 
 
-class ViMode(QObject):
-    """Handles a Vi-like mode for a QPlainTextEdit."""
+class MainWindow(QtWidgets.QMainWindow): 
+    def __init__(self, parent=None):
+        super(MainWindow, self).__init__(parent)
 
-    def __init__(self, textedit=None):
-        QObject.__init__(self)
+#        uic.loadUi("design.ui", self)
+#        self.pushButton.clicked.connect(self.onButton)
 
-        # init all internal variables
-        self._mode = None
-        self._handlers = [None] * 4
-        self._textedit = None
-        self._originalCursorWidth = 1
+        self.centralwidget = QtWidgets.QWidget()
+        self.setCentralWidget(self.centralwidget)
 
-        self.setTextEdit(textedit)
+        self.progressBar = QtWidgets.QProgressBar()
+        self.progressBar.setProperty("value", 0)
 
-    def setTextEdit(self, edit):
-        old = self._textedit
-        if edit is old:
-            return
-        if old:
-            # disconnect old textedit
-            self.clearCursor()
-            old.removeEventFilter(self)
-            old.cursorPositionChanged.disconnect(self.updateCursorPosition)
-            old.selectionChanged.disconnect(self.updateCursorPosition)
-            old.setCursorWidth(self._originalCursorWidth)
-        self._textedit = edit
-        if edit:
-            # connect new textedit
-            edit.installEventFilter(self)
-            edit.cursorPositionChanged.connect(self.updateCursorPosition)
-            edit.selectionChanged.connect(self.updateCursorPosition)
-            self._originalCursorWidth = edit.cursorWidth()
-        self.setMode(NORMAL)
-        if edit:
-            self.updateCursorPosition()
+        self.pushButton = QtWidgets.QPushButton("Start")
+        self.pushButton.clicked.connect(self.onButton)
 
-    def textEdit(self):
-        return self._textedit
+        self.layout = QtWidgets.QVBoxLayout(self.centralwidget)                
+        self.layout.addWidget(self.progressBar)
+        self.layout.addWidget(self.pushButton)
 
-    def setMode(self, mode):
-        """Sets the mode (NORMAL, VISUAL, INSERT or REPLACE)."""
-        if mode is self._mode:
-            return
-        assert mode in (NORMAL, VISUAL, INSERT, REPLACE)
-        if self._mode is not None and self.handler():
-            self.handler().leave()
-        self._mode = mode
-        if self._handlers[mode] is None:
-            self._handlers[mode] = self.createModeHandler(mode)
-        self.handler().enter()
-        self.updateCursorPosition()
+        self.threadclass = ThreadClass()
+        self.threadclass.stastSignal.connect(self.stast_process)
+        self.threadclass.finishSignal.connect(self.finishSignal_process)
 
-    def mode(self):
-        """Return the current mode (NORMAL, VISUAL, INSERT or REPLACE)."""
-        return self._mode
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.timeout_func)
 
-    def isNormal(self):
-        return self._mode is NORMAL
+        self.value = ...
 
-    def isVisual(self):
-        return self._mode is VISUAL
+    def onButton(self):
+        self.pushButton.setEnabled(False)
+        self.progressBar.setValue(0)
+        self.threadclass.start()
 
-    def isInsert(self):
-        return self._mode is INSERT
+    def stast_process(self, val):
+        self.value = val // 100   
+        self.timer.start(1000)
 
-    def isReplace(self):
-        return self._mode is REPLACE
+    def finishSignal_process(self, val): 
+        self.progressBar.setValue(100)    
+        self.timer.stop()
+        self.pushButton.setEnabled(True)
+        print(val)
 
-    def createModeHandler(self, mode):
-        """Returns a Handler for the specified mode."""
-        if mode == NORMAL:
-            from . import normal
-            return normal.NormalMode(self)
-        elif mode == VISUAL:
-            from . import visual
-            return visual.VisualMode(self)
-        elif mode == INSERT:
-            from . import insert
-            return insert.InsertMode(self)
-        elif mode == REPLACE:
-            from . import replace
-            return replace.ReplaceMode(self)
+    def timeout_func(self):
+        self.progressBar.setValue(self.value)
+        self.value += 10
 
-    def handler(self):
-        """Returns the current mode handler."""
-        return self._handlers[self._mode]
-
-    def updateCursorPosition(self):
-        """If in command mode, shows a square cursor on the right spot."""
-        self.handler().updateCursorPosition()
-
-    def drawCursor(self, cursor):
-        """Draws the cursor position as the selection of the specified cursor."""
-        es = QTextEdit.ExtraSelection()
-        es.format.setBackground(self.textEdit().palette().color(QPalette.Text))
-        es.format.setForeground(self.textEdit().palette().color(QPalette.Base))
-        es.cursor = cursor
-        self.textEdit().setExtraSelections([es])
-
-    def clearCursor(self):
-        """Removes the drawn cursor position."""
-        self.textEdit().setExtraSelections([])
-
-    def eventFilter(self, obj, ev):
-        if (ev.type() in (QEvent.KeyPress, QEvent.KeyRelease) and
-                ev.key() in (Qt.Key_Shift, Qt.Key_Control, Qt.Key_Alt, Qt.Key_Meta)):
-            return False
-        if ev.type() == QEvent.KeyPress:
-            return self.handler().handleKeyPress(ev) or False
-        return False
-
-
-def test():
-    a = QApplication([])
-    e = QTextEdit()
-    e.setCursorWidth(2)
-    e.setFont(QFont("Monospace"))
-    e.setPlainText("""\
-some text
-here another line
-and here yet another
-""")
-    e.show()
-    v = ViMode(e)
-    a.exec_()
+if __name__ == "__main__":
+    app   = QtWidgets.QApplication(sys.argv)
+    w = MainWindow()
+    w.show()
+    sys.exit(app.exec_()) 

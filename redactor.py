@@ -1,11 +1,16 @@
 from PyQt5.QtWidgets import QGridLayout,  QLabel,  QPushButton, QPlainTextEdit, QDialog,\
-    QCheckBox, QTextEdit, QWidget, QApplication, QFrame, QVBoxLayout, QBoxLayout
-from PyQt5.QtCore import Qt, QRect, QSize
+    QCheckBox, QTextEdit, QWidget, QApplication, QFrame, QVBoxLayout, QBoxLayout, QProgressBar
+from PyQt5.QtCore import Qt, QRect, QSize, QTimer, QThread, QThreadPool
 from PyQt5.QtGui import QTextOption, QColor, QPainter, QClipboard, QTextCursor, QTextDocument, QTextCharFormat,\
     QTextFormat, QGuiApplication
 from settings import *
 from find_replace import finder
 import HLSyntax.HL_Syntax
+import flow
+import runnable_flow
+import numpy as np
+
+
 
 class QLineNumberArea(QWidget):
     def __init__(self, editor):
@@ -24,6 +29,16 @@ class MyEdit(QPlainTextEdit):
 
     def __init__(self, text, base, existing, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        """ xyzcba"""
+        self.g_cod_pool = np.array([[200, 0, 3, 0, 0, 0],
+                                   [160, 0, -5, 0, 0, 0],
+                                   [163, 0, 3, 0, 0, 0],
+                                   [155, 0, -5, 0, 0, 0],
+                                   [166, 0, 0, 0, 0, 0],
+                                   [100, 0, 200, 0, 0, 0]],
+                                   float)
+        #modal coomnds
+        self.g_modal = np.array([0], float)
 
         self.base = base
         self.setWordWrapMode(QTextOption.NoWrap)
@@ -64,8 +79,10 @@ class MyEdit(QPlainTextEdit):
 
 
     def set_syntax(self):
-
-        self.highlight = HLSyntax.HL_Syntax.GMHighlighter(self.document())
+        print('SET syntax1')
+        print('self=', self)
+        self.highlight = HLSyntax.HL_Syntax.GMHighlighter(self.document(), self.g_cod_pool)
+        print('SET syntax2')
 
     def find_in_text(self):
         self.rez = finder(self).show()
@@ -155,18 +172,33 @@ class MyEdit(QPlainTextEdit):
         self.changed = True
 
 
-class MyEdit(QPlainTextEdit):
-
-    def __init__(self, text, base, existing, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+class Progress(QProgressBar):
+    def __init__(self):
+        super().__init__()
+        #self.hide()
 
 class ParentOfMyEdit(QWidget):
-    def __init__(self, text, base, existing, *args, **kwargs):
+    def __init__(self, text, base, existing):
         super().__init__()
+
+
+
         grid = QGridLayout()
         self.setLayout(grid)
-        self.editor = MyEdit(text, existing=existing, base=base, *args, **kwargs)
+        self.editor = MyEdit(text, existing=existing, base=base)
         grid.addWidget(self.editor, 0, 0)
+        #self.progress_bar = Progress()
+        #grid.addWidget(self.progress_bar, 1, 0)
+        #self.threadpool = QThreadPool()
+        self.editor.set_syntax()
+
+        #self.oh_no()
+
+    def oh_no(self):
+        worker = runnable_flow.Worker(self.editor.set_syntax, None)
+        self.threadpool.start(worker)
+
+
 
 
 

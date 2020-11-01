@@ -24,7 +24,7 @@ class finder(QDialog):
         self.find_next = QPushButton("NEXT")
         self.find_next.setMaximumSize(80, 40)
         grid.addWidget(self.find_next, 1, 0)
-        self.find_next.clicked.connect(lambda: self.naiv_find(None))
+        self.find_next.clicked.connect(lambda: self.naiv_find(False))
         self.find_previous = QPushButton("PREV")
         self.find_previous.setMaximumSize(80, 40)
         grid.addWidget(self.find_previous, 1, 1)
@@ -73,24 +73,29 @@ class finder(QDialog):
 
         start_position = self.parent.textCursor()
         #end_position = self.papka.textCursor.anchor()
-        print('pos:', self.parent.textCursor().position())
+        #print('pos:', self.parent.textCursor().position())
 
-        if self.parent.textCursor().selection().toPlainText() != self.string_to_find.toPlainText():
 
-            start_position.setPosition(self.parent.textCursor().selectionStart())
-
-            print(self.parent.textCursor().selectionStart(), self.parent.textCursor().selectionEnd())
-
-            #start_position.movePosition(QTextCursor.Up,  2)#it is working
+        if self.parent.textCursor().selection().toPlainText().lower() != self.string_to_find.toPlainText().lower():
+            if direction is True:
+                start_position.setPosition(self.parent.textCursor().selectionEnd())
+            else:
+                start_position.setPosition(self.parent.textCursor().selectionStart())
             self.parent.setTextCursor(start_position)
-            print('start:', start_position)
+
+
+        print(self.parent.textCursor().selectionStart(), self.parent.textCursor().selectionEnd())
+
+        #start_position.movePosition(QTextCursor.Up,  2)#it is working
+
+        print('start:', start_position)
 
         #extra = self.QPlainTextEdit.format.ExtraSelection()
         #self.papka.extra.setTextBackgroundColor(color3)
         all1 = [self.string_to_find.toPlainText()]
-        if direction:
+        if direction is True:
             all1.append(QTextDocument.FindBackward)
-        if self.case_sense.checkState():
+        if self.case_sense.checkState() is True:
             all1.append(QTextDocument.FindCaseSensitively)
 
 
@@ -99,7 +104,7 @@ class finder(QDialog):
             self.setWindowTitle('Find: "{}"'.format(self.string_to_find.toPlainText()))
             self.label_all.setText('"{}"'.format(self.string_to_find.toPlainText()))
         else:
-            start_position.movePosition(QTextCursor.End if direction else QTextCursor.Start)
+            start_position.movePosition(QTextCursor.End if direction is True else QTextCursor.Start)
             self.parent.setTextCursor(start_position)
             if self.parent.find(*all1):
                 self.setWindowTitle('Find: "{}"'.format(self.string_to_find.toPlainText()))

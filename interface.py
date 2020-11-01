@@ -67,19 +67,19 @@ class MyMainWindow(QMainWindow):
         self.centre.note.close_all()
 
     def find_obertka(self):
-        self.centre.note.currentWidget().find_in_text()
+        self.centre.note.currentWidget().editor.find_in_text()
 
     def change_tab(self, n):
         print('tab change')
-
         if self.centre.note.currentIndex() != -1:
-            if self.centre.note.currentWidget().existing is False:
+            print('cur index = ', self.centre.note.currentIndex())
+            if self.centre.note.currentWidget().editor.existing is False:
                 title2 = self.centre.note.tabText(n)
             else:
-                title2 = self.centre.note.currentWidget().existing
+                title2 = self.centre.note.currentWidget().editor.existing
             self.setWindowTitle('EZ machining:  {}'.format(title2))
             self.light_out(True)
-            self.centre.note.currentWidget().setFocus()
+            self.centre.note.currentWidget().editor.setFocus()
         else:
             self.setWindowTitle('EZ machining')
             self.light_out(False)
@@ -143,9 +143,9 @@ class MyMainWindow(QMainWindow):
             self.splitter_flag = 1
 
     def remeber_start_point(self):
-        self.centre.note.currentWidget().start_point = self.centre.note.currentWidget().textCursor().blockNumber()
+        self.centre.note.currentWidget().editor.start_point = self.centre.note.currentWidget().editor.textCursor().blockNumber()
         #todo
-        print('start point:', self.centre.note.currentWidget().start_point)
+        print('start point:', self.centre.note.currentWidget().editor.start_point)
         # self.centre.note.currentWidget().setMaximumBlockCount(self.max_blocks - self.cur_block)
 
     def drop_point(self):

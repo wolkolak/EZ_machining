@@ -67,11 +67,11 @@ class Tabs(QTabWidget):
 
     def delete_tab(self, n):
 
-        name = self.widget(n).existing
+        name = self.widget(n).editor.existing
         if not name:
             name = self.tabText(n)
         print('tab delete:', name)
-        if self.widget(n).changed:
+        if self.widget(n).editor.changed:
             if 'Cancel' != simple_2_dialog(self.save_file, lambda: self.close_only(n), "Save changes in {}?".format(self.tabText(n))):
                 self.removeTab(n)
                 remove_new_name(name)
@@ -84,7 +84,7 @@ class Tabs(QTabWidget):
 
 
     def close_only(self, n):
-        if self.widget(n).existing is False:
+        if self.widget(n).editor.existing is False:
             for i in range(1, self.quantity - 1):
                 if self.tabs[i][0] == self.tabText(n):
                     self.tabs[i][1] = None
@@ -98,8 +98,9 @@ class Tabs(QTabWidget):
         if self.tabs[i][1] is None:
             self.tabs[i][1] = True
             print('new tab1')
-            self.insertTab(self.currentIndex()+1, redactor.MyEdit(None, existing=False, base=self), self.tabs[i][0])
-            self.currentWidget().set_syntax()
+            self.insertTab(self.currentIndex()+1, redactor.ParentOfMyEdit(None, existing=False, base=self), self.tabs[i][0])
+
+            #self.currentWidget().editor.set_syntax()
             print('new tab1')
             self.setCurrentIndex(self.currentIndex()+1)
             add_new_name(self.tabs[i][0])
@@ -131,7 +132,7 @@ class Tabs(QTabWidget):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         name = g_programs_folder + '\\' + self.tabText(self.currentIndex())
-        if self.currentWidget().existing is False:
+        if self.currentWidget().editor.existing is False:
             name += str(self.ff)
         path, _ = QFileDialog.getSaveFileName(None, "Save As", name,
                                               self.filter_files, options=options)
@@ -140,13 +141,13 @@ class Tabs(QTabWidget):
             simple_warning('Nope, not recommended!', 'File name already \ntaking part in session')
             return
         if path:
-            text = self.currentWidget().toPlainText()
+            text = self.currentWidget().editor.toPlainText()
             with open(path, 'w') as file:
 
                 file.write(text)
-            self.currentWidget().changed = False
-            self.currentWidget().existing = path
-            self.currentWidget().set_syntax()
+            self.currentWidget().editor.changed = False
+            self.currentWidget().editor.existing = path
+            #self.currentWidget().editor.set_syntax()
             try:
                 name_open_file = path[path.rindex('/') + 1:]
             except ValueError:
@@ -157,18 +158,18 @@ class Tabs(QTabWidget):
 
     def save_file(self):
 
-        print(self.currentWidget().existing)
-        if self.currentWidget().existing is False:
+        print(self.currentWidget().editor.existing)
+        if self.currentWidget().editor.existing is False:
             print('is false')
             self.save_file_as()
             return
         print('saving file')
-        path = self.currentWidget().existing
+        path = self.currentWidget().editor.existing
         if path:
-            text = self.currentWidget().toPlainText()
+            text = self.currentWidget().editor.toPlainText()
             with open(path, 'w') as file:
                 file.write(text)
-            self.currentWidget().changed = False
+            self.currentWidget().editor.changed = False
             print(path)
 
 
@@ -183,10 +184,10 @@ class Tabs(QTabWidget):
             except ValueError:
                 name_open_file = path
 
-            self.insertTab(self.currentIndex()+1, redactor.MyEdit(text, existing=path, base=self), name_open_file)
-            self.currentWidget().set_syntax()
+            self.insertTab(self.currentIndex()+1, redactor.ParentOfMyEdit(text, existing=path, base=self), name_open_file)
+            #self.currentWidget().editor.set_syntax()
             self.setCurrentIndex(self.currentIndex()+1)
-            self.currentWidget().existing = path
+            self.currentWidget().editor.existing = path
             add_new_name(path)
         except BaseException:
             simple_warning('warning', "У файла формат не тот \n ¯\_(ツ)_/¯ ")
