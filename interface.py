@@ -9,6 +9,7 @@ import os
 import shutil
 import FileMenu, ViewMenu, OptionsMenu, EditMenu
 import bigCustomizer
+import change_setting
 
 class MyMainWindow(QMainWindow):
 
@@ -98,26 +99,14 @@ class MyMainWindow(QMainWindow):
         """
         :return: changing exact values of exact names
         """
-        name1 = 'interface_settings '
-        name2 = 'splitter_parameters '
-        name3 = 'saved_toolbars '
+        name1 = "interface_settings ", " {{'main_width': {}, 'main_height':{} }}".format(self.width(), self.height())
+        name2 = "splitter_parameters ", " {{'lefty': {}, 'righty': {}, 'flag': {} }}".format(self.centre.splitter.sizes()[0],
+                        self.centre.splitter.sizes()[1], self.splitter_flag)
+        name3 = "saved_toolbars ", " {}".format(self.saveState())
+        names = [name1, name2, name3]
         print(self.centre.splitter.sizes())
-        try:
-            with fileinput.FileInput('settings.py', inplace=True, backup='.bak') as settings:
-                for line in settings:
-                    if re.match(name1, line):
-                        print("{}= {{'main_width': {}, 'main_height':{} }}".format(name1, self.width(), self.height()))
-                    elif re.match(name2, line):
-                        print("{}= {{'lefty': {}, 'righty': {}, 'flag': {} }}".format(name2, self.centre.splitter.sizes()[0],
-                        self.centre.splitter.sizes()[1], self.splitter_flag))
-                    elif re.match(name3, line):
-                        print("{}= {}".format(name3, self.saveState()))
 
-                    else:
-                        print(line, end='')
-            os.unlink('settings.py' + '.bak')
-        except OSError:
-            gui_classes.simple_warning('Ooh', 'Something went wrong \n ¯\_(ツ)_/¯')
+        change_setting.change_settins(names)
 
         toolbars_plasemnt = self.saveState()
         print('tolbars:', toolbars_plasemnt)

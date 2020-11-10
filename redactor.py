@@ -12,6 +12,7 @@ import numpy as np
 
 
 
+
 class QLineNumberArea(QWidget):
     def __init__(self, editor):
         super().__init__(editor)
@@ -27,7 +28,7 @@ class QLineNumberArea(QWidget):
 
 class MyEdit(QPlainTextEdit):
 
-    def __init__(self, text, base, existing, *args, **kwargs):
+    def __init__(self, text, tab_, base, existing, *args, **kwargs):
         super().__init__(*args, **kwargs)
         """ xyzcba"""
         self.g_cod_pool = np.array([[200, 0, 3, 0, 0, 0],
@@ -40,10 +41,11 @@ class MyEdit(QPlainTextEdit):
         #modal coomnds
         self.g_modal = np.array([0], float)
 
+        self.tab_ = tab_
         self.base = base
         self.setWordWrapMode(QTextOption.NoWrap)
         self.existing = existing
-        self.start_point = None
+        self.start_point = None#todo
         self.setStyleSheet("background-color: {}".format(color4))
         if text:
             self.setPlainText(text)
@@ -60,8 +62,6 @@ class MyEdit(QPlainTextEdit):
         #number line
         self.lineNumberArea = QLineNumberArea(self)
 
-
-
         self.blockCountChanged.connect(self.updateLineNumberAreaWidth)
 
         self.cursorPositionChanged.connect(self.highlightCurrentLine)
@@ -72,17 +72,8 @@ class MyEdit(QPlainTextEdit):
 
         self.updateRequest.connect(self.updateLineNumberArea)
 
-        #self.set_syntax()
-        #self.rez = finder()
 
 
-
-
-    def set_syntax(self):
-        print('SET syntax1')
-        print('self=', self)
-        self.highlight = HLSyntax.HL_Syntax.GMHighlighter(self.document(), self.g_cod_pool)
-        print('SET syntax2')
 
     def find_in_text(self):
         self.rez = finder(self).show()
@@ -99,12 +90,10 @@ class MyEdit(QPlainTextEdit):
         nya = e.mimeData().text()
         if nya[:8] == 'file:///':
             nya = nya[8:]
-            self.base.make_open_DRY(nya)
+            self.tab_.make_open_DRY(nya)
         else:
             QPlainTextEdit.dropEvent(self, e)
         print(nya)
-
-
 
     def lineNumberAreaWidth(self):
         digits = 1
@@ -175,28 +164,43 @@ class MyEdit(QPlainTextEdit):
 class Progress(QProgressBar):
     def __init__(self):
         super().__init__()
+        #self.setMaximum(100)
         #self.hide()
 
 class ParentOfMyEdit(QWidget):
-    def __init__(self, text, base, existing):
+    def __init__(self, text, tab_, existing):
         super().__init__()
 
-
+        self.tab_ = tab_
 
         grid = QGridLayout()
         self.setLayout(grid)
-        self.editor = MyEdit(text, existing=existing, base=base)
+        self.editor = MyEdit(text, existing=existing, tab_=self.tab_, base=self)
         grid.addWidget(self.editor, 0, 0)
-        #self.progress_bar = Progress()
-        #grid.addWidget(self.progress_bar, 1, 0)
+
+        self.progress_bar = Progress()
+        self.delta_number_of_lines = self.editor.blockCount()
+        self.progress_bar.setMaximum(self.delta_number_of_lines)#//1000*1000
+        grid.addWidget(self.progress_bar, 1, 0)
+        self.set_syntax()
+
+
+    def set_syntax(self):
+        print('SET syntax1')
+        self.highlight = HLSyntax.HL_Syntax.GMHighlighter(self.editor.document(), base=self)
+        print('SET syntax2')
+
+    def on_count_changed(self, value):
+        self.progress_bar.setValue(value)
+
         #self.threadpool = QThreadPool()
-        self.editor.set_syntax()
+
 
         #self.oh_no()
 
-    def oh_no(self):
-        worker = runnable_flow.Worker(self.editor.set_syntax, None)
-        self.threadpool.start(worker)
+    #def oh_no(self):#сейчас не используется
+    #    worker = runnable_flow.Worker(self.set_syntax, None)
+    #    self.threadpool.start(worker)
 
 
 

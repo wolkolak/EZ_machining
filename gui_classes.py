@@ -1,9 +1,9 @@
 from PyQt5.QtWidgets import  QSplitter, QTabWidget, QHBoxLayout,  \
-    QFrame, QTabBar,  QMessageBox, QFileDialog, QFontDialog, QPushButton, QWidget, QGridLayout
+    QFrame, QTabBar,  QMessageBox, QFileDialog, QFontDialog, QPushButton, QWidget, QGridLayout, QCheckBox
 from PyQt5.QtCore import Qt, QRect, QSize
 import redactor, left_part
 from settings import *
-
+import change_setting
 
 
 
@@ -19,6 +19,27 @@ class coloredTabBar(QTabBar):
 
 
 current_files = []
+
+
+class MyOpenDialog(QWidget):
+    """В данный момент не используется - можно выкинуть или допилить, заменив окно открцытия файлов"""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        #self.options = QFileDialog.DontUseNativeDialog
+        self.remember_directory = QCheckBox('Remember that directory')
+        #self.setMaximumSize(1111,1111)
+        grid = QGridLayout()
+        self.setLayout(grid)
+        
+        #self.self.layout().addWidget(self.remember_directory)
+        #print('niheraaaaaaaaaaa', self.layout)
+        #grid = QGridLayout()
+
+        #grid.addWidget(self.remember_directory, 5, 5)
+        #self.setLayout(grid)
+        #self.remember_directory.setParent(self)
+        #self.remember_directory.show()
+
 
 class Tabs(QTabWidget):
 
@@ -117,13 +138,18 @@ class Tabs(QTabWidget):
 
     def open_file(self):
         options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
+
+        #options |= QFileDialog.DontUseNativeDialog
         print('QFileDialog.DontUseNativeDialog')
-        path, _ = QFileDialog.getOpenFileName(None,
-        "Open файлик", g_programs_folder, self.filter_files)
+        path, _ = QFileDialog.getOpenFileName(None, "Open файлик", g_programs_folder, self.filter_files)
         print(path)
         if path:
             self.make_open_DRY(path)
+            directory_to_remember = path[: path.rindex('/')]
+            names = [['g_programs_folder ', " '{}'".format(directory_to_remember)]]
+            change_setting.change_settins(names)
+
+
 
     def save_file_as(self):
         if self.currentIndex() == -1:
@@ -156,6 +182,10 @@ class Tabs(QTabWidget):
             self.window().setWindowTitle(path)
             add_new_name(name)
 
+            directory_to_remember = path[: path.rindex('/')]
+            names = [['g_programs_folder ', " '{}'".format(directory_to_remember)]]
+            change_setting.change_settins(names)
+
     def save_file(self):
 
         print(self.currentWidget().editor.existing)
@@ -184,7 +214,7 @@ class Tabs(QTabWidget):
             except ValueError:
                 name_open_file = path
 
-            self.insertTab(self.currentIndex()+1, redactor.ParentOfMyEdit(text, existing=path, base=self), name_open_file)
+            self.insertTab(self.currentIndex()+1, redactor.ParentOfMyEdit(text, existing=path, tab_=self), name_open_file)
             #self.currentWidget().editor.set_syntax()
             self.setCurrentIndex(self.currentIndex()+1)
             self.currentWidget().editor.existing = path
