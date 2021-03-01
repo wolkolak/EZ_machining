@@ -64,23 +64,44 @@ class MyFrame(QFrame):
 
 
 class leftTab(QTabWidget):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, parent, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        b = SomeInTab()
-        self.addTab(b, 'visual')
+        self.parent = parent
+        self.a = NumpyPrint(self)
+        self.addTab(self.a, 'whole array')
+        self.b = SomeInTab()
+        self.addTab(self.b, 'visual')
+
+class NumpyPrint(QPlainTextEdit):
+    def __init__(self, base, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.base = base
+
+        # нам нужно постучаться в конкретную вкладку
+
+        #self.setPlainText(np.array2string(self.test_pool2))
+
+    def reset_np_array_in_left_field(self):
+        #self.setPlainText(np.array2string(np_array))
+        visible_np = self.base.parent.central_widget.note.currentWidget().main_g_cod_pool
+        #self.clear()
+        self.setPlainText(np.array2string(visible_np))
+        print('is it going on or not&&!')
+        print('np.array2string(visible_np):', np.array2string(visible_np))
 
 
 
 
 class left1(QWidget):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, central_widget, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.central_widget = central_widget
         self.setAttribute(Qt.WA_StyledBackground)
         self.setStyleSheet("background-color: {}".format(color1))
 
         grid = QGridLayout()
         self.setLayout(grid)
-        self.left_tab = leftTab()
+        self.left_tab = leftTab(self)
         grid.addWidget(self.left_tab, 0, 0)
 
 

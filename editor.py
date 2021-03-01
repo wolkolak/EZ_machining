@@ -28,18 +28,18 @@ class MyW(QWidget):
         grid.addWidget(self.lb, 1, 1)
         font = QFont()
         font.setPointSize(12)
-        self.editor.setFont(font)
-        self.highlight = HLSyntax.HL_Syntax.GMHighlighter(self.editor.document())
+        #self.editor.setFont(font)
+        self.highlight = HL_Syntax1.PythonHighlighter(self.editor.document())
         self.resize(700, 400)
         # Загрузите что-нибудь (например, editor_2.py) в редактор для демонстрации.
-        infile = open('D:\Py_try\EZ_machining\examples\g1_billion.txt', 'r')
+        infile = open('D:\Py_try\EZ_machining\examples\doc1.txt', 'r')
         self.editor.setPlainText(infile.read())
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     ex = MyW()
     ex.show()
-    sys.exit(app.exec_())
+    #sys.exit(app.exec_())
 
 
 

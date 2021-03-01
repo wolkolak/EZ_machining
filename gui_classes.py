@@ -51,13 +51,13 @@ class Tabs(QTabWidget):
     quantity = 15
     tabs = [["File" + str(i), None] for i in range(0, quantity)]
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, center_widget, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.colored_tabbar = coloredTabBar()
         self.setTabBar(self.colored_tabbar)
         self.setTabsClosable(True)
         self.setMovable(True)
-
+        self.center_widget = center_widget
         self.little_widget = QFrame()
 
         little_layout = QHBoxLayout()
@@ -118,13 +118,13 @@ class Tabs(QTabWidget):
             i += 1
         if self.tabs[i][1] is None:
             self.tabs[i][1] = True
-            print('new tab1')
-            self.insertTab(self.currentIndex()+1, redactor.ParentOfMyEdit(None, existing=False, base=self), self.tabs[i][0])
-
+            print('new tab0')
+            self.insertTab(self.currentIndex()+1, redactor.ParentOfMyEdit(None, existing=False, tab_=self), self.tabs[i][0])
             #self.currentWidget().editor.set_syntax()
-            print('new tab1')
+
             self.setCurrentIndex(self.currentIndex()+1)
             add_new_name(self.tabs[i][0])
+            print('new tab1')
         else:
             simple_warning('warning', "Притормози \n ¯\_(ツ)_/¯")
 
@@ -268,11 +268,11 @@ class CenterWindow(QWidget):
         self.splitter.setStyleSheet('background-color:green')
 
         centr_grid.addWidget(self.splitter)
-        self.left = left_part.left1()
+        self.left = left_part.left1(self)
         self.splitter.addWidget(self.left)
         self.right = right2(self)
         self.splitter.addWidget(self.right)
-        self.note = Tabs()
+        self.note = Tabs(center_widget=self)
         grid_right = QGridLayout()
         self.right.setLayout(grid_right)
         grid_right.addWidget(self.note, 0, 0)

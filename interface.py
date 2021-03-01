@@ -10,6 +10,7 @@ import shutil
 import FileMenu, ViewMenu, OptionsMenu, EditMenu
 import bigCustomizer
 import change_setting
+import test_button
 
 class MyMainWindow(QMainWindow):
 
@@ -61,6 +62,10 @@ class MyMainWindow(QMainWindow):
         finally:
             pass
 
+        #Test
+        test_button.test_opt(self)
+
+
     def return_files(self):
         pass
 
@@ -74,6 +79,9 @@ class MyMainWindow(QMainWindow):
         print('tab change')
         if self.centre.note.currentIndex() != -1:
             print('cur index = ', self.centre.note.currentIndex())
+            #todo self.centre.note.currentWidget().current_g_cod_pool
+            print('здесь: {}'.format(self.centre.left.left_tab.a.reset_np_array_in_left_field))
+            self.centre.left.left_tab.a.reset_np_array_in_left_field()
             if self.centre.note.currentWidget().editor.existing is False:
                 title2 = self.centre.note.tabText(n)
             else:
