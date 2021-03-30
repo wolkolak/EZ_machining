@@ -200,49 +200,79 @@ class MyEdit(QPlainTextEdit):
         self.changed = True
 
 
-    #todo сделать set maximum +1 для не последней строки на конце вставки
+    #todo сделать set maximum +1 для не последней строки на конце вставки|вроде сделал
     def insertFromMimeData(self, source):
+        #должен ссылаться на универсальную замену текста
         if source.hasText():
             self.base.delta_number_of_lines = source.text().count('\n') + 1
             print('paaaste: ', self.base.delta_number_of_lines)
-            self.base.current_g_cod_pool = np.zeros((self.base.delta_number_of_lines, 7), float)
-            self.base.progress_bar.setMaximum(self.base.delta_number_of_lines)
-
-            #Запомни текущую строку
-            self.base.index_insert = self.base.editor.textCursor().blockNumber()
-
-            if self.base.delta_number_of_lines < self.base.highlight.const_step:
-                self.base.highlight.standart_step = self.base.delta_number_of_lines
-            else:
-                self.base.highlight.standart_step = self.base.highlight.const_step
+            self.universal_replace()
             QPlainTextEdit.insertFromMimeData(self, source)
 
-
-        #self.base.current_g_cod_pool =
-
     def eventFilter(self, widget, event):
-
+        # должен ссылаться на универсальную замену текста
         if (event.type() == QEvent.KeyPress and widget is self):
-            self.base.highlight.standart_step = 1
-            #self.base.highlight.count = 0
             key = event.key()
-            if key == Qt.Key_Backspace:
-                print('Backspace')
-            #else:
-            #    if key == Qt.Key_Return:
-            #        print('return')
-            #    elif key == Qt.Key_Enter:
-            #        print('enter')
-            #    return True
-            self.base.progress_bar.setMaximum(self.base.delta_number_of_lines)
-            self.base.on_count_changed(0)
-
+            if int(event.modifiers()) > 0 and event.modifiers() != Qt.ShiftModifier:
+                print('модификаторы кроме шифта')
+            else:
+                if event.text():
+                    print('writing key used')
+                    self.universal_replace()
+                else:
+                    #delete, backspace
+                    if key == Qt.Key_Backspace:
+                        print('Backspace')
+                        self.universal_replace()
+                    elif key == Qt.Key_Delete:
+                        print('Delete')
+                        self.universal_replace()
+                    elif key == Qt.Key_Enter:
+                        print('enter')
+                        self.universal_replace()
             QWidget.eventFilter(self, widget, event)
             if self._document.isModified():
                 print('was modified')
-
                 self._document.setModified(False)
         return QWidget.eventFilter(self, widget, event)
+
+    def universal_replace(self):
+        self.base.highlight.standart_step = 1
+        self.find_lines_to_replace()
+        self.creating_np_pool_and_organize_step()
+        self.delete_lines_from_main_np_g_pool()
+
+    def find_lines_to_replace(self):
+        # Запомни текущую строку
+        print('find_lines_to_replace')
+        cursor_copy = self.base.editor.textCursor()
+        self.base.index_insert_NB = cursor_copy.blockNumber()
+        cursor_position = cursor_copy.position()
+        self.base.index_insert_anchor_NB = self.base.index_insert_NB
+
+        if self.base.editor.textCursor().hasSelection():
+            print('has selection')
+            anchor_position = cursor_copy.anchor()
+            cursor_copy.setPosition(anchor_position)
+            self.base.index_insert_anchor_NB = cursor_copy.blockNumber()
+
+
+    def creating_np_pool_and_organize_step(self):
+        self.base.current_g_cod_pool = np.zeros((self.base.delta_number_of_lines, 7), float)
+        print('creating_np_pool_and_organize_step with size', self.base.delta_number_of_lines)
+        self.base.progress_bar.setMaximum(self.base.delta_number_of_lines)
+        if self.base.delta_number_of_lines < self.base.highlight.const_step:
+            self.base.highlight.standart_step = self.base.delta_number_of_lines
+        else:
+            self.base.highlight.standart_step = self.base.highlight.const_step
+
+    def delete_lines_from_main_np_g_pool(self):
+        self.base.min_line = min(self.base.index_insert_NB, self.base.index_insert_anchor_NB)
+        b = max(self.base.index_insert_NB, self.base.index_insert_anchor_NB)
+        print('выпилить с {} до {}'.format(self.base.min_line, b))
+        print('было: ', self.base.current_g_cod_pool.shape)
+        self.base.main_g_cod_pool = np.delete(self.base.main_g_cod_pool, np.s_[self.base.min_line:b], axis=0)
+        print('стало: ', self.base.current_g_cod_pool.shape)
 
 
 class Progress(QProgressBar):
@@ -257,7 +287,7 @@ class Progress(QProgressBar):
     def finish_current_batch(self, current_value):
         self.base.highlight.count_in_step = 0
         if current_value == self.maximum():
-            self.inserting_in_main_g_cod(self.base.index_insert)
+            self.inserting_in_main_g_cod(self.base.min_line)
             print('Load 100%')
             print('LOAD inserting current pool:', self.base.current_g_cod_pool[0])
             self.base.delta_number_of_lines = 1
@@ -266,8 +296,6 @@ class Progress(QProgressBar):
             print('specially here count', self.base.highlight.count)
             self.setValue(0)
 
-
-
         elif self.base.delta_number_of_lines < self.base.highlight.count + self.base.highlight.standart_step:
                 print('Делаем шаг поменьше: self.base.delta_number_of_lines={}, self.base.highlight.count={}, self.base.highlight.standart_step={}'
                       .format(self.base.delta_number_of_lines, self.base.highlight.count, self.base.highlight.standart_step))
@@ -275,11 +303,12 @@ class Progress(QProgressBar):
         print('progressbar finish current batch Hcount ', self.base.highlight.count)
 
 
-    def inserting_in_main_g_cod(self, index_start=0, lines_to_delete=1):
-        #добавить self.base.main_g_cod_pool в
-        #print('index = ', index_start)
-        self.base.main_g_cod_pool = np.insert(self.base.main_g_cod_pool, 0, self.base.current_g_cod_pool, axis=0)
+    def inserting_in_main_g_cod(self, index_start=0):
+        print('self.base.min_line', self.base.min_line)
+        print('main_g_cod_pool.shape', self.base.main_g_cod_pool.shape)
+        self.base.main_g_cod_pool = np.insert(self.base.main_g_cod_pool, self.base.min_line, self.base.current_g_cod_pool, axis=0)
 
+        #self.min_line+1
         self.base.tab_.center_widget.left.left_tab.a.reset_np_array_in_left_field()
         print('inserting current pool:', self.base.current_g_cod_pool[0])
         print('inserting to main pool:', self.base.main_g_cod_pool )

@@ -86,7 +86,7 @@ class NumpyPrint(QPlainTextEdit):
         visible_np = self.base.parent.central_widget.note.currentWidget().main_g_cod_pool
         #self.clear()
         self.setPlainText(np.array2string(visible_np))
-        print('is it going on or not&&!')
+        print('shape of visible_np = ', visible_np.shape)
         print('np.array2string(visible_np):', np.array2string(visible_np))
 
 
