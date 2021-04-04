@@ -14,5 +14,7 @@ print("--- %s seconds ---" % (time.process_time_ns() - start_time))"""
 
 a = np.array([1,2,3])
 print('a=', a)
-a = np.insert(a, 3, [9], axis=0)
-print('a=', a)
+#a = np.insert(a, 1, [9], axis=0)
+#print('a=', a)
+c = np.delete(a, np.s_[1:1], axis=0)
+print('c=', c)

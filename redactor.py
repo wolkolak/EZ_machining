@@ -270,9 +270,10 @@ class MyEdit(QPlainTextEdit):
         self.base.min_line = min(self.base.index_insert_NB, self.base.index_insert_anchor_NB)
         b = max(self.base.index_insert_NB, self.base.index_insert_anchor_NB)
         print('выпилить с {} до {}'.format(self.base.min_line, b))
-        print('было: ', self.base.current_g_cod_pool.shape)
-        self.base.main_g_cod_pool = np.delete(self.base.main_g_cod_pool, np.s_[self.base.min_line:b], axis=0)
-        print('стало: ', self.base.current_g_cod_pool.shape)
+        print('было: ', self.base.main_g_cod_pool.shape)
+        print('удалить строго диапазон: {}'.format(self.base.main_g_cod_pool[self.base.min_line]))
+        self.base.main_g_cod_pool = np.delete(self.base.main_g_cod_pool, np.s_[self.base.min_line:b+1], axis=0)
+        print('стало: ', self.base.main_g_cod_pool.shape)
 
 
 class Progress(QProgressBar):
@@ -332,7 +333,7 @@ class ParentOfMyEdit(QWidget):
         #self.delta_number_of_lines = 1
         self.current_g_cod_pool = np.zeros((self.delta_number_of_lines, 7), float)#.fill(np.nan)
         print('START: Создан массив размером ', self.current_g_cod_pool.shape)
-        self.main_g_cod_pool = np.zeros((0, 7), float)
+        self.main_g_cod_pool = np.zeros((1, 7), float)
         self.progress_bar.setMaximum(self.delta_number_of_lines)
         grid.addWidget(self.progress_bar, 1, 0)
         self.set_syntax()
