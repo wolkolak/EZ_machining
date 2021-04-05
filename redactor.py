@@ -272,7 +272,12 @@ class MyEdit(QPlainTextEdit):
         print('выпилить с {} до {}'.format(self.base.min_line, b))
         print('было: ', self.base.main_g_cod_pool.shape)
         print('удалить строго диапазон: {}'.format(self.base.main_g_cod_pool[self.base.min_line]))
-        self.base.main_g_cod_pool = np.delete(self.base.main_g_cod_pool, np.s_[self.base.min_line:b+1], axis=0)
+        #есть следующая строка?
+        if b < self._document.blockCount():
+            adding_lines = 2
+        else:
+            adding_lines = 1
+        self.base.main_g_cod_pool = np.delete(self.base.main_g_cod_pool, np.s_[self.base.min_line:b+adding_lines], axis=0)
         print('стало: ', self.base.main_g_cod_pool.shape)
 
 
