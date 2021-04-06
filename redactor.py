@@ -213,22 +213,30 @@ class MyEdit(QPlainTextEdit):
         # должен ссылаться на универсальную замену текста
         if (event.type() == QEvent.KeyPress and widget is self):
             key = event.key()
-            if int(event.modifiers()) > 0 and event.modifiers() != Qt.ShiftModifier:
+            if Qt.KeypadModifier:
+                print('KeypadModifie', int(event.modifiers()))
+            mod_sum = int(event.modifiers())
+            if mod_sum > 0 and mod_sum != Qt.ShiftModifier and mod_sum != Qt.KeypadModifier \
+                    and mod_sum != Qt.ShiftModifier + Qt.KeypadModifier:
                 print('модификаторы кроме шифта')
             else:
                 if event.text():
                     print('writing key used')
-                    self.universal_replace()
-                else:
                     #delete, backspace
                     if key == Qt.Key_Backspace:
                         print('Backspace')
+                        if self.textCursor().position() == 0:
+                            return QWidget.eventFilter(self, widget, event)
                         self.universal_replace()
                     elif key == Qt.Key_Delete:
                         print('Delete')
+                        if self.textCursor().atEnd():
+                            return QWidget.eventFilter(self, widget, event)
                         self.universal_replace()
                     elif key == Qt.Key_Enter:
                         print('enter')
+                        self.universal_replace()
+                    else:
                         self.universal_replace()
             QWidget.eventFilter(self, widget, event)
             if self._document.isModified():
@@ -259,6 +267,7 @@ class MyEdit(QPlainTextEdit):
 
     def creating_np_pool_and_organize_step(self):
         self.base.current_g_cod_pool = np.zeros((self.base.delta_number_of_lines, 7), float)
+        self.base.current_g_cod_pool[:] = np.nan
         print('creating_np_pool_and_organize_step with size', self.base.delta_number_of_lines)
         self.base.progress_bar.setMaximum(self.base.delta_number_of_lines)
         if self.base.delta_number_of_lines < self.base.highlight.const_step:
@@ -298,6 +307,7 @@ class Progress(QProgressBar):
             print('LOAD inserting current pool:', self.base.current_g_cod_pool[0])
             self.base.delta_number_of_lines = 1
             self.base.current_g_cod_pool = np.zeros((self.base.delta_number_of_lines, 7), float)
+            self.base.current_g_cod_pool[:] = np.nan
             self.base.highlight.to_the_start()
             print('specially here count', self.base.highlight.count)
             self.setValue(0)
@@ -313,7 +323,7 @@ class Progress(QProgressBar):
         print('self.base.min_line', self.base.min_line)
         print('main_g_cod_pool.shape', self.base.main_g_cod_pool.shape)
         self.base.main_g_cod_pool = np.insert(self.base.main_g_cod_pool, self.base.min_line, self.base.current_g_cod_pool, axis=0)
-
+        self.base.min_line = self.base.min_line + 1
         #self.min_line+1
         self.base.tab_.center_widget.left.left_tab.a.reset_np_array_in_left_field()
         print('inserting current pool:', self.base.current_g_cod_pool[0])
@@ -336,9 +346,11 @@ class ParentOfMyEdit(QWidget):
 
         self.delta_number_of_lines = self.editor.blockCount() or 1
         #self.delta_number_of_lines = 1
-        self.current_g_cod_pool = np.zeros((self.delta_number_of_lines, 7), float)#.fill(np.nan)
+        self.current_g_cod_pool = np.zeros((self.delta_number_of_lines, 7), float)
+        self.current_g_cod_pool[:] = np.nan
         print('START: Создан массив размером ', self.current_g_cod_pool.shape)
         self.main_g_cod_pool = np.zeros((1, 7), float)
+        self.main_g_cod_pool[:] = np.nan
         self.progress_bar.setMaximum(self.delta_number_of_lines)
         grid.addWidget(self.progress_bar, 1, 0)
         self.set_syntax()
