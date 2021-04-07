@@ -203,6 +203,7 @@ class MyEdit(QPlainTextEdit):
     #todo сделать set maximum +1 для не последней строки на конце вставки|вроде сделал
     def insertFromMimeData(self, source):
         #должен ссылаться на универсальную замену текста
+        print('perv insert')
         if source.hasText():
             self.base.delta_number_of_lines = source.text().count('\n') + 1
             print('paaaste: ', self.base.delta_number_of_lines)
@@ -302,7 +303,7 @@ class Progress(QProgressBar):
     def finish_current_batch(self, current_value):
         self.base.highlight.count_in_step = 0
         if current_value == self.maximum():
-            self.inserting_in_main_g_cod(self.base.min_line)
+            self.inserting_in_main_g_cod()
             print('Load 100%')
             print('LOAD inserting current pool:', self.base.current_g_cod_pool[0])
             self.base.delta_number_of_lines = 1
@@ -319,7 +320,7 @@ class Progress(QProgressBar):
         print('progressbar finish current batch Hcount ', self.base.highlight.count)
 
 
-    def inserting_in_main_g_cod(self, index_start=0):
+    def inserting_in_main_g_cod(self):
         print('self.base.min_line', self.base.min_line)
         print('main_g_cod_pool.shape', self.base.main_g_cod_pool.shape)
         self.base.main_g_cod_pool = np.insert(self.base.main_g_cod_pool, self.base.min_line, self.base.current_g_cod_pool, axis=0)
@@ -349,6 +350,7 @@ class ParentOfMyEdit(QWidget):
         self.current_g_cod_pool = np.zeros((self.delta_number_of_lines, 7), float)
         self.current_g_cod_pool[:] = np.nan
         print('START: Создан массив размером ', self.current_g_cod_pool.shape)
+        self.min_line = 1
         self.main_g_cod_pool = np.zeros((1, 7), float)
         self.main_g_cod_pool[:] = np.nan
         self.progress_bar.setMaximum(self.delta_number_of_lines)
@@ -373,8 +375,4 @@ class ParentOfMyEdit(QWidget):
     #def oh_no(self):#сейчас не используется
     #    worker = runnable_flow.Worker(self.set_syntax, None)
     #    self.threadpool.start(worker)
-
-
-
-
 
