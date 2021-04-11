@@ -34,13 +34,7 @@ class MyEdit(QPlainTextEdit):
 
         self.flag_modificationChanged_workaround = True
 
-        self.g_cod_pool = np.array([[200, 0, 3, 0, 0, 0],
-                                   [160, 0, -5, 0, 0, 0],
-                                   [163, 0, 3, 0, 0, 0],
-                                   [155, 0, -5, 0, 0, 0],
-                                   [166, 0, 0, 0, 0, 0],
-                                   [100, 0, 200, 0, 0, 0]],
-                                   float)
+
         #modal coomnds
         self.g_modal = np.array([0], float)
 
@@ -210,6 +204,12 @@ class MyEdit(QPlainTextEdit):
             self.universal_replace()
             QPlainTextEdit.insertFromMimeData(self, source)
 
+    def undo1(self):
+        print('undo')
+
+    def redo(self):
+        print('redo')
+
     def eventFilter(self, widget, event):
         # должен ссылаться на универсальную замену текста
         if (event.type() == QEvent.KeyPress and widget is self):
@@ -220,6 +220,8 @@ class MyEdit(QPlainTextEdit):
             if mod_sum > 0 and mod_sum != Qt.ShiftModifier and mod_sum != Qt.KeypadModifier \
                     and mod_sum != Qt.ShiftModifier + Qt.KeypadModifier:
                 print('модификаторы кроме шифта')
+                if event.key() == (Qt.Key_Control and Qt.Key_Z):
+                    self.undo1()
             else:
                 if event.text():
                     print('writing key used')
@@ -239,10 +241,12 @@ class MyEdit(QPlainTextEdit):
                         self.universal_replace()
                     else:
                         self.universal_replace()
-            QWidget.eventFilter(self, widget, event)
+            print('key was', key)
+            #QWidget.eventFilter(self, widget, event)
             if self._document.isModified():
                 print('was modified')
                 self._document.setModified(False)
+
         return QWidget.eventFilter(self, widget, event)
 
     def universal_replace(self):
