@@ -204,8 +204,9 @@ class MyEdit(QPlainTextEdit):
             self.universal_replace()
             QPlainTextEdit.insertFromMimeData(self, source)
 
-    def undo1(self):
-        print('undo')
+    def my_undo(self):
+        #this is SLOT and it won't work directly
+        print('my_undo')
 
     def redo(self):
         print('redo')
@@ -221,7 +222,7 @@ class MyEdit(QPlainTextEdit):
                     and mod_sum != Qt.ShiftModifier + Qt.KeypadModifier:
                 print('модификаторы кроме шифта')
                 if event.key() == (Qt.Key_Control and Qt.Key_Z):
-                    self.undo1()
+                    self.my_undo()
             else:
                 if event.text():
                     print('writing key used')
