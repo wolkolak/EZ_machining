@@ -1,20 +1,62 @@
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
 
-import numpy as np
-import timeit, traceback
 import time
 
-"""a = np.ascontiguousarray(np.random.randint(1, 200.0, 10000000))
-a = np.repeat(a, 7)
-print(a.shape)
-start_time = time.process_time_ns()
-a = np.insert(a, 0, 11, axis=0)
-#b = np.array(a)
-#print(timeit.timeit('output1 = np.array(a)'))
-print("--- %s seconds ---" % (time.process_time_ns() - start_time))"""
+class MainWindow(QMainWindow):
 
-a = np.array([1,2,3])
-print('a=', a)
-#a = np.insert(a, 1, [9], axis=0)
-#print('a=', a)
-c = np.delete(a, np.s_[1:1], axis=0)
-print('c=', c)
+
+    def __init__(self, *args, **kwargs):
+        super(MainWindow, self).__init__(*args, **kwargs)
+
+        self.counter = 0
+
+        layout = QVBoxLayout()
+
+        self.l = QLabel("Start")
+        b = QPushButton("DANGER!")
+        b.pressed.connect(self.oh_no)
+
+        layout.addWidget(self.l)
+        layout.addWidget(b)
+
+        w = QWidget()
+        w.setLayout(layout)
+
+        self.setCentralWidget(w)
+
+        self.threadpool = QThreadPool()
+        print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
+        self.show()
+
+        self.timer = QTimer()
+        self.timer.setInterval(1000)
+        self.timer.timeout.connect(self.recurring_timer)
+        self.timer.start()
+
+    def oh_no(self):
+        worker = Worker()
+        self.threadpool.start(worker)
+
+    def recurring_timer(self):
+        self.counter +=1
+        self.l.setText("Counter: %d" % self.counter)
+
+class Worker(QRunnable):
+    '''
+    Worker thread
+    '''
+
+    @pyqtSlot()
+    def run(self):
+        '''
+        Your code goes in this function
+        '''
+        print("Thread start")
+        time.sleep(5)
+        print("Thread complete")
+
+app = QApplication([])
+window = MainWindow()
+app.exec_()

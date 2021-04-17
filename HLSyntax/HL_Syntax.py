@@ -1,7 +1,7 @@
 import sys
 import time
 from PyQt5.QtGui import QColor, QTextCharFormat, QFont, QSyntaxHighlighter
-from PyQt5.QtCore import QRegExp, QRegularExpression, pyqtSignal
+from PyQt5.QtCore import QRegExp, QRegularExpression, pyqtSignal, QEventLoop
 from PyQt5.QtWidgets import *
 
 def format(color, style=''):
@@ -168,7 +168,7 @@ class GMHighlighter(QSyntaxHighlighter):
 
         if self.count_in_step == self.standart_step:
             self.base.on_count_changed(self.count)  # progressBar
-            QApplication.processEvents()
+
         return
 
     def recount(self, nya, self_block):
@@ -180,12 +180,10 @@ class GMHighlighter(QSyntaxHighlighter):
         self.count_in_step += 1
         self.count += 1
 
-
-
         if self.count_in_step == self.standart_step:
             #print('count step = standart step, self.count = {}, bar.maximum = {}'.format(self.count, self.base.progress_bar.maximum()))
             self.base.on_count_changed(self.count)  # progressBar
-            QApplication.processEvents()
+            #QApplication.processEvents(QEventLoop.WaitForMoreEvents)
         return
 
     def to_the_start(self):

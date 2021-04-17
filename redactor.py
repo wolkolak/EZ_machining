@@ -1,8 +1,8 @@
 from PyQt5.QtWidgets import QGridLayout,  QLabel,  QPushButton, QPlainTextEdit, QDialog,\
-    QCheckBox, QTextEdit, QWidget, QApplication, QFrame, QVBoxLayout, QBoxLayout, QProgressBar
-from PyQt5.QtCore import Qt, QRect, QSize, QTimer, QThread, QThreadPool, pyqtSlot, QEvent, Qt
+    QCheckBox, QTextEdit, QWidget, QApplication, QFrame, QVBoxLayout, QBoxLayout, QProgressBar, QAction
+from PyQt5.QtCore import Qt, QRect, QSize, QTimer, QThread, QThreadPool, pyqtSlot, QEvent, Qt, pyqtSignal
 from PyQt5.QtGui import QTextOption, QColor, QPainter, QClipboard, QTextCursor, QTextDocument, QTextCharFormat,\
-    QTextFormat, QGuiApplication
+    QTextFormat, QGuiApplication, QKeySequence,QContextMenuEvent, QInputEvent, QMouseEvent, QCursor, QKeyEvent
 from settings import *
 from find_replace import finder
 import HLSyntax.HL_Syntax
@@ -10,7 +10,7 @@ import flow
 import runnable_flow
 import numpy as np
 import time
-
+import pyautogui
 
 
 class QLineNumberArea(QWidget):
@@ -76,26 +76,10 @@ class MyEdit(QPlainTextEdit):
         self._document = self.document()
 
         self._document.contentsChange.connect(self.onChange)
+        #contex menu settings
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.__contextMenu)
 
-    def onChange(self, position, charsRemoved, charsAdded):
-        """
-        Я думаю, нужно сначала удалить из numpy лишнее, потому указать место вставки. Логично? вроде - да
-        А если в данный момент мы уже читаем некий участок?  Тогда этот новый участок будет вставлен не там, так?
-        Значит, сначала красим текст, потом вставляем и удаляем единовременно. Где беда?
-        Если добавлены изменения пока идёт покраска участка. Что делать?
-        В очередь. И? Новый onchange должен запустить процессы после того как работа с прерыдущим участком будет закончена?
-
-        Допустим, очередь в 3 возможных подсчёта. Пока
-
-
-        """
-        #time.sleep(5)
-        firstBlock = self._document.findBlock(position).blockNumber()
-        untilBlock = self._document.findBlock(position + charsAdded - charsRemoved).blockNumber()
-        delta = untilBlock - firstBlock
-        print('on change position = {}, charsRemoved = {}, charsAdded = {}'
-              .format(position, charsRemoved, charsAdded))
-        print('How mach lines? = {} - {}'.format(untilBlock + 1, firstBlock))
 
     def find_in_text(self):
         self.rez = finder(self).show()
@@ -179,6 +163,29 @@ class MyEdit(QPlainTextEdit):
             bottom = top + self.blockBoundingRect(block).height()
             blockNumber += 1
 
+    def __contextMenu(self):
+        self._menu_to_borrow = self.createStandardContextMenu()
+        self._normalMenu = self.createStandardContextMenu()
+        self._addCustomMenuItems(self._normalMenu)
+        self._normalMenu.exec_(QCursor.pos())
+
+    def _addCustomMenuItems(self, menu):
+        self.my_undo_action = QAction("My Undo", self)
+        self.my_undo_action.triggered.connect(self.my_undo)
+        self.my_redo_action = QAction("My Redo", self)
+        self.my_redo_action.triggered.connect(self.my_redo)
+        menu.removeAction(menu.actions()[0])
+        menu.removeAction(menu.actions()[0])
+        menu.insertAction(menu.actions()[0], self.my_redo_action)
+        menu.insertAction(menu.actions()[0], self.my_undo_action)
+
+    def my_undo(self):
+        #в стек запомнить длину удаленного, добавленного в строках. место заполнится без моего участия
+        pyautogui.hotkey('ctrl', 'z')
+
+    def my_redo(self):
+        pyautogui.hotkey('ctrl', 'y')
+
     #pyqtSlot()
     def changing(self):
         """С одной стороны я хочу отслеживать изменения в документе, с другой - отслеживать их момент.
@@ -194,84 +201,51 @@ class MyEdit(QPlainTextEdit):
         self.changed = True
 
 
-    #todo сделать set maximum +1 для не последней строки на конце вставки|вроде сделал
-    def insertFromMimeData(self, source):
-        #должен ссылаться на универсальную замену текста
-        print('perv insert')
-        if source.hasText():
-            self.base.delta_number_of_lines = source.text().count('\n') + 1
-            print('paaaste: ', self.base.delta_number_of_lines)
-            self.universal_replace()
-            QPlainTextEdit.insertFromMimeData(self, source)
 
-    def my_undo(self):
+
+    def my_undo1(self):
         #this is SLOT and it won't work directly
         print('my_undo')
 
-    def redo(self):
+    def redo1(self):
         print('redo')
 
-    def eventFilter(self, widget, event):
-        # должен ссылаться на универсальную замену текста
-        if (event.type() == QEvent.KeyPress and widget is self):
-            key = event.key()
-            if Qt.KeypadModifier:
-                print('KeypadModifie', int(event.modifiers()))
-            mod_sum = int(event.modifiers())
-            if mod_sum > 0 and mod_sum != Qt.ShiftModifier and mod_sum != Qt.KeypadModifier \
-                    and mod_sum != Qt.ShiftModifier + Qt.KeypadModifier:
-                print('модификаторы кроме шифта')
-                if event.key() == (Qt.Key_Control and Qt.Key_Z):
-                    self.my_undo()
-            else:
-                if event.text():
-                    print('writing key used')
-                    #delete, backspace
-                    if key == Qt.Key_Backspace:
-                        print('Backspace')
-                        if self.textCursor().position() == 0:
-                            return QWidget.eventFilter(self, widget, event)
-                        self.universal_replace()
-                    elif key == Qt.Key_Delete:
-                        print('Delete')
-                        if self.textCursor().atEnd():
-                            return QWidget.eventFilter(self, widget, event)
-                        self.universal_replace()
-                    elif key == Qt.Key_Enter:
-                        print('enter')
-                        self.universal_replace()
-                    else:
-                        self.universal_replace()
-            print('key was', key)
-            #QWidget.eventFilter(self, widget, event)
-            if self._document.isModified():
-                print('was modified')
-                self._document.setModified(False)
+    def onChange(self, position, charsRemoved, charsAdded):
+        """
+        Я думаю, нужно сначала удалить из numpy лишнее, потому указать место вставки. Логично? вроде - да
+        А если в данный момент мы уже читаем некий участок?  Тогда этот новый участок будет вставлен не там, так?
+        Значит, сначала красим текст, потом вставляем и удаляем единовременно. Где беда?
+        Если добавлены изменения пока идёт покраска участка. Что делать?
+        В очередь. И? Новый onchange должен запустить процессы после того как работа с прерыдущим участком будет закончена?
 
-        return QWidget.eventFilter(self, widget, event)
+        Допустим, очередь в 2 возможных подсчёта. Алгоритм сложный но реальный.
+        Иная проблема - onChange принимает мало данных. нельзя поличить вторую position или можно? нука. Вроде
+        работает
 
-    def universal_replace(self):
+        """
+        #time.sleep(5)
+        print('выспался')
+        self.change_position = position
+        self.firstBlock = self._document.findBlock(position).blockNumber()
+        self.untilBlock = self._document.findBlock(position + charsAdded - charsRemoved).blockNumber()
+        self.delta = self.untilBlock - self.firstBlock
+        print('on change position = {}, charsRemoved = {}, charsAdded = {}'
+              .format(position, charsRemoved, charsAdded))
+        print('How mach lines? = {} - {}'.format(self.untilBlock + 1, self.firstBlock))
+        print('firstBlock = {}, untilBlock = {}, delta = {}'.format(self.firstBlock, self.untilBlock, self.delta))
+        self.universal_replace_new()
+
+    def universal_replace_new(self):
         self.base.highlight.standart_step = 1
-        self.find_lines_to_replace()
+        #self.find_lines_to_replace()
         self.creating_np_pool_and_organize_step()
         self.delete_lines_from_main_np_g_pool()
 
-    def find_lines_to_replace(self):
-        # Запомни текущую строку
-        print('find_lines_to_replace')
-        cursor_copy = self.base.editor.textCursor()
-        self.base.index_insert_NB = cursor_copy.blockNumber()
-        cursor_position = cursor_copy.position()
-        self.base.index_insert_anchor_NB = self.base.index_insert_NB
-
-        if self.base.editor.textCursor().hasSelection():
-            print('has selection')
-            anchor_position = cursor_copy.anchor()
-            cursor_copy.setPosition(anchor_position)
-            self.base.index_insert_anchor_NB = cursor_copy.blockNumber()
-
-
     def creating_np_pool_and_organize_step(self):
+        """
+        return: self.base.current_g_cod_pool empty, progress_bar.setMaximum, standart_step
+        """
+        self.base.delta_number_of_lines = self.delta + 1
         self.base.current_g_cod_pool = np.zeros((self.base.delta_number_of_lines, 7), float)
         self.base.current_g_cod_pool[:] = np.nan
         print('creating_np_pool_and_organize_step with size', self.base.delta_number_of_lines)
@@ -282,19 +256,61 @@ class MyEdit(QPlainTextEdit):
             self.base.highlight.standart_step = self.base.highlight.const_step
 
     def delete_lines_from_main_np_g_pool(self):
-        self.base.min_line = min(self.base.index_insert_NB, self.base.index_insert_anchor_NB)
-        b = max(self.base.index_insert_NB, self.base.index_insert_anchor_NB)
+        print('self.firstBlock', self.firstBlock)
+        self.base.min_line = min(self.firstBlock, self.untilBlock)
+        b = max(self.firstBlock, self.untilBlock)
         print('выпилить с {} до {}'.format(self.base.min_line, b))
         print('было: ', self.base.main_g_cod_pool.shape)
-        print('удалить строго диапазон: {}'.format(self.base.main_g_cod_pool[self.base.min_line]))
+        print('удалить строго диапазон: c {} по {}'.format(self.base.main_g_cod_pool[self.base.min_line], b))
         #есть следующая строка?
-        if b < self._document.blockCount():
+        BL = self._document.blockCount()
+        if b < BL:
             adding_lines = 2
         else:
             adding_lines = 1
-        self.base.main_g_cod_pool = np.delete(self.base.main_g_cod_pool, np.s_[self.base.min_line:b+adding_lines], axis=0)
+        self.base.main_g_cod_pool = np.delete(self.base.main_g_cod_pool, np.s_[self.base.min_line+1:b+adding_lines], axis=0)
+        if BL != 0:
+            self.base.min_line = self.base.min_line + 1
         print('стало: ', self.base.main_g_cod_pool.shape)
 
+    def eventFilter(self, widget, event):
+        # должен ссылаться на универсальную замену текста
+        #print('event.type() = ', event.type())
+        if event == QKeySequence.Undo:
+            print('olololololo')
+
+        if (event.type() == QEvent.KeyPress and widget is self):
+            key = event.key()
+            if Qt.KeypadModifier:
+                print('KeypadModifie', int(event.modifiers()))
+            mod_sum = int(event.modifiers())
+            if mod_sum > 0 and mod_sum != Qt.ShiftModifier and mod_sum != Qt.KeypadModifier \
+                    and mod_sum != Qt.ShiftModifier + Qt.KeypadModifier:
+                print('модификаторы кроме шифта')
+                #if event.key() == (Qt.Key_Control and Qt.Key_Z):
+                #    self.my_undo()
+            else:
+                if event.text():
+                    print('writing key used')
+                    #delete, backspace
+                    if key == Qt.Key_Backspace:
+                        print('Backspace')
+                    elif key == Qt.Key_Delete:
+                        print('Delete')
+                    elif key == Qt.Key_Enter:
+                        print('enter')
+                    else:
+                        pass
+            print('key was', key)
+            #QWidget.eventFilter(self, widget, event)
+            if self._document.isModified():
+                print('was modified')
+                self._document.setModified(False)
+
+        return QWidget.eventFilter(self, widget, event)
+
+    def universal_replace(self):
+        pass
 
 class Progress(QProgressBar):
     def __init__(self, base):
@@ -318,11 +334,12 @@ class Progress(QProgressBar):
             print('specially here count', self.base.highlight.count)
             self.setValue(0)
 
-        elif self.base.delta_number_of_lines < self.base.highlight.count + self.base.highlight.standart_step:
-                print('Делаем шаг поменьше: self.base.delta_number_of_lines={}, self.base.highlight.count={}, self.base.highlight.standart_step={}'
-                      .format(self.base.delta_number_of_lines, self.base.highlight.count, self.base.highlight.standart_step))
-                self.base.highlight.standart_step = self.base.delta_number_of_lines - self.base.highlight.count# - 1?
+        #elif self.base.delta_number_of_lines < self.base.highlight.count + self.base.highlight.standart_step:
+                #print('Делаем шаг поменьше: self.base.delta_number_of_lines={}, self.base.highlight.count={}, self.base.highlight.standart_step={}'
+                #      .format(self.base.delta_number_of_lines, self.base.highlight.count, self.base.highlight.standart_step))
+                #self.base.highlight.standart_step = self.base.delta_number_of_lines - self.base.highlight.count# - 1?
         print('progressbar finish current batch Hcount ', self.base.highlight.count)
+
 
 
     def inserting_in_main_g_cod(self):
@@ -332,8 +349,8 @@ class Progress(QProgressBar):
         self.base.min_line = self.base.min_line + 1
         #self.min_line+1
         self.base.tab_.center_widget.left.left_tab.a.reset_np_array_in_left_field()
-        print('inserting current pool:', self.base.current_g_cod_pool[0])
-        print('inserting to main pool:', self.base.main_g_cod_pool )
+        #print('inserting current pool:', self.base.current_g_cod_pool[0])
+        print('inserting to main pool:', self.base.main_g_cod_pool)
         #print('let s see = ', self.base.tab_.center_widget.left.left_tab.a)
 
 class ParentOfMyEdit(QWidget):
