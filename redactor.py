@@ -228,7 +228,7 @@ class MyEdit(QPlainTextEdit):
         self.change_position = position
         self.firstBlock = self._document.findBlock(position).blockNumber()
         self.untilBlock = self._document.findBlock(position + charsAdded - charsRemoved).blockNumber()
-        self.delta = self.untilBlock - self.firstBlock
+        self.delta = abs(self.untilBlock - self.firstBlock)
         print('on change position = {}, charsRemoved = {}, charsAdded = {}'
               .format(position, charsRemoved, charsAdded))
         print('How mach lines? = {} - {}'.format(self.untilBlock + 1, self.firstBlock))
@@ -323,10 +323,11 @@ class Progress(QProgressBar):
 
     def finish_current_batch(self, current_value):
         self.base.highlight.count_in_step = 0
+        print('progressbar finish current batch Hcount ', self.base.highlight.count)
+
         if current_value == self.maximum():
             self.inserting_in_main_g_cod()
             print('Load 100%')
-            print('LOAD inserting current pool:', self.base.current_g_cod_pool[0])
             self.base.delta_number_of_lines = 1
             self.base.current_g_cod_pool = np.zeros((self.base.delta_number_of_lines, 7), float)
             self.base.current_g_cod_pool[:] = np.nan
@@ -334,11 +335,11 @@ class Progress(QProgressBar):
             print('specially here count', self.base.highlight.count)
             self.setValue(0)
 
-        #elif self.base.delta_number_of_lines < self.base.highlight.count + self.base.highlight.standart_step:
-                #print('Делаем шаг поменьше: self.base.delta_number_of_lines={}, self.base.highlight.count={}, self.base.highlight.standart_step={}'
-                #      .format(self.base.delta_number_of_lines, self.base.highlight.count, self.base.highlight.standart_step))
-                #self.base.highlight.standart_step = self.base.delta_number_of_lines - self.base.highlight.count# - 1?
-        print('progressbar finish current batch Hcount ', self.base.highlight.count)
+        elif self.base.delta_number_of_lines < self.base.highlight.count + self.base.highlight.standart_step:
+                print('Делаем шаг поменьше: self.base.delta_number_of_lines={}, self.base.highlight.count={}, self.base.highlight.standart_step={}'
+                      .format(self.base.delta_number_of_lines, self.base.highlight.count, self.base.highlight.standart_step))
+                self.base.highlight.standart_step = self.base.delta_number_of_lines - self.base.highlight.count# - 1?
+
 
 
 
@@ -350,7 +351,7 @@ class Progress(QProgressBar):
         #self.min_line+1
         self.base.tab_.center_widget.left.left_tab.a.reset_np_array_in_left_field()
         #print('inserting current pool:', self.base.current_g_cod_pool[0])
-        print('inserting to main pool:', self.base.main_g_cod_pool)
+        #print('inserting to main pool:', self.base.main_g_cod_pool)
         #print('let s see = ', self.base.tab_.center_widget.left.left_tab.a)
 
 class ParentOfMyEdit(QWidget):
@@ -368,7 +369,6 @@ class ParentOfMyEdit(QWidget):
         self.progress_bar = Progress(self)
 
         self.delta_number_of_lines = self.editor.blockCount() or 1
-        #self.delta_number_of_lines = 1
         self.current_g_cod_pool = np.zeros((self.delta_number_of_lines, 7), float)
         self.current_g_cod_pool[:] = np.nan
         print('START: Создан массив размером ', self.current_g_cod_pool.shape)
@@ -379,8 +379,6 @@ class ParentOfMyEdit(QWidget):
         grid.addWidget(self.progress_bar, 1, 0)
         self.set_syntax()
 
-
-
     def set_syntax(self):
         print('SET syntax1')
         self.highlight = HLSyntax.HL_Syntax.GMHighlighter(self.editor._document, base=self)
@@ -388,13 +386,4 @@ class ParentOfMyEdit(QWidget):
 
     def on_count_changed(self, value):
         self.progress_bar.setValue(value)
-
-        #self.threadpool = QThreadPool()
-
-
-        #self.oh_no()
-
-    #def oh_no(self):#сейчас не используется
-    #    worker = runnable_flow.Worker(self.set_syntax, None)
-    #    self.threadpool.start(worker)
 

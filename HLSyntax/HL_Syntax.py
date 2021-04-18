@@ -106,8 +106,11 @@ class GMHighlighter(QSyntaxHighlighter):
         self.too_little_number_check()
 
     def too_little_number_check(self):
+        print('too_little_number_check')
         if self.base.delta_number_of_lines < self.const_step:
             self.standart_step = self.base.delta_number_of_lines
+        print('Шаг ныне ', self.standart_step)
+        print('А delta_number_of_lines = ', self.base.delta_number_of_lines)
 
     def highlightBlock(self, text):
         """Применить выделение синтаксиса к данному блоку текста. """
@@ -127,13 +130,13 @@ class GMHighlighter(QSyntaxHighlighter):
             self.setFormat(index, len_match, self.main_format)
             #print('self.base.current_g_cod_pool[0]  = ', self.base.current_g_cod_pool[0])
             #print('nya = ', nya.captured())
-            self.recount(nya, text)
+            self.recount(nya)
             #print('main rule! index = {}, string = {}'.format(index, text))
         elif index == 0:#empty string
-            self.recount2(nya)
+            self.recount2()
             #print('index = {}, string = {}, запуск дополнительных правил'.format(index, text))
         else:
-            self.recount(nya, text)
+            self.recount(nya)
         #nya = self.second_rule_regular_expression.match(text, 0)
         #index = nya.capturedStart()
         #if index != -1:
@@ -160,30 +163,20 @@ class GMHighlighter(QSyntaxHighlighter):
         #print('здесь')
         #self.recount(nya)#нужен отдельный реконт
 
-    def recount2(self, nya):
-        #print('recount start2, count = {}, nya = {}'.format(self.count, nya.captured(0)))
-        # print('recount поместил в self.base.current_g_cod_pool[{}]: {}'.format(self.count, self.base.current_g_cod_pool[self.count]))
+    def recount2(self):
         self.count_in_step += 1
         self.count += 1
-
         if self.count_in_step == self.standart_step:
             self.base.on_count_changed(self.count)  # progressBar
-
         return
 
-    def recount(self, nya, self_block):
-        #print('recount start, count = {}, nya = {}, self.standart_step={}'.format(self.count, nya.captured(0), self.standart_step))
+    def recount(self, nya):
         self.base.current_g_cod_pool[self.count] = [nya.captured(i) or None for i in self.max_number_ax]
-        #print('type  self_block', type(self_block))
-        #self_block.setUserData('ff')
-        #print('recount поместил в self.base.current_g_cod_pool[{}]: {}'.format(self.count, self.base.current_g_cod_pool[self.count]))
         self.count_in_step += 1
         self.count += 1
-
         if self.count_in_step == self.standart_step:
-            #print('count step = standart step, self.count = {}, bar.maximum = {}'.format(self.count, self.base.progress_bar.maximum()))
             self.base.on_count_changed(self.count)  # progressBar
-            #QApplication.processEvents(QEventLoop.WaitForMoreEvents)
+            #QApplication.processEvents()
         return
 
     def to_the_start(self):

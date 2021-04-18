@@ -12,7 +12,7 @@ color1 = 'rgb(145,191,204)'
 color2 = 'rgb(72,128,143)'
 color3 = 'rgb(47, 69, 82)'
 color4 = 'rgb(195,221,234)' #бледный
-splitter_parameters = {'lefty': 216, 'righty': 1177, 'flag': 1 }
+splitter_parameters = {'lefty': 449, 'righty': 944, 'flag': 1 }
 #self.splitter_flag
 
 g_programs_folder = 'D:/Py_try/EZ_machining/examples'

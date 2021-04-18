@@ -76,7 +76,7 @@ class NumpyPrint(QPlainTextEdit):
     def __init__(self, base, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.base = base
-
+        self.setFont(font1)
         # нам нужно постучаться в конкретную вкладку
 
         #self.setPlainText(np.array2string(self.test_pool2))
@@ -87,7 +87,7 @@ class NumpyPrint(QPlainTextEdit):
         #self.clear()
         self.setPlainText(np.array2string(visible_np))
         print('shape of visible_np = ', visible_np.shape)
-        print('np.array2string(visible_np):', np.array2string(visible_np))
+        #print('np.array2string(visible_np):', np.array2string(visible_np))
 
 
 
