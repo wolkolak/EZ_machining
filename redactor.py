@@ -1,11 +1,11 @@
 from PyQt5.QtWidgets import QGridLayout,  QLabel,  QPushButton, QPlainTextEdit, QDialog,\
     QCheckBox, QTextEdit, QWidget, QApplication, QFrame, QVBoxLayout, QBoxLayout, QProgressBar, QAction
-from PyQt5.QtCore import Qt, QRect, QSize, QTimer, QThread, QThreadPool, pyqtSlot, QEvent, Qt, pyqtSignal
+from PyQt5.QtCore import QRect, QSize, QTimer, QThread, QThreadPool, pyqtSlot, QEvent, Qt, pyqtSignal
 from PyQt5.QtGui import QTextOption, QColor, QPainter, QClipboard, QTextCursor, QTextDocument, QTextCharFormat,\
     QTextFormat, QGuiApplication, QKeySequence,QContextMenuEvent, QInputEvent, QMouseEvent, QCursor, QKeyEvent
 from settings import *
 from find_replace import finder
-import HLSyntax.HL_Syntax
+import HLSyntax.HL_Syntax, HLSyntax.addition_help_for_qt_highlight
 import flow
 import runnable_flow
 import numpy as np
@@ -68,7 +68,7 @@ class MyEdit(QPlainTextEdit):
         self.updateLineNumberAreaWidth(0)
 
         self.setAcceptDrops(True)
-        self.previousBlockCount = 1
+        #self.previousBlockCount = 1
 
         self.updateRequest.connect(self.updateLineNumberArea)
         print('self.blockCount() = ', self.blockCount())
@@ -79,7 +79,15 @@ class MyEdit(QPlainTextEdit):
         #contex menu settings
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.__contextMenu)
+        self.arithmetic_ones()
 
+    def arithmetic_ones(self):
+        self.corrected_qt_number_of_lines = 0
+        self.adding_lines = 1
+        self.min_line_np = 1
+        self.second_place = 1
+        self.blocks_before = 1
+        self.make_undo_work_1_time = 0
 
     def find_in_text(self):
         self.rez = finder(self).show()
@@ -202,14 +210,6 @@ class MyEdit(QPlainTextEdit):
 
 
 
-
-    def my_undo1(self):
-        #this is SLOT and it won't work directly
-        print('my_undo')
-
-    def redo1(self):
-        print('redo')
-
     def onChange(self, position, charsRemoved, charsAdded):
         """
         Я думаю, нужно сначала удалить из numpy лишнее, потому указать место вставки. Логично? вроде - да
@@ -226,58 +226,73 @@ class MyEdit(QPlainTextEdit):
         #time.sleep(5)
         print('выспался')
         self.change_position = position
-        self.firstBlock = self._document.findBlock(position).blockNumber()
-        self.untilBlock = self._document.findBlock(position + charsAdded - charsRemoved).blockNumber()
-        self.delta = abs(self.untilBlock - self.firstBlock)
-        print('on change position = {}, charsRemoved = {}, charsAdded = {}'
-              .format(position, charsRemoved, charsAdded))
-        print('How mach lines? = {} - {}'.format(self.untilBlock + 1, self.firstBlock))
-        print('firstBlock = {}, untilBlock = {}, delta = {}'.format(self.firstBlock, self.untilBlock, self.delta))
+        #арифметика
+        self.line_arithmetic()
         self.universal_replace_new()
+        if self.make_undo_work_1_time == 1:
+            self.make_undo_work_1_time = 2
+
+    def line_arithmetic(self):
+        self.text_lines_delete = self.untilBlock - self.firstBlock + 1
+        print('self.untilBlock = {}, self.firstBlock = {}'.format(self.untilBlock, self.firstBlock ))
+        self.text_lines_insert = self.blockCount() - self.blocks_before + self.text_lines_delete
+        print('text_lines_delete = {}, text_lines_insert = {}'.format(self.text_lines_delete, self.text_lines_insert))
+
+        self.min_line_np = self.firstBlock + 1
+        # есть следующая строка?
+        BL = self._document.blockCount()
+        if self.untilBlock + self.corrected_qt_number_of_lines - 1 < BL:
+            self.adding_lines = 0
+        else:
+            self.adding_lines = 1
+
+        self.np_lines_delete = self.text_lines_delete + self.corrected_qt_number_of_lines - self.adding_lines #+ 1
+        print('text_lines_delete = {}, self.corrected_qt_number_of_lines = {}, self.adding_lines = {}'.format(self.text_lines_delete, self.corrected_qt_number_of_lines, self.adding_lines))
+        self.base.reading_lines_number = self.text_lines_insert + self.corrected_qt_number_of_lines - self.adding_lines #+1
+        print('self.base.reading_lines_number', self.base.reading_lines_number)
+        self.second_place = self.min_line_np + self.np_lines_delete - 1
+        #self.second_place = self.min_line_np + self.np_lines_delete - self.adding_lines
+        print('self.min_line_np = ', self.min_line_np)
+        print('self.np_lines_delete = ', self.np_lines_delete )
+        #self.untilBlock - self.text_lines_delete + self.corrected_qt_number_of_lines
+
+
+
 
     def universal_replace_new(self):
         self.base.highlight.standart_step = 1
         #self.find_lines_to_replace()
-        self.creating_np_pool_and_organize_step()
+        self.creating_np_pool()
         self.delete_lines_from_main_np_g_pool()
 
-    def creating_np_pool_and_organize_step(self):
-        """
-        return: self.base.current_g_cod_pool empty, progress_bar.setMaximum, standart_step
-        """
-        self.base.delta_number_of_lines = self.delta + 1
-        self.base.current_g_cod_pool = np.zeros((self.base.delta_number_of_lines, 7), float)
+    def creating_np_pool(self):
+        self.base.current_g_cod_pool = np.zeros((self.base.reading_lines_number, 7), float)
         self.base.current_g_cod_pool[:] = np.nan
-        print('creating_np_pool_and_organize_step with size', self.base.delta_number_of_lines)
-        self.base.progress_bar.setMaximum(self.base.delta_number_of_lines)
-        if self.base.delta_number_of_lines < self.base.highlight.const_step:
-            self.base.highlight.standart_step = self.base.delta_number_of_lines
-        else:
-            self.base.highlight.standart_step = self.base.highlight.const_step
+
+        self.base.progress_bar.setMaximum(self.base.reading_lines_number)
+
+        self.base.highlight.too_little_number_check()
 
     def delete_lines_from_main_np_g_pool(self):
-        print('self.firstBlock', self.firstBlock)
-        self.base.min_line = min(self.firstBlock, self.untilBlock)
-        b = max(self.firstBlock, self.untilBlock)
-        print('выпилить с {} до {}'.format(self.base.min_line, b))
+        print('min_line = ', self.min_line_np)
         print('было: ', self.base.main_g_cod_pool.shape)
-        print('удалить строго диапазон: c {} по {}'.format(self.base.main_g_cod_pool[self.base.min_line], b))
-        #есть следующая строка?
-        BL = self._document.blockCount()
-        if b < BL:
-            adding_lines = 2
-        else:
-            adding_lines = 1
-        self.base.main_g_cod_pool = np.delete(self.base.main_g_cod_pool, np.s_[self.base.min_line+1:b+adding_lines], axis=0)
-        if BL != 0:
-            self.base.min_line = self.base.min_line + 1
+        print('удалить строго диапазон: c {} по {} включительно'.format(self.base.main_g_cod_pool[self.min_line_np],
+                                                                        self.second_place))
+        self.base.main_g_cod_pool = np.delete(self.base.main_g_cod_pool, np.s_[self.min_line_np:self.second_place + 1], axis=0)
+
         print('стало: ', self.base.main_g_cod_pool.shape)
 
     def eventFilter(self, widget, event):
         # должен ссылаться на универсальную замену текста
         #print('event.type() = ', event.type())
         if event == QKeySequence.Undo:
-            print('olololololo')
+            if self.make_undo_work_1_time == 0:
+                print('QKeySequence.Undo для однократного исполнения')
+                self.corrected_qt_number_of_lines, self.untilBlock, self.firstBlock, self.blocks_before = HLSyntax.addition_help_for_qt_highlight.corrected_number_of_lines(
+                    self, key='Undo')
+                self.make_undo_work_1_time = 1
+            elif self.make_undo_work_1_time == 2:
+                self.make_undo_work_1_time = 0
 
         if (event.type() == QEvent.KeyPress and widget is self):
             key = event.key()
@@ -291,26 +306,15 @@ class MyEdit(QPlainTextEdit):
                 #    self.my_undo()
             else:
                 if event.text():
-                    print('writing key used')
-                    #delete, backspace
-                    if key == Qt.Key_Backspace:
-                        print('Backspace')
-                    elif key == Qt.Key_Delete:
-                        print('Delete')
-                    elif key == Qt.Key_Enter:
-                        print('enter')
-                    else:
-                        pass
-            print('key was', key)
-            #QWidget.eventFilter(self, widget, event)
+                    self.corrected_qt_number_of_lines, self.untilBlock, self.firstBlock, self.blocks_before = HLSyntax.addition_help_for_qt_highlight.corrected_number_of_lines(self, key)
             if self._document.isModified():
                 print('was modified')
                 self._document.setModified(False)
 
         return QWidget.eventFilter(self, widget, event)
 
-    def universal_replace(self):
-        pass
+
+
 
 class Progress(QProgressBar):
     def __init__(self, base):
@@ -328,31 +332,26 @@ class Progress(QProgressBar):
         if current_value == self.maximum():
             self.inserting_in_main_g_cod()
             print('Load 100%')
-            self.base.delta_number_of_lines = 1
-            self.base.current_g_cod_pool = np.zeros((self.base.delta_number_of_lines, 7), float)
+            self.base.reading_lines_number = 1
+
+            self.base.current_g_cod_pool = np.zeros((self.base.reading_lines_number, 7), float)
             self.base.current_g_cod_pool[:] = np.nan
             self.base.highlight.to_the_start()
             print('specially here count', self.base.highlight.count)
             self.setValue(0)
 
-        elif self.base.delta_number_of_lines < self.base.highlight.count + self.base.highlight.standart_step:
-                print('Делаем шаг поменьше: self.base.delta_number_of_lines={}, self.base.highlight.count={}, self.base.highlight.standart_step={}'
-                      .format(self.base.delta_number_of_lines, self.base.highlight.count, self.base.highlight.standart_step))
-                self.base.highlight.standart_step = self.base.delta_number_of_lines - self.base.highlight.count# - 1?
-
-
+        elif self.base.reading_lines_number < self.base.highlight.count + self.base.highlight.standart_step:
+                print('Делаем шаг поменьше: number_of_lines={}, self.base.highlight.count={}, self.base.highlight.standart_step={}'
+                      .format(self.base.reading_lines_number, self.base.highlight.count, self.base.highlight.standart_step))
+                self.base.highlight.standart_step = self.base.reading_lines_number - self.base.highlight.count# - 1?
 
 
     def inserting_in_main_g_cod(self):
-        print('self.base.min_line', self.base.min_line)
-        print('main_g_cod_pool.shape', self.base.main_g_cod_pool.shape)
-        self.base.main_g_cod_pool = np.insert(self.base.main_g_cod_pool, self.base.min_line, self.base.current_g_cod_pool, axis=0)
-        self.base.min_line = self.base.min_line + 1
-        #self.min_line+1
+
+        print('вставить {} перед строкой {}'.format(self.base.current_g_cod_pool, self.base.editor.min_line_np))
+        self.base.main_g_cod_pool = np.insert(self.base.main_g_cod_pool, self.base.editor.min_line_np, self.base.current_g_cod_pool, axis=0)
         self.base.tab_.center_widget.left.left_tab.a.reset_np_array_in_left_field()
-        #print('inserting current pool:', self.base.current_g_cod_pool[0])
-        #print('inserting to main pool:', self.base.main_g_cod_pool)
-        #print('let s see = ', self.base.tab_.center_widget.left.left_tab.a)
+
 
 class ParentOfMyEdit(QWidget):
     def __init__(self, text, tab_, existing):
@@ -368,14 +367,14 @@ class ParentOfMyEdit(QWidget):
 
         self.progress_bar = Progress(self)
 
-        self.delta_number_of_lines = self.editor.blockCount() or 1
-        self.current_g_cod_pool = np.zeros((self.delta_number_of_lines, 7), float)
+        self.reading_lines_number = self.editor.blockCount() or 1
+
+        self.current_g_cod_pool = np.zeros((self.reading_lines_number, 7), float)
         self.current_g_cod_pool[:] = np.nan
         print('START: Создан массив размером ', self.current_g_cod_pool.shape)
-        self.min_line = 1
         self.main_g_cod_pool = np.zeros((1, 7), float)
         self.main_g_cod_pool[:] = np.nan
-        self.progress_bar.setMaximum(self.delta_number_of_lines)
+        self.progress_bar.setMaximum(self.reading_lines_number)
         grid.addWidget(self.progress_bar, 1, 0)
         self.set_syntax()
 

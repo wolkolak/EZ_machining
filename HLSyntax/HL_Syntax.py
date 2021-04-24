@@ -107,17 +107,17 @@ class GMHighlighter(QSyntaxHighlighter):
 
     def too_little_number_check(self):
         print('too_little_number_check')
-        if self.base.delta_number_of_lines < self.const_step:
-            self.standart_step = self.base.delta_number_of_lines
+        if self.base.reading_lines_number < self.const_step:
+            self.standart_step = self.base.reading_lines_number
         print('Шаг ныне ', self.standart_step)
-        print('А delta_number_of_lines = ', self.base.delta_number_of_lines)
+        print('А reading_lines_number = ', self.base.reading_lines_number)
 
     def highlightBlock(self, text):
         """Применить выделение синтаксиса к данному блоку текста. """
 
         #if self.base.editor._document.isModified():
         #print('waiting')
-        #print('delta_number_of_lines', self.base.delta_number_of_lines)
+        #print('reading_lines_number', self.base.reading_lines_number)
         #time.sleep(5)
 
         common_length = 0
