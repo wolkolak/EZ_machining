@@ -277,7 +277,6 @@ class MyEdit(QPlainTextEdit):
         self.base.main_g_cod_pool = np.delete(self.base.main_g_cod_pool, np.s_[self.min_line_np:self.second_place + 1], axis=0)
         print('стало: ', self.base.main_g_cod_pool.shape)
 
-    #todo сделать set maximum +1 для не последней строки на конце вставки|вроде сделал
 
     def eventFilter(self, widget, event):
         # должен ссылаться на универсальную замену текста
@@ -314,7 +313,15 @@ class MyEdit(QPlainTextEdit):
         return QWidget.eventFilter(self, widget, event)
 
 
+    def insertFromMimeData(self, source):
+        # должен ссылаться на универсальную замену текста
+        self.blocks_before = self._document.blockCount()
 
+        if source.hasText():
+            self.corrected_qt_number_of_lines, self.untilBlock, self.firstBlock = HLSyntax.addition_help_for_qt_highlight.corrected_number_of_lines(
+               self, key='insert')
+            print('paaaste: ')
+            QPlainTextEdit.insertFromMimeData(self, source)
 
 class Progress(QProgressBar):
     def __init__(self, base):
@@ -373,7 +380,6 @@ class ParentOfMyEdit(QWidget):
         self.current_g_cod_pool[:] = np.nan
         print('START: Создан массив размером ', self.current_g_cod_pool.shape)
         self.main_g_cod_pool = np.zeros((1, 7), float)
-        #todo добавил строку в начальный main_g_cod_pool
         self.main_g_cod_pool[:] = np.nan
         self.progress_bar.setMaximum(self.reading_lines_number)
         grid.addWidget(self.progress_bar, 1, 0)

@@ -29,22 +29,25 @@ def corrected_number_of_lines(my_edit, key):
         if my_cursor.atBlockStart() and not h:
             print('tut problema bila')
             mladshii_block = mladshii_block - 1#backspace in the beginning of the line will update previous line too
-        #a = a + 1
         if important_clue and not starshiy_block + 1 == my_edit.blockCount():
             a = a + 1
+
+    elif key == 'Undo':#todo
+        print('QKeySequence.Undo шляпа')
+
+    elif key == 'insert':
+        print('insert11')
+
     elif key == Qt.Key_Delete:
         print('Delete')
         if b and not h:
             starshiy_block = starshiy_block + 1#delete on the end of the line will update next line too
         if h and important_clue and not starshiy_block + 1 == my_edit.blockCount():
             a = a + 1
-    elif key == Qt.Key_Enter or Qt.Key_Return:
+    elif key == Qt.Key_Enter or Qt.Key_Return:#enter почему то срабатывает при Undo и insert, так что пусть лежит ниже
         print('enter')
-
         if h and important_clue:
             a = a + 1
-    elif key == 'Undo':#todo
-        print('QKeySequence.Undo шляпа')
 
 
     else:#symbol
