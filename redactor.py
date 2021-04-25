@@ -178,15 +178,21 @@ class MyEdit(QPlainTextEdit):
         self._normalMenu.exec_(QCursor.pos())
 
     def _addCustomMenuItems(self, menu):
-        #self.my_undo_action = QAction("My Undo", self)
-        #self.my_undo_action.triggered.connect(self.my_undo)
 
-        self.my_redo_action = QAction("My Redo", self)
-        self.my_redo_action.triggered.connect(self.my_redo)
+        self.myUndoAction = QAction('Undo', self)
+        self.myUndoAction.setStatusTip('Cancel previous change')
+        self.myUndoAction.triggered.connect(self.my_undo)
+        self.myUndoAction.setShortcut('Ctrl+Z')
+
+        self.myRedoAction = QAction("Redo", self)
+        self.myRedoAction.setStatusTip('Rewriting undone changes')
+        self.myRedoAction.triggered.connect(self.my_redo)
+        self.myRedoAction.setShortcut('Ctrl+Y')
+
         menu.removeAction(menu.actions()[0])
         menu.removeAction(menu.actions()[0])
         menu.insertAction(menu.actions()[0], self.my_redo_action)
-        menu.insertAction(menu.actions()[0], self.base.tab_.center_widget.)
+        menu.insertAction(menu.actions()[0], self.myUndoAction)
 
     def my_undo(self):
         print('undo21')
@@ -195,7 +201,9 @@ class MyEdit(QPlainTextEdit):
         #pyautogui.hotkey('ctrl', 'z')
 
     def my_redo(self):
-        pyautogui.hotkey('ctrl', 'y')
+        print('redo21')
+        QPlainTextEdit.redo(self)
+        #pyautogui.hotkey('ctrl', 'y')
 
     #pyqtSlot()
     def changing(self):
