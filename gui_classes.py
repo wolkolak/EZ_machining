@@ -4,7 +4,7 @@ from PyQt5.QtCore import Qt, QRect, QSize
 import redactor, left_part
 from settings import *
 import change_setting
-
+import numpy as np
 
 
 class My_Button(QPushButton):
@@ -120,6 +120,12 @@ class Tabs(QTabWidget):
             self.tabs[i][1] = True
             print('new tab0')
             self.insertTab(self.currentIndex()+1, redactor.ParentOfMyEdit(None, existing=False, tab_=self), self.tabs[i][0])
+            #gbplf
+
+            self.currentWidget().main_g_cod_pool = np.insert(self.currentWidget().main_g_cod_pool, 0, self.currentWidget().main_g_cod_pool, axis=0)
+            self.center_widget.left.left_tab.a.reset_np_array_in_left_field()
+            print('self.currentWidget().main_g_cod_pool', self.currentWidget().main_g_cod_pool)
+
             #self.currentWidget().editor.set_syntax()
 
             self.setCurrentIndex(self.currentIndex()+1)

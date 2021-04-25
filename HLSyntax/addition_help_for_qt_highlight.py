@@ -52,5 +52,5 @@ def corrected_number_of_lines(my_edit, key):
             a = a + 1
     print('key was', key)
     print('И вот a = ', a)
-    return a, starshiy_block, mladshii_block, my_edit._document.blockCount()
+    return a, starshiy_block, mladshii_block
 #my_edir.delete_line_corrector

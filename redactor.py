@@ -240,8 +240,7 @@ class MyEdit(QPlainTextEdit):
 
         self.min_line_np = self.firstBlock + 1
         # есть следующая строка?
-        BL = self._document.blockCount()
-        if self.untilBlock + self.corrected_qt_number_of_lines - 1 < BL:
+        if self.untilBlock + self.corrected_qt_number_of_lines < self.blocks_before:
             self.adding_lines = 0
         else:
             self.adding_lines = 1
@@ -268,34 +267,35 @@ class MyEdit(QPlainTextEdit):
     def creating_np_pool(self):
         self.base.current_g_cod_pool = np.zeros((self.base.reading_lines_number, 7), float)
         self.base.current_g_cod_pool[:] = np.nan
-
         self.base.progress_bar.setMaximum(self.base.reading_lines_number)
-
         self.base.highlight.too_little_number_check()
 
     def delete_lines_from_main_np_g_pool(self):
         print('min_line = ', self.min_line_np)
         print('было: ', self.base.main_g_cod_pool.shape)
-        print('удалить строго диапазон: c {} по {} включительно'.format(self.base.main_g_cod_pool[self.min_line_np],
-                                                                        self.second_place))
+        print('удалить строго диапазон: c {} по {} включительно'.format(self.base.main_g_cod_pool[self.min_line_np],                                                              self.second_place))
         self.base.main_g_cod_pool = np.delete(self.base.main_g_cod_pool, np.s_[self.min_line_np:self.second_place + 1], axis=0)
-
         print('стало: ', self.base.main_g_cod_pool.shape)
+
+    #todo сделать set maximum +1 для не последней строки на конце вставки|вроде сделал
 
     def eventFilter(self, widget, event):
         # должен ссылаться на универсальную замену текста
         #print('event.type() = ', event.type())
         if event == QKeySequence.Undo:
+            print('QKeySequence.Undo для однократного исполнения')
             if self.make_undo_work_1_time == 0:
-                print('QKeySequence.Undo для однократного исполнения')
-                self.corrected_qt_number_of_lines, self.untilBlock, self.firstBlock, self.blocks_before = HLSyntax.addition_help_for_qt_highlight.corrected_number_of_lines(
-                    self, key='Undo')
+
+                #self.corrected_qt_number_of_lines, self.untilBlock, self.firstBlock, self.blocks_before = HLSyntax.addition_help_for_qt_highlight.corrected_number_of_lines(
+                #    self, key='Undo')
                 self.make_undo_work_1_time = 1
             elif self.make_undo_work_1_time == 2:
                 self.make_undo_work_1_time = 0
 
         if (event.type() == QEvent.KeyPress and widget is self):
             key = event.key()
+
+            self.blocks_before  = self._document.blockCount()
             if Qt.KeypadModifier:
                 print('KeypadModifie', int(event.modifiers()))
             mod_sum = int(event.modifiers())
@@ -306,7 +306,7 @@ class MyEdit(QPlainTextEdit):
                 #    self.my_undo()
             else:
                 if event.text():
-                    self.corrected_qt_number_of_lines, self.untilBlock, self.firstBlock, self.blocks_before = HLSyntax.addition_help_for_qt_highlight.corrected_number_of_lines(self, key)
+                    self.corrected_qt_number_of_lines, self.untilBlock, self.firstBlock= HLSyntax.addition_help_for_qt_highlight.corrected_number_of_lines(self, key)
             if self._document.isModified():
                 print('was modified')
                 self._document.setModified(False)
@@ -373,6 +373,7 @@ class ParentOfMyEdit(QWidget):
         self.current_g_cod_pool[:] = np.nan
         print('START: Создан массив размером ', self.current_g_cod_pool.shape)
         self.main_g_cod_pool = np.zeros((1, 7), float)
+        #todo добавил строку в начальный main_g_cod_pool
         self.main_g_cod_pool[:] = np.nan
         self.progress_bar.setMaximum(self.reading_lines_number)
         grid.addWidget(self.progress_bar, 1, 0)

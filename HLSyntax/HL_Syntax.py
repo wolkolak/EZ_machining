@@ -129,7 +129,7 @@ class GMHighlighter(QSyntaxHighlighter):
         if len_match != 0:
             self.setFormat(index, len_match, self.main_format)
             #print('self.base.current_g_cod_pool[0]  = ', self.base.current_g_cod_pool[0])
-            #print('nya = ', nya.captured())
+            print('nya = ', nya.captured())
             self.recount(nya)
             #print('main rule! index = {}, string = {}'.format(index, text))
         elif index == 0:#empty string
