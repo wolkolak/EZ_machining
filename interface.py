@@ -75,6 +75,9 @@ class MyMainWindow(QMainWindow):
     def find_obertka(self):
         self.centre.note.currentWidget().editor.find_in_text()
 
+    def undo_obertka(self):
+        self.centre.note.currentWidget().editor.my_undo()
+
     def change_tab(self, n):
         print('tab change')
         if self.centre.note.currentIndex() != -1:

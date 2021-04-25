@@ -42,7 +42,8 @@ def corrected_number_of_lines(my_edit, key):
 
     elif key == 'cut':
         print('cut1')
-
+        if important_clue and h:
+            a = a + 1
 
     elif key == Qt.Key_Delete:
         print('Delete')

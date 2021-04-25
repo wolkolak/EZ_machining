@@ -178,18 +178,21 @@ class MyEdit(QPlainTextEdit):
         self._normalMenu.exec_(QCursor.pos())
 
     def _addCustomMenuItems(self, menu):
-        self.my_undo_action = QAction("My Undo", self)
-        self.my_undo_action.triggered.connect(self.my_undo)
+        #self.my_undo_action = QAction("My Undo", self)
+        #self.my_undo_action.triggered.connect(self.my_undo)
+
         self.my_redo_action = QAction("My Redo", self)
         self.my_redo_action.triggered.connect(self.my_redo)
         menu.removeAction(menu.actions()[0])
         menu.removeAction(menu.actions()[0])
         menu.insertAction(menu.actions()[0], self.my_redo_action)
-        menu.insertAction(menu.actions()[0], self.my_undo_action)
+        menu.insertAction(menu.actions()[0], self.base.tab_.center_widget.)
 
     def my_undo(self):
+        print('undo21')
+        QPlainTextEdit.undo(self)
         #в стек запомнить длину удаленного, добавленного в строках. место заполнится без моего участия
-        pyautogui.hotkey('ctrl', 'z')
+        #pyautogui.hotkey('ctrl', 'z')
 
     def my_redo(self):
         pyautogui.hotkey('ctrl', 'y')
@@ -272,15 +275,7 @@ class MyEdit(QPlainTextEdit):
     def eventFilter(self, widget, event):
         # должен ссылаться на универсальную замену текста
         #print('event.type() = ', event.type())
-        if event == QKeySequence.Undo:
 
-            if self.make_undo_work_1_time == 0:
-                print('QKeySequence.Undo для однократного исполнения')
-                #self.corrected_qt_number_of_lines, self.untilBlock, self.firstBlock, self.blocks_before = HLSyntax.addition_help_for_qt_highlight.corrected_number_of_lines(
-                #    self, key='Undo')
-                self.make_undo_work_1_time = 1
-            elif self.make_undo_work_1_time == 2:
-                self.make_undo_work_1_time = 0
 
         if (event.type() == QEvent.KeyPress and widget is self):
             key = event.key()
