@@ -239,12 +239,6 @@ class MyEdit(QPlainTextEdit):
         print('text_lines_delete = {}, text_lines_insert = {}'.format(self.text_lines_delete, self.text_lines_insert))
 
         self.min_line_np = self.firstBlock + 1
-        # есть следующая строка?
-        if self.untilBlock + self.corrected_qt_number_of_lines < self.blocks_before:
-            self.adding_lines = 0
-        else:
-            self.adding_lines = 1
-
         self.np_lines_delete = self.text_lines_delete + self.corrected_qt_number_of_lines - self.adding_lines #+ 1
         print('text_lines_delete = {}, self.corrected_qt_number_of_lines = {}, self.adding_lines = {}'.format(self.text_lines_delete, self.corrected_qt_number_of_lines, self.adding_lines))
         self.base.reading_lines_number = self.text_lines_insert + self.corrected_qt_number_of_lines - self.adding_lines #+1
@@ -254,9 +248,6 @@ class MyEdit(QPlainTextEdit):
         print('self.min_line_np = ', self.min_line_np)
         print('self.np_lines_delete = ', self.np_lines_delete )
         #self.untilBlock - self.text_lines_delete + self.corrected_qt_number_of_lines
-
-
-
 
     def universal_replace_new(self):
         self.base.highlight.standart_step = 1
@@ -282,9 +273,9 @@ class MyEdit(QPlainTextEdit):
         # должен ссылаться на универсальную замену текста
         #print('event.type() = ', event.type())
         if event == QKeySequence.Undo:
-            print('QKeySequence.Undo для однократного исполнения')
-            if self.make_undo_work_1_time == 0:
 
+            if self.make_undo_work_1_time == 0:
+                print('QKeySequence.Undo для однократного исполнения')
                 #self.corrected_qt_number_of_lines, self.untilBlock, self.firstBlock, self.blocks_before = HLSyntax.addition_help_for_qt_highlight.corrected_number_of_lines(
                 #    self, key='Undo')
                 self.make_undo_work_1_time = 1
@@ -301,6 +292,12 @@ class MyEdit(QPlainTextEdit):
             if mod_sum > 0 and mod_sum != Qt.ShiftModifier and mod_sum != Qt.KeypadModifier \
                     and mod_sum != Qt.ShiftModifier + Qt.KeypadModifier:
                 print('модификаторы кроме шифта')
+
+                if event.key() == (Qt.Key_Control and Qt.Key_X):
+                    print('Вырез')
+                self.corrected_qt_number_of_lines, self.untilBlock, self.firstBlock = HLSyntax.addition_help_for_qt_highlight.corrected_number_of_lines(
+                    self, key='cut')
+
                 #if event.key() == (Qt.Key_Control and Qt.Key_Z):
                 #    self.my_undo()
             else:

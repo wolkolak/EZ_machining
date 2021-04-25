@@ -37,6 +37,12 @@ def corrected_number_of_lines(my_edit, key):
 
     elif key == 'insert':
         print('insert11')
+        if important_clue and h:
+            a = a + 1
+
+    elif key == 'cut':
+        print('cut1')
+
 
     elif key == Qt.Key_Delete:
         print('Delete')
@@ -44,15 +50,21 @@ def corrected_number_of_lines(my_edit, key):
             starshiy_block = starshiy_block + 1#delete on the end of the line will update next line too
         if h and important_clue and not starshiy_block + 1 == my_edit.blockCount():
             a = a + 1
+
     elif key == Qt.Key_Enter or Qt.Key_Return:#enter почему то срабатывает при Undo и insert, так что пусть лежит ниже
         print('enter')
         if h and important_clue:
             a = a + 1
 
-
     else:#symbol
         if h and important_clue:
             a = a + 1
+
+    # есть следующая строка?
+    if starshiy_block + a < my_edit.blocks_before:
+        my_edit.adding_lines = 0
+    else:
+        my_edit.adding_lines = 1
     print('key was', key)
     print('И вот a = ', a)
     return a, starshiy_block, mladshii_block
