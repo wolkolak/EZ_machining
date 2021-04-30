@@ -35,6 +35,13 @@ def corrected_number_of_lines(my_edit, key):
     elif key == 'Undo':#todo
         print('QKeySequence.Undo шляпа')
 
+    elif key == 'undo':
+        print('undo99')
+
+        #if important_clue and h:
+        #    a = a + 1
+
+
     elif key == 'insert':
         print('insert11')
         if important_clue and h:

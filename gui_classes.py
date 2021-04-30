@@ -263,9 +263,9 @@ class right2(QWidget):
 
 class CenterWindow(QWidget):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, app, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
+        self.app = app
         centr_grid = QGridLayout()
         self.setLayout(centr_grid)
         self.setStyleSheet("background-color: gray")

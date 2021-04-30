@@ -25,7 +25,7 @@ class MyMainWindow(QMainWindow):
 
         self.setWindowTitle('EZ machining')
         self.setGeometry(100, 100, settings.interface_settings['main_width'], settings.interface_settings['main_height'])
-        self.centre = gui_classes.CenterWindow()
+        self.centre = gui_classes.CenterWindow(self)
         self.setCentralWidget(self.centre)
         self.statusBar()
         self.menubar = self.menuBar()
@@ -80,6 +80,21 @@ class MyMainWindow(QMainWindow):
 
     def redo_obertka(self):
         self.centre.note.currentWidget().editor.my_redo()
+
+    def del_obertka(self):
+        self.centre.note.currentWidget().editor.my_del()
+
+    def paste_obertka(self):
+        self.centre.note.currentWidget().editor.my_paste()
+
+    def select_all_obertka(self):
+        self.centre.note.currentWidget().editor.my_select_all()
+
+    def copy_obertka(self):
+        self.centre.note.currentWidget().editor.my_copy()
+
+    def cut_obertka(self):
+        self.centre.note.currentWidget().editor.my_cut()
 
     def change_tab(self, n):
         print('tab change')

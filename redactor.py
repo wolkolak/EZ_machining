@@ -1,8 +1,8 @@
 from PyQt5.QtWidgets import QGridLayout,  QLabel,  QPushButton, QPlainTextEdit, QDialog,\
-    QCheckBox, QTextEdit, QWidget, QApplication, QFrame, QVBoxLayout, QBoxLayout, QProgressBar, QAction
+    QCheckBox, QTextEdit, QWidget,  QProgressBar, QAction, QMenu, QUndoStack, QUndoCommand
 from PyQt5.QtCore import QRect, QSize, QTimer, QThread, QThreadPool, pyqtSlot, QEvent, Qt, pyqtSignal
-from PyQt5.QtGui import QTextOption, QColor, QPainter, QClipboard, QTextCursor, QTextDocument, QTextCharFormat,\
-    QTextFormat, QGuiApplication, QKeySequence,QContextMenuEvent, QInputEvent, QMouseEvent, QCursor, QKeyEvent
+from PyQt5.QtGui import QTextOption, QColor, QPainter,  QTextCharFormat,\
+    QTextFormat,  QCursor, QKeyEvent
 from settings import *
 from find_replace import finder
 import HLSyntax.HL_Syntax, HLSyntax.addition_help_for_qt_highlight
@@ -11,7 +11,7 @@ import runnable_flow
 import numpy as np
 import time
 import pyautogui
-
+import copy
 
 class QLineNumberArea(QWidget):
     def __init__(self, editor):
@@ -47,12 +47,8 @@ class MyEdit(QPlainTextEdit):
         if text:
             self.setPlainText(text)
         self.changed = False
-        self.modificationChanged.connect(self.changing)
-        #self.document().setModified(False)
-        #self.modificationChanged.disconnect(self.document().codeModificationChanged)
 
         self.zoomIn(5)
-        #self.setTextBackgroundColor(Qt.lightGray)
 
         self.fmt = QTextCharFormat()
         self.fmt.setUnderlineColor(Qt.red)
@@ -80,6 +76,8 @@ class MyEdit(QPlainTextEdit):
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.__contextMenu)
         self.arithmetic_ones()
+        #self.undoStack = QUndoStack()
+        self.i = 0#for tests
 
     def arithmetic_ones(self):
         self.corrected_qt_number_of_lines = 0
@@ -172,52 +170,55 @@ class MyEdit(QPlainTextEdit):
             blockNumber += 1
 
     def __contextMenu(self):
-        self._menu_to_borrow = self.createStandardContextMenu()
-        self._normalMenu = self.createStandardContextMenu()
-        self._addCustomMenuItems(self._normalMenu)
+        self._normalMenu = QMenu()
+        self._addCustomMenuItems(self._normalMenu, self.base.tab_.center_widget.app.editMenu)
         self._normalMenu.exec_(QCursor.pos())
 
-    def _addCustomMenuItems(self, menu):
+    def _addCustomMenuItems(self, new_menu1, old_menu):
+        for i in range(2, 11):
+            new_menu1.addAction(old_menu.actions()[i])
 
-        self.myUndoAction = QAction('Undo', self)
-        self.myUndoAction.setStatusTip('Cancel previous change')
-        self.myUndoAction.triggered.connect(self.my_undo)
-        self.myUndoAction.setShortcut('Ctrl+Z')
 
-        self.myRedoAction = QAction("Redo", self)
-        self.myRedoAction.setStatusTip('Rewriting undone changes')
-        self.myRedoAction.triggered.connect(self.my_redo)
-        self.myRedoAction.setShortcut('Ctrl+Y')
-
-        menu.removeAction(menu.actions()[0])
-        menu.removeAction(menu.actions()[0])
-        menu.insertAction(menu.actions()[0], self.my_redo_action)
-        menu.insertAction(menu.actions()[0], self.myUndoAction)
 
     def my_undo(self):
         print('undo21')
+        self.corrected_qt_number_of_lines, self.untilBlock, self.firstBlock = HLSyntax.addition_help_for_qt_highlight.corrected_number_of_lines(
+            self, key='undo')
+
         QPlainTextEdit.undo(self)
         #в стек запомнить длину удаленного, добавленного в строках. место заполнится без моего участия
         #pyautogui.hotkey('ctrl', 'z')
 
     def my_redo(self):
         print('redo21')
+
         QPlainTextEdit.redo(self)
         #pyautogui.hotkey('ctrl', 'y')
 
-    #pyqtSlot()
-    def changing(self):
-        """С одной стороны я хочу отслеживать изменения в документе, с другой - отслеживать их момент.
-        Не знаю как выставить верную стратегию изменений документа (сигнал приходит дважды),
-        посему - чётные изменения я буду игнорировать"""
+    def my_del(self):
+        print('my_del21')
+        pyautogui.hotkey('delete')
 
-        #if self.flag_modificationChanged_workaround is False:
-        #    self.flag_modificationChanged_workaround = True
-        #    #print('Ветка False')
-        #    return
+    def my_paste(self):
+        #seems, it can not work directly, we need insertFromMimeData :((
+        QPlainTextEdit.paste(self)
 
-        print('changing')
-        self.changed = True
+    def my_select_all(self):
+        print('my chose21')
+        pyautogui.hotkey('ctrl', 'a')
+
+    def my_copy(self):
+        print('my copy21')
+        pyautogui.hotkey('ctrl', 'c')
+
+    def my_cut(self):
+        print('my cut21')
+        self.corrected_qt_number_of_lines, self.untilBlock, self.firstBlock = HLSyntax.addition_help_for_qt_highlight.corrected_number_of_lines(
+            self, key='cut')
+        #self.cut()
+        QPlainTextEdit.cut(self)
+        #pyautogui.hotkey('ctrl', 'x')
+
 
 
 
@@ -235,13 +236,25 @@ class MyEdit(QPlainTextEdit):
 
         """
         #time.sleep(5)
-        print('выспался')
+        print('начало onChange')
+        self.changed = True
         self.change_position = position
         #арифметика
         self.line_arithmetic()
+        print('after line_arithmetic')
         self.universal_replace_new()
         if self.make_undo_work_1_time == 1:
             self.make_undo_work_1_time = 2
+
+        #print('здесь self.sender()', dir(self.sender()))
+        #print('здесь type self.sender()', type(self.sender()))
+        #command = StoreCommand(self.sender())
+        #self.undoStack.push(command)
+
+        #self.undoStack.push(command)
+        print('конец onChange')
+
+
 
     def line_arithmetic(self):
         self.text_lines_delete = self.untilBlock - self.firstBlock + 1
@@ -295,14 +308,14 @@ class MyEdit(QPlainTextEdit):
             if mod_sum > 0 and mod_sum != Qt.ShiftModifier and mod_sum != Qt.KeypadModifier \
                     and mod_sum != Qt.ShiftModifier + Qt.KeypadModifier:
                 print('модификаторы кроме шифта')
-
+                if event.key() == (Qt.Key_Control and Qt.Key_Z):
+                    print('отменить')
+                    self.my_undo()
                 if event.key() == (Qt.Key_Control and Qt.Key_X):
                     print('Вырез')
-                self.corrected_qt_number_of_lines, self.untilBlock, self.firstBlock = HLSyntax.addition_help_for_qt_highlight.corrected_number_of_lines(
-                    self, key='cut')
-
-                #if event.key() == (Qt.Key_Control and Qt.Key_Z):
-                #    self.my_undo()
+                    self.my_cut()
+                if event.key() == (Qt.Key_Control and Qt.Key_V):
+                    print('Вставка')
             else:
                 if event.text():
                     self.corrected_qt_number_of_lines, self.untilBlock, self.firstBlock= HLSyntax.addition_help_for_qt_highlight.corrected_number_of_lines(self, key)
@@ -312,16 +325,41 @@ class MyEdit(QPlainTextEdit):
 
         return QWidget.eventFilter(self, widget, event)
 
-
     def insertFromMimeData(self, source):
         # должен ссылаться на универсальную замену текста
-        self.blocks_before = self._document.blockCount()
+        #self.blocks_before = self._document.blockCount()
 
         if source.hasText():
             self.corrected_qt_number_of_lines, self.untilBlock, self.firstBlock = HLSyntax.addition_help_for_qt_highlight.corrected_number_of_lines(
                self, key='insert')
             print('paaaste: ')
             QPlainTextEdit.insertFromMimeData(self, source)
+
+
+class StoreCommand(QUndoCommand):
+
+    def __init__(self, field):
+
+        QUndoCommand.__init__(self)
+
+        # Record the field that has changed.
+        self.field = field
+        print('self.field.text()', self.field.toPlainText())
+
+        # Record the text at the time the command was created.
+        self.text = field.toPlainText()
+
+    def undo(self):
+
+        # Remove the text from the file and set it in the field.
+        # ...
+        self.field.setText(self.text)
+
+    def redo(self):
+
+        # Store the text in the file and set it in the field.
+        # ...
+        self.field.setText(self.text)
 
 class Progress(QProgressBar):
     def __init__(self, base):
