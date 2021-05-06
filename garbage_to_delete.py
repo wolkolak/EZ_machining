@@ -66,11 +66,15 @@ class MyLine(QPlainTextEdit):
                 print('модификаторы кроме шифта')
                 if event.key() == (Qt.Key_Control and Qt.Key_Z):
                     print('отменить')
-                    self.my_undo()
+                    #self.my_undo()
+                if event.key() == (Qt.Key_Control and Qt.Key_Y):
+                    print('вернуть')
                 if event.key() == (Qt.Key_Control and Qt.Key_X):
                     print('Вырез')
                     self.undoStack.edit_type = 'Cut'# ['Cut']
-                    self.my_cut()
+                    #QPlainTextEdit.cut(self)
+                    self.undoStack.last_edited = ''
+                    self.undoStack.storeFieldText()
                 if event.key() == (Qt.Key_Control and Qt.Key_V):
                     print('Вставка')
                     self.undoStack.edit_type = 'Insert'
@@ -118,48 +122,47 @@ class StoreCommand(QUndoCommand):
         self.text_inserted = self.stack.last_edited
         self.text = self.stack.edit_type
 
-        if not self.store_cursor.hasSelection():
-            print('not selection')
-            if self.text == 'Backspace':
-                self.text_inserted = ''
-                # self.store_cursor.movePosition(19, 1)
+        if self.text == 'symbol':
+            self.give_position()
+            self.pos3 = self.pos1 + 1
+        elif self.text == 'Backspace':
+            self.text_inserted = ''
+            if not self.store_cursor.hasSelection():
                 self.store_cursor.setPosition(self.store_cursor.position() - 1, 1)
-                # pos2 = pos1
-                # self.pos1 = self.pos1 - 1
-            elif self.text == 'Delete':
-                self.text_inserted = ''
-                # self.pos1 = self.pos1 + 1
+            self.give_position()
+            self.pos3 = self.pos1
+        elif self.text == 'Delete':
+            self.text_inserted = ''
+            if not self.store_cursor.hasSelection():
+                self.store_cursor.setPosition(self.store_cursor.position() + 1, 1)
+            self.give_position()
+            self.pos3 = self.pos1
+        elif self.text == 'Cut':
+            #self.text_inserted = ''
+            self.give_position()
+            self.pos3 = self.pos1
 
+        self.command_created_only = True
+
+
+        print('text = ', self.field.toPlainText())
+        print('                    self.pos1 = {}, self.pos2 = {}'.format(self.pos1, self.pos2))
+        self.text_deleted = self.store_cursor.selectedText()
+        print('                    selectedText', self.text_deleted)
+
+        print('                    last_edited', self.text_inserted)
+
+    def give_position(self):
         pos1 = self.store_cursor.position()
         pos2 = self.store_cursor.anchor()
         self.pos1 = min(pos1, pos2)
         self.pos2 = max(pos1, pos2)
-        #print('self.store_cursor.hasSelection = ', self.store_cursor.hasSelection)
-        #if self.store_cursor.hasSelection():
-        #    self.pos3 = self.pos1
-        #else:
-        #    self.pos3 = self.pos1 + 1
-
-
-        #todo self.store_cursor.selectedText() и pos2 = pos1
-        print('text = ', self.field.toPlainText())
-
-
-        print('                    self.pos1 = {}, self.pos2 = {}'.format(self.pos1, self.pos2))
-        self.text_deleted = self.store_cursor.selectedText() #QTextDocumentFragment.fromPlainText('')  insertFragment
-        print('                    selectedText', self.text_deleted)
-
-
-        self.command_created_only = True
-
-        print('                    last_edited', self.text_inserted)
-        # Record the text at the time the command was created.
 
 
 
     def undo(self):
         print('undo: {}, готов записать в команду № {}'.format(self.text, self.stack.index()))
-        self.store_cursor.setPosition(self.pos1+1, 0)#
+        self.store_cursor.setPosition(self.pos3, 0)#
         self.store_cursor.setPosition(self.pos1, 1)
         self.store_cursor.insertText(self.text_deleted)
         self.command_created_only = False

@@ -311,6 +311,9 @@ class MyEdit(QPlainTextEdit):
                 if event.key() == (Qt.Key_Control and Qt.Key_Z):
                     print('отменить')
                     self.my_undo()
+                if event.key() == (Qt.Key_Control and Qt.Key_Y):
+                    print('вернуть')
+                    self.my_redo()
                 if event.key() == (Qt.Key_Control and Qt.Key_X):
                     print('Вырез')
                     self.my_cut()
