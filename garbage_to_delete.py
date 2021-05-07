@@ -78,6 +78,9 @@ class MyLine(QPlainTextEdit):
                 if event.key() == (Qt.Key_Control and Qt.Key_V):
                     print('Вставка')
                     self.undoStack.edit_type = 'Insert'
+                    #print('source = ', QApplication.clipboard().text())
+                    self.undoStack.last_edited = QApplication.clipboard().text()
+                    self.undoStack.storeFieldText()
             else:
                 #txt = event.text()
                 if event.text():
@@ -141,6 +144,9 @@ class StoreCommand(QUndoCommand):
             #self.text_inserted = ''
             self.give_position()
             self.pos3 = self.pos1
+        if self.text == 'Insert':
+            self.give_position()
+            self.pos3 = self.pos1 + len(self.text_inserted)
 
         self.command_created_only = True
 

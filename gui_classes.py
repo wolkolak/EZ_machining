@@ -221,7 +221,6 @@ class Tabs(QTabWidget):
                 name_open_file = path
 
             self.insertTab(self.currentIndex()+1, redactor.ParentOfMyEdit(text, existing=path, tab_=self), name_open_file)
-            #self.currentWidget().editor.set_syntax()
             self.setCurrentIndex(self.currentIndex()+1)
             self.currentWidget().editor.existing = path
             add_new_name(path)
@@ -253,7 +252,6 @@ class right2(QWidget):
             e.ignore()
 
     def dropEvent(self, e):
-        # self.addItem(e.mimeData().text())
         nya = e.mimeData().text()
         nya = nya[8:]
         print(nya)
@@ -309,7 +307,6 @@ def simple_warning(title, text):
 def simple_2_dialog(func1, func2, title):
    save_or_throw = QMessageBox()
    save_or_throw.setWindowTitle(title)
-   #save_or_throw.setText(text)
    save_or_throw.setStandardButtons(QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
    rez = save_or_throw.exec()
    if rez == QMessageBox.Yes:
