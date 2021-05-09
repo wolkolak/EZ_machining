@@ -78,9 +78,10 @@ class MyLine(QPlainTextEdit):
                 if event.key() == (Qt.Key_Control and Qt.Key_V):
                     print('Вставка')
                     self.undoStack.edit_type = 'Insert'
-                    #print('source = ', QApplication.clipboard().text())
-                    self.undoStack.last_edited = QApplication.clipboard().text()
-                    self.undoStack.storeFieldText()
+                    insert_txt = QApplication.clipboard().text()
+                    if insert_txt is not '':
+                        self.undoStack.last_edited = insert_txt
+                        self.undoStack.storeFieldText()
             else:
                 #txt = event.text()
                 if event.text():
@@ -89,8 +90,21 @@ class MyLine(QPlainTextEdit):
                     elif key == Qt.Key_Delete:
                         self.undoStack.edit_type = 'Delete'
                     else:
-                        self.undoStack.edit_type = 'symbol'
-                    self.undoStack.last_edited = event.text()
+                        if Qt.Key_0 <= key <= Qt.Key_9:
+                            self.undoStack.edit_type = 'digital'
+                        elif Qt.Key_A <= key <= Qt.Key_Z:
+                            self.undoStack.edit_type = 'symbol'
+                        elif key == Qt.Key_Space:
+                            self.undoStack.merging_world()
+                            self.undoStack.edit_type = 'space'
+                        elif key == Qt.Key_Return or Qt.Key_Enter:
+                            self.undoStack.merging_world()
+                            self.undoStack.edit_type = 'enter'
+                        elif key == Qt.Key_Dead_Belowdot or Qt.Key_Comma:
+                            self.undoStack.edit_type = 'comma'
+                        else:
+                            self.undoStack.edit_type = 'another'
+                        self.undoStack.last_edited = event.text()
                     self.undoStack.storeFieldText()
             if self._document.isModified():
                 print('was modified')
@@ -113,6 +127,13 @@ class MyStack(QUndoStack):
         self.push(command)
         print('command.field = ', command.text)
 
+    def merging_world(self):
+        if self.edit_type == 'space':
+            print('merge')
+            g = self.command(self.index() - 1).mergeWith(self.command(self.index() - 2))
+            print('g = ', g)
+
+
 
 class StoreCommand(QUndoCommand):
 
@@ -124,11 +145,10 @@ class StoreCommand(QUndoCommand):
         self.store_cursor = self.field.textCursor()
         self.text_inserted = self.stack.last_edited
         self.text = self.stack.edit_type
+        self.id = 1
 
-        if self.text == 'symbol':
-            self.give_position()
-            self.pos3 = self.pos1 + 1
-        elif self.text == 'Backspace':
+
+        if self.text == 'Backspace':
             self.text_inserted = ''
             if not self.store_cursor.hasSelection():
                 self.store_cursor.setPosition(self.store_cursor.position() - 1, 1)
@@ -147,9 +167,10 @@ class StoreCommand(QUndoCommand):
         if self.text == 'Insert':
             self.give_position()
             self.pos3 = self.pos1 + len(self.text_inserted)
-
+        else:#остальные символы
+            self.give_position()
+            self.pos3 = self.pos1 + 1
         self.command_created_only = True
-
 
         print('text = ', self.field.toPlainText())
         print('                    self.pos1 = {}, self.pos2 = {}'.format(self.pos1, self.pos2))
@@ -179,6 +200,17 @@ class StoreCommand(QUndoCommand):
             self.store_cursor.setPosition(self.pos1, 0)
             self.store_cursor.setPosition(self.pos2, 1)
             self.store_cursor.insertText(self.text_inserted)
+
+    def mergeWith(self, previous_command):
+        print('my mergeeeee')
+        if (previous_command.text == 'space' or previous_command.text == 'enter') \
+                and previous_command.pos1 == self.pos1 - 1:
+            if previous_command.text == self.text:
+                pass#сложить
+            #self.mergeWith()
+            else:
+                pass
+                #merge previous
 
 
 
