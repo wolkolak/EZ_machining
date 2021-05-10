@@ -117,6 +117,7 @@ class MyStack(QUndoStack):
         super().__init__(*args, **kwargs)
         self.edit = edit
         self.last_edited = ''
+        #self.merge_n = 1
         #self.edit_type = 'symbol'
 
     def storeFieldText(self):
@@ -128,9 +129,9 @@ class MyStack(QUndoStack):
         print('command.field = ', command.text)
 
     def merging_world(self):
-        if self.edit_type == 'space':
+        if self.edit_type == 'space' and self.index() > 0:
             print('merge')
-            g = self.command(self.index() - 1).mergeWith(self.command(self.index() - 2))
+            g = self.command(self.index()).MYmergeWith(self.command(self.index() - 1), 1, 0)
             print('g = ', g)
 
 
@@ -201,16 +202,20 @@ class StoreCommand(QUndoCommand):
             self.store_cursor.setPosition(self.pos2, 1)
             self.store_cursor.insertText(self.text_inserted)
 
-    def mergeWith(self, previous_command):
-        print('my mergeeeee')
-        if (previous_command.text == 'space' or previous_command.text == 'enter') \
-                and previous_command.pos1 == self.pos1 - 1:
+    def MYmergeWith(self, previous_command, merge_n, obsolete):
+
+        print('my mergeeeee: {} and {}'.format(self.text, previous_command.text))
+        if previous_command.text != 'enter' and previous_command.pos1 == self.pos1 - 1:
             if previous_command.text == self.text:
-                pass#сложить
-            #self.mergeWith()
+                #сложить
+
+                obsolete???!!!
+                if self.stack.index() > 0:
+                    self.mergeWith(self.stack.command(self.index() - 1), merge_n)
             else:
-                pass
-                #merge previous
+                if not self.text != 'space' and self.stack.index() - self.stack.merge_n > 0:
+                    self.stack.command(self.index() - merge_n).mergeWith(self.stack.command(self.index()
+                    - merge_n - 1), merge_n+1, 0)
 
 
 
