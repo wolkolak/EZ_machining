@@ -60,8 +60,9 @@ class MyLine(QPlainTextEdit):
         """
         print('onchange start')
         print('self.undoStack.index()=', self.undoStack.index())
-        z = self.undoStack.command(self.undoStack.index() - 1)
-        #print('z.command_created_only = ', z.command_created_only)
+        z = self.undoStack.command_onChange_for
+
+        print('z.command_created_only = ', z.command_created_only)
         if z.command_created_only is False:
             print('gggg')
             if self.undoStack.undo_direction == 0:#undo
@@ -146,6 +147,7 @@ class MyStack(QUndoStack):
         self.line_max_np_del = 0
         self.line_max_np_insert = 0
         self.undo_direction = 1
+        self.command_onChange_for = self.command(self.index()-1)
         # self.edit_type = something
 
     def storeFieldText(self):
@@ -245,6 +247,7 @@ class StoreCommand(QUndoCommand):
             self.store_cursor.insertText(self.text_deleted)
             self.stack.line_max_np_del = self.field._document.findBlock(self.pos2).blockNumber()
             print('UNDO self.stack.line_max_np_del = ', self.stack.line_max_np_del)
+            self.stack.command_onChange_for = self
 
     def redo(self):
         print('redo: {}, готов записать в команду № {}'.format(self.text, self.stack.index()))
@@ -254,6 +257,7 @@ class StoreCommand(QUndoCommand):
             self.store_cursor.insertText(self.text_inserted)
             self.stack.line_max_np_del = self.field._document.findBlock(self.pos3).blockNumber() + self.corrected_qt_number_of_lines
             print('REDO self.stack.line_max_np_del = ', self.stack.line_max_np_del)
+            self.stack.command_onChange_for = self
 
 
 def format(color, style=''):
