@@ -61,7 +61,7 @@ class MyLine(QPlainTextEdit):
         print('onchange start')
         print('self.undoStack.index()=', self.undoStack.index())
         z = self.undoStack.command(self.undoStack.index() - 1)
-        print('z.command_created_only = ', z.command_created_only)
+        #print('z.command_created_only = ', z.command_created_only)
         if z.command_created_only is False:
             print('gggg')
             if self.undoStack.undo_direction == 0:#undo
@@ -183,7 +183,7 @@ class StoreCommand(QUndoCommand):
         self.corrected_qt_number_of_lines = 1
         # todo self.text перевести на self.id
 
-
+        self.command_created_only = True
 
         if self.text == 'symbol' or self.text == 'enter' or self.text == 'space':  # остальные символы
             if self.text == 'symbol':
@@ -209,7 +209,8 @@ class StoreCommand(QUndoCommand):
         elif self.text == 'Insert':
             self.give_position()
             self.pos3 = self.pos1 + len(self.text_inserted)
-        self.command_created_only = True
+
+        print('self.command_created_only = True')
 
         print('text = ', self.field.toPlainText())
         print('                    self.pos1 = {}, self.pos2 = {}'.format(self.pos1, self.pos2))
