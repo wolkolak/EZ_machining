@@ -63,10 +63,8 @@ def corrected_number_of_lines(my_edit, key):
             corrected_qt_number_of_lines = corrected_qt_number_of_lines + 1
 
     # есть следующая строка?
-    if starshiy_block + corrected_qt_number_of_lines < my_edit.blocks_before:
-        my_edit.adding_lines = 0
-    else:
-        my_edit.adding_lines = 1
+    if starshiy_block + corrected_qt_number_of_lines >= my_edit.blocks_before:
+        corrected_qt_number_of_lines = corrected_qt_number_of_lines - 1
     print('key was', key)
     print('И вот corrected_qt_number_of_lines = ', corrected_qt_number_of_lines)
     return corrected_qt_number_of_lines, starshiy_block, mladshii_block

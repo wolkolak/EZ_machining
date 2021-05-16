@@ -81,7 +81,7 @@ class MyEdit(QPlainTextEdit):
 
     def arithmetic_ones(self):
         self.corrected_qt_number_of_lines = 0
-        self.adding_lines = 1
+        #self.adding_lines = 1
         self.min_line_np = 1
         self.second_place = 1
         self.blocks_before = 1
@@ -263,9 +263,9 @@ class MyEdit(QPlainTextEdit):
         print('text_lines_delete = {}, text_lines_insert = {}'.format(self.text_lines_delete, self.text_lines_insert))
 
         self.min_line_np = self.firstBlock + 1
-        self.np_lines_delete = self.text_lines_delete + self.corrected_qt_number_of_lines - self.adding_lines #+ 1
-        print('text_lines_delete = {}, self.corrected_qt_number_of_lines = {}, self.adding_lines = {}'.format(self.text_lines_delete, self.corrected_qt_number_of_lines, self.adding_lines))
-        self.base.reading_lines_number = self.text_lines_insert + self.corrected_qt_number_of_lines - self.adding_lines #+1
+        self.np_lines_delete = self.text_lines_delete + self.corrected_qt_number_of_lines #- self.adding_lines #+ 1
+        print('text_lines_delete = {}, self.corrected_qt_number_of_lines = {}'.format(self.text_lines_delete, self.corrected_qt_number_of_lines))
+        self.base.reading_lines_number = self.text_lines_insert + self.corrected_qt_number_of_lines #- self.adding_lines #+1
         print('self.base.reading_lines_number', self.base.reading_lines_number)
         self.second_place = self.min_line_np + self.np_lines_delete - 1
         #self.second_place = self.min_line_np + self.np_lines_delete - self.adding_lines

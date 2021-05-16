@@ -58,21 +58,28 @@ class MyLine(QPlainTextEdit):
         и pos1_del pos1_insert
          в self.undoStack.command(self.undoStack.index()-1)
         """
+        print('onchange start')
         print('self.undoStack.index()=', self.undoStack.index())
         z = self.undoStack.command(self.undoStack.index() - 1)
         if z.command_created_only is False:
-            if self.undo_direction == 0:
+            print('gggg')
+            if self.undoStack.undo_direction == 0:#undo
                 self.undoStack.line_max_np_insert = self._document.findBlock(z.pos3).blockNumber() + 1
+                #print('undo self.undoStack.line_max_np_insert = ', self.undoStack.line_max_np_insert)
+                print('удалим с {} по {}, вставим с {} по {}'.format(self._document.findBlock(z.pos1).blockNumber(),
+                                                                     self._document.findBlock(z.pos2).blockNumber(),
+                                                                     self._document.findBlock(z.pos1).blockNumber(),
+                                                                     self.undoStack.line_max_np_insert))
             else:
-                self.undoStack.line_max_np_insert = self._document.findBlock(z.pos2).blockNumber() + 1
+                self.undoStack.line_max_np_insert = self._document.findBlock(z.pos2).blockNumber() + 1 + z.corrected_qt_number_of_lines
+                #print('redo self.undoStack.line_max_np_insert = ', self.undoStack.line_max_np_insert)
+                print('удалим с {} по {}, вставим с {} по {}'.format(self._document.findBlock(z.pos1).blockNumber(),
+                                                                     self._document.findBlock(z.pos3).blockNumber(),
+                                                                     self._document.findBlock(z.pos1).blockNumber(),
+                                                                     self.undoStack.line_max_np_insert))
             return
-        print('onchange start')
-        #self.undoStack.command(self.undoStack.index() - 1).line_start_hl_on_redo = self._document.findBlock(
-        #    position).blockNumber()  # возможно под backspace корректировать нужно и delete
-        #print('position min: = ', self.undoStack.command(self.undoStack.index() - 1).line_start_hl_on_redo)
-        #self.undoStack.command(self.undoStack.index() - 1).line_end_hl_on_redo = self._document.findBlock(
-        #    position + charsRemoved + charsAdded + self.corrected_qt_number_of_lines - self.adding_lines).blockNumber()
-        #print('position max: = ', self.undoStack.command(self.undoStack.index() - 1).line_start_hl_on_undo)
+
+
 
     def eventFilter(self, widget, event):
         if (event.type() == QEvent.KeyPress and widget is self):
@@ -86,12 +93,12 @@ class MyLine(QPlainTextEdit):
                 print('модификаторы кроме шифта')
                 if event.key() == (Qt.Key_Control and Qt.Key_Z):
                     print('отменить')
-                    self.undo_direction = 0
+                    self.undoStack.undo_direction = 0
                     self.undoStack.undo()
                     return True
                 if event.key() == (Qt.Key_Control and Qt.Key_Y):
                     print('вернуть')
-                    self.undo_direction = 1
+                    self.undoStack.undo_direction = 1
                     self.undoStack.redo()
                     return True
                 if event.key() == (Qt.Key_Control and Qt.Key_X):
@@ -172,6 +179,7 @@ class StoreCommand(QUndoCommand):
         self.text_inserted = self.stack.last_edited
         self.text = self.stack.edit_type
         self.id = -1
+        self.corrected_qt_number_of_lines = 1
         # todo self.text перевести на self.id
 
 
@@ -234,6 +242,7 @@ class StoreCommand(QUndoCommand):
             self.store_cursor.setPosition(self.pos1, 1)
             self.store_cursor.insertText(self.text_deleted)
             self.stack.line_max_np_del = self.field._document.findBlock(self.pos2).blockNumber()
+            print('UNDO self.stack.line_max_np_del = ', self.stack.line_max_np_del)
 
     def redo(self):
         print('redo: {}, готов записать в команду № {}'.format(self.text, self.stack.index()))
@@ -241,7 +250,8 @@ class StoreCommand(QUndoCommand):
             self.store_cursor.setPosition(self.pos1, 0)
             self.store_cursor.setPosition(self.pos2, 1)
             self.store_cursor.insertText(self.text_inserted)
-            self.stack.line_max_np_del = self.field._document.findBlock(self.pos3).blockNumber()
+            self.stack.line_max_np_del = self.field._document.findBlock(self.pos3).blockNumber() + self.corrected_qt_number_of_lines
+            print('REDO self.stack.line_max_np_del = ', self.stack.line_max_np_del)
 
 
 def format(color, style=''):
