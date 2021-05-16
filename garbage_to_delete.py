@@ -61,6 +61,7 @@ class MyLine(QPlainTextEdit):
         print('onchange start')
         print('self.undoStack.index()=', self.undoStack.index())
         z = self.undoStack.command(self.undoStack.index() - 1)
+        print('z.command_created_only = ', z.command_created_only)
         if z.command_created_only is False:
             print('gggg')
             if self.undoStack.undo_direction == 0:#undo
