@@ -1,8 +1,9 @@
 import sys
 
 from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QKeySequence, QTextOption, QTextDocumentFragment, QTextCursor
-from PyQt5.QtCore import QEvent, Qt
+from PyQt5.QtGui import QKeySequence, QTextOption, QColor, QTextCharFormat, QSyntaxHighlighter, QFont
+from PyQt5.QtCore import QEvent, Qt, QRegularExpression
+
 
 class Form(QWidget):
 
@@ -12,6 +13,7 @@ class Form(QWidget):
         self.nameEdit = MyLine(self)
 
         undoAction = self.nameEdit.undoStack.createUndoAction(self, self.tr("&Undo"))
+        undoAction.setShortcuts(QKeySequence.Undo)
         undoAction.setShortcuts(QKeySequence.Undo)
         redoAction = self.nameEdit.undoStack.createRedoAction(self, self.tr("&Redo"))
         redoAction.setShortcuts(QKeySequence.Redo)
@@ -23,7 +25,6 @@ class Form(QWidget):
 
         formLayout = QFormLayout()
         formLayout.addRow(self.tr("&Name"), self.nameEdit)
-        #formLayout.addRow(self.tr("&Address"), addressEdit)
 
         buttonLayout = QVBoxLayout()
         buttonLayout.addWidget(undoButton)
@@ -33,7 +34,7 @@ class Form(QWidget):
         layout.addLayout(formLayout)
         layout.addLayout(buttonLayout)
         self.setWindowTitle(self.tr("Undo Example"))
-
+        self.highlight = GMHighlighter(self.nameEdit._document, base=self)
 
 
 class MyLine(QPlainTextEdit):
@@ -47,16 +48,35 @@ class MyLine(QPlainTextEdit):
         self.installEventFilter(self)
         self.undoStack = MyStack(self)
         self.setWordWrapMode(QTextOption.NoWrap)
+        self._document.contentsChange.connect(self.onChange)
+        self.corrected_qt_number_of_lines = 0
+        self.adding_lines = 0
 
-
+    def onChange(self, position, charsRemoved, charsAdded):
+        """
+        Тут необходимо добавить n_deleted_lines, n_highlighted_lines
+        и pos1_del pos1_insert
+         в self.undoStack.command(self.undoStack.index()-1)
+        """
+        print('self.undoStack.index()=', self.undoStack.index())
+        z = self.undoStack.command(self.undoStack.index() - 1)
+        if z.command_created_only is False:
+            if self.undo_direction == 0:
+                self.undoStack.line_max_np_insert = self._document.findBlock(z.pos3).blockNumber() + 1
+            else:
+                self.undoStack.line_max_np_insert = self._document.findBlock(z.pos2).blockNumber() + 1
+            return
+        print('onchange start')
+        #self.undoStack.command(self.undoStack.index() - 1).line_start_hl_on_redo = self._document.findBlock(
+        #    position).blockNumber()  # возможно под backspace корректировать нужно и delete
+        #print('position min: = ', self.undoStack.command(self.undoStack.index() - 1).line_start_hl_on_redo)
+        #self.undoStack.command(self.undoStack.index() - 1).line_end_hl_on_redo = self._document.findBlock(
+        #    position + charsRemoved + charsAdded + self.corrected_qt_number_of_lines - self.adding_lines).blockNumber()
+        #print('position max: = ', self.undoStack.command(self.undoStack.index() - 1).line_start_hl_on_undo)
 
     def eventFilter(self, widget, event):
-        # должен ссылаться на универсальную замену текста
-        # print('event.type() = ', event.type())
-
         if (event.type() == QEvent.KeyPress and widget is self):
             key = event.key()
-
             self.blocks_before = self._document.blockCount()
             if Qt.KeypadModifier:
                 print('KeypadModifie', int(event.modifiers()))
@@ -66,74 +86,79 @@ class MyLine(QPlainTextEdit):
                 print('модификаторы кроме шифта')
                 if event.key() == (Qt.Key_Control and Qt.Key_Z):
                     print('отменить')
-                    #self.my_undo()
+                    self.undo_direction = 0
+                    self.undoStack.undo()
+                    return True
                 if event.key() == (Qt.Key_Control and Qt.Key_Y):
                     print('вернуть')
+                    self.undo_direction = 1
+                    self.undoStack.redo()
+                    return True
                 if event.key() == (Qt.Key_Control and Qt.Key_X):
                     print('Вырез')
-                    self.undoStack.edit_type = 'Cut'# ['Cut']
-                    #QPlainTextEdit.cut(self)
+                    self.undoStack.edit_type = 'Cut'
                     self.undoStack.last_edited = ''
                     self.undoStack.storeFieldText()
                 if event.key() == (Qt.Key_Control and Qt.Key_V):
                     print('Вставка')
                     self.undoStack.edit_type = 'Insert'
                     insert_txt = QApplication.clipboard().text()
-                    if insert_txt is not '':
+                    if insert_txt != '':
                         self.undoStack.last_edited = insert_txt
                         self.undoStack.storeFieldText()
             else:
-                #txt = event.text()
                 if event.text():
                     if key == Qt.Key_Backspace:
                         self.undoStack.edit_type = 'Backspace'
                     elif key == Qt.Key_Delete:
                         self.undoStack.edit_type = 'Delete'
                     else:
-                        if Qt.Key_0 <= key <= Qt.Key_9:
-                            self.undoStack.edit_type = 'digital'
-                        elif Qt.Key_A <= key <= Qt.Key_Z:
-                            self.undoStack.edit_type = 'symbol'
-                        elif key == Qt.Key_Space:
+                        if key == Qt.Key_Space:
                             self.undoStack.merging_world()
                             self.undoStack.edit_type = 'space'
-                        elif key == Qt.Key_Return or Qt.Key_Enter:
+                        elif key == Qt.Key_Return or key == Qt.Key_Enter:
                             self.undoStack.merging_world()
                             self.undoStack.edit_type = 'enter'
-                        elif key == Qt.Key_Dead_Belowdot or Qt.Key_Comma:
-                            self.undoStack.edit_type = 'comma'
                         else:
-                            self.undoStack.edit_type = 'another'
+                            self.undoStack.edit_type = 'symbol'
                         self.undoStack.last_edited = event.text()
                     self.undoStack.storeFieldText()
             if self._document.isModified():
                 print('was modified')
                 self._document.setModified(False)
-
         return QWidget.eventFilter(self, widget, event)
+
 
 class MyStack(QUndoStack):
     def __init__(self, edit, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.edit = edit
         self.last_edited = ''
-        #self.merge_n = 1
-        #self.edit_type = 'symbol'
+        self.sutulaya_sobaka = False
+        self.line_max_np_del = 0
+        self.line_max_np_insert = 0
+        self.undo_direction = 1
+        # self.edit_type = something
 
     def storeFieldText(self):
-        if self.last_edited == False:
+        if self.edit_type == False:
             return
         command = StoreCommand(self)
-        self.last_edited = False
+        self.edit_type = False
         self.push(command)
         print('command.field = ', command.text)
 
     def merging_world(self):
-        if self.edit_type == 'space' and self.index() > 0:
-            print('merge')
-            g = self.command(self.index()).MYmergeWith(self.command(self.index() - 1), 1, 0)
-            print('g = ', g)
 
+        print('merge')
+        while self.index() > 1 and (self.command(self.index() - 2).id != -1):
+            print('self.index() ==== ', self.index())
+            g = self.command(self.index() - 2).mergeWith(self.command(self.index() - 1))
+            self.sutulaya_sobaka = True
+            self.undo()  # silent undo
+            self.sutulaya_sobaka = False
+            # print('g = ', g)
+            # print('self.index() zzzz = ', self.index())
 
 
 class StoreCommand(QUndoCommand):
@@ -146,10 +171,17 @@ class StoreCommand(QUndoCommand):
         self.store_cursor = self.field.textCursor()
         self.text_inserted = self.stack.last_edited
         self.text = self.stack.edit_type
-        self.id = 1
+        self.id = -1
+        # todo self.text перевести на self.id
 
 
-        if self.text == 'Backspace':
+
+        if self.text == 'symbol' or self.text == 'enter' or self.text == 'space':  # остальные символы
+            if self.text == 'symbol':
+                self.id = 1
+            self.give_position()
+            self.pos3 = self.pos1 + 1
+        elif self.text == 'Backspace':
             self.text_inserted = ''
             if not self.store_cursor.hasSelection():
                 self.store_cursor.setPosition(self.store_cursor.position() - 1, 1)
@@ -162,15 +194,12 @@ class StoreCommand(QUndoCommand):
             self.give_position()
             self.pos3 = self.pos1
         elif self.text == 'Cut':
-            #self.text_inserted = ''
+            # self.text_inserted = ''
             self.give_position()
             self.pos3 = self.pos1
-        if self.text == 'Insert':
+        elif self.text == 'Insert':
             self.give_position()
             self.pos3 = self.pos1 + len(self.text_inserted)
-        else:#остальные символы
-            self.give_position()
-            self.pos3 = self.pos1 + 1
         self.command_created_only = True
 
         print('text = ', self.field.toPlainText())
@@ -186,14 +215,25 @@ class StoreCommand(QUndoCommand):
         self.pos1 = min(pos1, pos2)
         self.pos2 = max(pos1, pos2)
 
-
+    def mergeWith(self, other: 'QUndoCommand') -> bool:
+        print('{} mergeWith {}'.format(self.text_inserted, other.text_inserted))
+        self.text_inserted = self.text_inserted + other.text_inserted
+        self.pos3 = other.pos3
+        print('self.pos3 = ', self.pos3)
+        # other.setObsolete(True)
+        return True
 
     def undo(self):
-        print('undo: {}, готов записать в команду № {}'.format(self.text, self.stack.index()))
-        self.store_cursor.setPosition(self.pos3, 0)#
-        self.store_cursor.setPosition(self.pos1, 1)
-        self.store_cursor.insertText(self.text_deleted)
         self.command_created_only = False
+        if self.stack.sutulaya_sobaka is True:
+            print('pseudo undo')
+        else:
+            print(
+                'undo text_inserted: {}, готов записать в команду № {}'.format(self.text_inserted, self.stack.index()))
+            self.store_cursor.setPosition(self.pos3, 0)  #
+            self.store_cursor.setPosition(self.pos1, 1)
+            self.store_cursor.insertText(self.text_deleted)
+            self.stack.line_max_np_del = self.field._document.findBlock(self.pos2).blockNumber()
 
     def redo(self):
         print('redo: {}, готов записать в команду № {}'.format(self.text, self.stack.index()))
@@ -201,22 +241,111 @@ class StoreCommand(QUndoCommand):
             self.store_cursor.setPosition(self.pos1, 0)
             self.store_cursor.setPosition(self.pos2, 1)
             self.store_cursor.insertText(self.text_inserted)
+            self.stack.line_max_np_del = self.field._document.findBlock(self.pos3).blockNumber()
 
-    def MYmergeWith(self, previous_command, merge_n, obsolete):
 
-        print('my mergeeeee: {} and {}'.format(self.text, previous_command.text))
-        if previous_command.text != 'enter' and previous_command.pos1 == self.pos1 - 1:
-            if previous_command.text == self.text:
-                #сложить
+def format(color, style=''):
+    """ Верните QTextCharFormat с указанными атрибутами. """
+    _color = QColor()
+    _color.setNamedColor(color)
 
-                obsolete???!!!
-                if self.stack.index() > 0:
-                    self.mergeWith(self.stack.command(self.index() - 1), merge_n)
-            else:
-                if not self.text != 'space' and self.stack.index() - self.stack.merge_n > 0:
-                    self.stack.command(self.index() - merge_n).mergeWith(self.stack.command(self.index()
-                    - merge_n - 1), merge_n+1, 0)
+    _format = QTextCharFormat()
+    _format.setForeground(_color)
+    if 'bold' in style:
+        _format.setFontWeight(QFont.Bold)
+    if 'italic' in style:
+        _format.setFontItalic(True)
 
+    return _format
+
+
+# Синтаксические стили, которые могут использоваться
+STYLES = {
+    'axis': format('blue'),
+    'g_cod': format('red'),
+    'comment_brace': format('darkGray'),
+    'defclass': format('black', 'bold'),
+    'string': format('magenta'),
+    'string2': format('darkMagenta'),
+    'comment': format('darkGreen', 'italic'),
+    'self': format('black', 'italic'),
+    'numbers': format('brown'),
+}
+
+
+class GMHighlighter(QSyntaxHighlighter):
+    """Синтаксические маркеры для языка. """
+    # G-func
+    g_cod = ['G0', 'G1', 'G2', 'G3']
+    # axises
+    axises = ['X', 'Y', 'Z', 'C', 'B', 'A', 'R']
+    # most strings look like 'main_rule'
+
+    sorted_axis_rule = ''
+    for letter in axises:
+        sorted_axis_rule += r'((?:{})(-?\d+\.\d*)\s*)?'.format(letter)
+        # sorted_axis_rule += r'(([{}]\s*)(-)?(\d+.\d*)\s*)?'.format(letter)
+    sorted_axis_rule = '^' + '(?:G\d+)?\s*' + sorted_axis_rule + '$'
+    # print('nabor XYZ:', sorted_axis_rule)
+
+    main_rule = sorted_axis_rule
+
+    axises_str = ''.join(axises)
+    axises_coord = r'([{}]\s*(-)?(\d+\.\d*)\s*)'.format(axises_str)
+    second_rule = r'^(G0?\d)?\s*{}+(F\d(\.)?)?(?:;)?$'.format(axises_coord)
+    # condition operators
+    condition_operators = ['WHILE', 'IF']
+
+    # comment braces
+    comment_braces = ['\([\w.]*\)']
+
+    # condition braces
+    logic_op = ['EQ', 'NE', 'GT', 'LT', 'GE', 'LE']
+
+    def __init__(self, document, base):
+        QSyntaxHighlighter.__init__(self, document)
+        self.max_number_ax = [i * 2 for i in range(1, 8)]
+        self.base = base
+        self.count = 0
+        self.count_in_step = 0
+        self.const_step = 1000
+        self.standart_step = self.const_step
+        rules = []
+
+        rules += [(r'{}'.format(GMHighlighter.second_rule), 0, STYLES['axis'])]
+
+        # comment rules
+        rules += [(r'{}'.format(GMHighlighter.comment_braces[0]), 2,
+                   STYLES['comment_brace'])]  # rules += [(r'\([\w.]*\)', 0, STYLES['string'])]
+
+        # Создайте QRegExp для каждого шаблона
+        self.first_rule = [QRegularExpression(self.main_rule), 0, STYLES['axis']]
+        self.rules = [(QRegularExpression(pat), index, fmt) for (pat, index, fmt) in rules]
+        self.main_rule_regular_expression = self.first_rule[0]
+        self.main_format = self.first_rule[2]
+        self.second_rule_regular_expression = self.rules[0][0]
+        self.second_format = self.rules[0][2]
+
+    def highlightBlock(self, text):
+        """Применить выделение синтаксиса к данному блоку текста. """
+
+        # if self.base.editor._document.isModified():
+        # print('waiting')
+        # print('reading_lines_number', self.base.reading_lines_number)
+        # time.sleep(5)
+
+        common_length = 0
+
+        nya = self.main_rule_regular_expression.match(text, 0)
+        # print('nya0 = ', nya.captured(0))
+        index = nya.capturedStart()
+        len_match = nya.capturedLength()
+        if len_match != 0:
+            self.setFormat(index, len_match, self.main_format)
+            # print('self.base.current_g_cod_pool[0]  = ', self.base.current_g_cod_pool[0])
+            print('nya = ', nya.captured())
+        else:
+            print('nya = pusto')
 
 
 if __name__ == "__main__":
