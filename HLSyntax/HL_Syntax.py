@@ -133,9 +133,11 @@ class GMHighlighter(QSyntaxHighlighter):
             self.recount(nya)
             #print('main rule! index = {}, string = {}'.format(index, text))
         elif index == 0:#empty string
+            print('nya = pusto1')
             self.recount2()
             #print('index = {}, string = {}, запуск дополнительных правил'.format(index, text))
         else:
+            print('nya = pusto2')
             self.recount(nya)
         #nya = self.second_rule_regular_expression.match(text, 0)
         #index = nya.capturedStart()

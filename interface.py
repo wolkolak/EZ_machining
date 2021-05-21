@@ -76,10 +76,10 @@ class MyMainWindow(QMainWindow):
         self.centre.note.currentWidget().editor.find_in_text()
 
     def undo_obertka(self):
-        self.centre.note.currentWidget().editor.my_undo()
+        self.centre.note.currentWidget().editor.undoStack.undo()
 
     def redo_obertka(self):
-        self.centre.note.currentWidget().editor.my_redo()
+        self.centre.note.currentWidget().editor.undoStack.redo()
 
     def del_obertka(self):
         self.centre.note.currentWidget().editor.my_del()
@@ -110,6 +110,7 @@ class MyMainWindow(QMainWindow):
             self.setWindowTitle('EZ machining:  {}'.format(title2))
             self.light_out(True)
             self.centre.note.currentWidget().editor.setFocus()
+            #self.centre.left.left_tab.a.reset_np_array_in_left_field()
         else:
             self.setWindowTitle('EZ machining')
             self.light_out(False)

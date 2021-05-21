@@ -122,13 +122,16 @@ class Tabs(QTabWidget):
             self.insertTab(self.currentIndex()+1, redactor.ParentOfMyEdit(None, existing=False, tab_=self), self.tabs[i][0])
             #gbplf
 
-            self.currentWidget().main_g_cod_pool = np.insert(self.currentWidget().main_g_cod_pool, 0, self.currentWidget().main_g_cod_pool, axis=0)
-            self.center_widget.left.left_tab.a.reset_np_array_in_left_field()
+
+
             print('self.currentWidget().main_g_cod_pool', self.currentWidget().main_g_cod_pool)
 
             #self.currentWidget().editor.set_syntax()
 
             self.setCurrentIndex(self.currentIndex()+1)
+            self.currentWidget().main_g_cod_pool = np.insert(self.currentWidget().main_g_cod_pool, 0,
+                                                             self.currentWidget().main_g_cod_pool, axis=0)
+            self.center_widget.left.left_tab.a.reset_np_array_in_left_field()
             add_new_name(self.tabs[i][0])
             print('new tab1')
         else:
@@ -221,6 +224,7 @@ class Tabs(QTabWidget):
                 name_open_file = path
 
             self.insertTab(self.currentIndex()+1, redactor.ParentOfMyEdit(text, existing=path, tab_=self), name_open_file)
+            #self.currentWidget().editor.set_syntax()
             self.setCurrentIndex(self.currentIndex()+1)
             self.currentWidget().editor.existing = path
             add_new_name(path)
@@ -252,6 +256,7 @@ class right2(QWidget):
             e.ignore()
 
     def dropEvent(self, e):
+        # self.addItem(e.mimeData().text())
         nya = e.mimeData().text()
         nya = nya[8:]
         print(nya)
@@ -307,6 +312,7 @@ def simple_warning(title, text):
 def simple_2_dialog(func1, func2, title):
    save_or_throw = QMessageBox()
    save_or_throw.setWindowTitle(title)
+   #save_or_throw.setText(text)
    save_or_throw.setStandardButtons(QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
    rez = save_or_throw.exec()
    if rez == QMessageBox.Yes:

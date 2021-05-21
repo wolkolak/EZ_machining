@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QGridLayout,  QLabel,  QPushButton, QPlainTextEdit, 
     QCheckBox, QTextEdit, QWidget,  QProgressBar, QAction, QMenu, QUndoStack, QUndoCommand
 from PyQt5.QtCore import QRect, QSize, QTimer, QThread, QThreadPool, pyqtSlot, QEvent, Qt, pyqtSignal
 from PyQt5.QtGui import QTextOption, QColor, QPainter,  QTextCharFormat,\
-    QTextFormat,  QCursor, QKeyEvent
+    QTextFormat,  QCursor, QKeyEvent, QKeySequence
 from settings import *
 from find_replace import finder
 import HLSyntax.HL_Syntax, HLSyntax.addition_help_for_qt_highlight
@@ -70,14 +70,20 @@ class MyEdit(QPlainTextEdit):
         print('self.blockCount() = ', self.blockCount())
         self.installEventFilter(self)
         self._document = self.document()
+        #undo/redo
+        self.undoStack = MyStack(self)
+        self.undoAction = self.undoStack.createUndoAction(self, self.tr("&Undo"))
+        self.undoAction.setShortcuts(QKeySequence.Undo)
+        self.redoAction = self.undoStack.createRedoAction(self, self.tr("&Redo"))
+        self.redoAction.setShortcuts(QKeySequence.Redo)
 
         self._document.contentsChange.connect(self.onChange)
         #contex menu settings
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.__contextMenu)
         self.arithmetic_ones()
-        #self.undoStack = QUndoStack()
-        self.i = 0#for tests
+
+        #self.i = 0#for tests
 
     def arithmetic_ones(self):
         self.corrected_qt_number_of_lines = 0
@@ -182,17 +188,14 @@ class MyEdit(QPlainTextEdit):
 
     def my_undo(self):
         print('undo21')
-        self.corrected_qt_number_of_lines, self.untilBlock, self.firstBlock = HLSyntax.addition_help_for_qt_highlight.corrected_number_of_lines(
-            self, key='undo')
-
-        QPlainTextEdit.undo(self)
+        self.undoStack.undo()
         #в стек запомнить длину удаленного, добавленного в строках. место заполнится без моего участия
         #pyautogui.hotkey('ctrl', 'z')
 
     def my_redo(self):
         print('redo21')
-
-        QPlainTextEdit.redo(self)
+        self.undoStack.redo()
+        #QPlainTextEdit.redo(self)
         #pyautogui.hotkey('ctrl', 'y')
 
     def my_del(self):
@@ -213,46 +216,70 @@ class MyEdit(QPlainTextEdit):
 
     def my_cut(self):
         print('my cut21')
-        self.corrected_qt_number_of_lines, self.untilBlock, self.firstBlock = HLSyntax.addition_help_for_qt_highlight.corrected_number_of_lines(
+        self.corrected_qt_number_of_lines, self.untilBlock, self.firstBlock, self.undoStack.add_undo = HLSyntax.addition_help_for_qt_highlight.corrected_number_of_lines(
             self, key='cut')
         #self.cut()
         QPlainTextEdit.cut(self)
         #pyautogui.hotkey('ctrl', 'x')
 
-
-
-
     def onChange(self, position, charsRemoved, charsAdded):
         """
-        Я думаю, нужно сначала удалить из numpy лишнее, потому указать место вставки. Логично? вроде - да
-        А если в данный момент мы уже читаем некий участок?  Тогда этот новый участок будет вставлен не там, так?
-        Значит, сначала красим текст, потом вставляем и удаляем единовременно. Где беда?
-        Если добавлены изменения пока идёт покраска участка. Что делать?
-        В очередь. И? Новый onchange должен запустить процессы после того как работа с прерыдущим участком будет закончена?
+                Тут необходимо добавить n_deleted_lines, n_highlighted_lines
+                и pos1_del pos1_insert
+                 в self.undoStack.command(self.undoStack.index()-1)
+                """
+        # time.sleep(1.1)
+        print('onchange start = ', self.undoStack.edit_type)
+        if self.undoStack.edit_type == 'undo':  # only for undo redo зщщы2
+            z = self.undoStack.command(self.undoStack.index() - 1)
+            line1 = self._document.findBlock(z.pos1).blockNumber() + 1# for numpy
+            line2 = self.undoStack.previous_max_line  + 1# for deleting last
+            line3 = self._document.findBlock(z.pos2).blockNumber() + 1
+            self.min_line_np = line1
+            self.second_place = line2 + z.add_undo #-1
+            print('delete с {} по {} включительно'.format(self.min_line_np, self.second_place))
+            self.delete_lines_from_main_np_g_pool()
 
-        Допустим, очередь в 2 возможных подсчёта. Алгоритм сложный но реальный.
-        Иная проблема - onChange принимает мало данных. нельзя поличить вторую position или можно? нука. Вроде
-        работает
+            #self.base.reading_lines_number = line3 + z.corrected_qt_number_of_lines - line1 # todo oooo
 
-        """
-        #time.sleep(5)
-        print('начало onChange')
+            print('z.add_undo ', z.add_undo)
+            self.base.reading_lines_number = line3 - line1 + 1 + z.add_undo #+ z.corrected_qt_number_of_lines
+            print('creating pool')
+            self.creating_np_pool()
+            print('insert c {}  {} строк'.format(self.min_line_np, self.base.reading_lines_number))
+            #выше можно объеденить в universal replace. вставкой займется progressBar через HLSyntax
+
+            print('z.command_created_only  = ', z.command_created_only)
+
+        elif self.undoStack.edit_type == 'redo':
+            z = self.undoStack.command(self.undoStack.index())
+            line1 = self._document.findBlock(z.pos1).blockNumber() + 1
+            line2 = self.undoStack.previous_max_line + 1
+            line3 = self._document.findBlock(z.pos3).blockNumber() + 1
+            self.min_line_np = line1
+            self.second_place = line3 + z.corrected_qt_number_of_lines
+            self.base.reading_lines_number = line2 + z.corrected_qt_number_of_lines - line1
+
+            print('delete с {} по {} включительно'.format(self.min_line_np, self.second_place))
+            self.delete_lines_from_main_np_g_pool()
+            print('insert c {} по {}'.format(self.min_line_np, line3 + z.corrected_qt_number_of_lines))
+            self.creating_np_pool()
+        else:
+            self.onChange_new_command(position)
+
+
+    def onChange_new_command(self, position):
+
+        print('начало onChange new_command')
         self.changed = True
         self.change_position = position
-        #арифметика
         self.line_arithmetic()
         print('after line_arithmetic')
         self.universal_replace_new()
         if self.make_undo_work_1_time == 1:
             self.make_undo_work_1_time = 2
 
-        #print('здесь self.sender()', dir(self.sender()))
-        #print('здесь type self.sender()', type(self.sender()))
-        #command = StoreCommand(self.sender())
-        #self.undoStack.push(command)
-
-        #self.undoStack.push(command)
-        print('конец onChange')
+        print('конец onChange new_command')
 
 
 
@@ -274,7 +301,7 @@ class MyEdit(QPlainTextEdit):
         #self.untilBlock - self.text_lines_delete + self.corrected_qt_number_of_lines
 
     def universal_replace_new(self):
-        self.base.highlight.standart_step = 1
+        self.base.highlight.standart_step = 1#todo ЗАЧЕЕМ?!
         #self.find_lines_to_replace()
         self.creating_np_pool()
         self.delete_lines_from_main_np_g_pool()
@@ -282,6 +309,7 @@ class MyEdit(QPlainTextEdit):
     def creating_np_pool(self):
         self.base.current_g_cod_pool = np.zeros((self.base.reading_lines_number, 7), float)
         self.base.current_g_cod_pool[:] = np.nan
+        print('self.base.reading_lines_number', self.base.reading_lines_number)
         self.base.progress_bar.setMaximum(self.base.reading_lines_number)
         self.base.highlight.too_little_number_check()
 
@@ -310,18 +338,41 @@ class MyEdit(QPlainTextEdit):
                 print('модификаторы кроме шифта')
                 if event.key() == (Qt.Key_Control and Qt.Key_Z):
                     print('отменить')
-                    self.my_undo()
+                    self.undoStack.undo()#todo
+                    return True
                 if event.key() == (Qt.Key_Control and Qt.Key_Y):
                     print('вернуть')
-                    self.my_redo()
+                    self.undoStack.redo()#todo
+                    return True
                 if event.key() == (Qt.Key_Control and Qt.Key_X):
                     print('Вырез')
+                    self.undoStack.edit_type = 'Cut'
+                    self.undoStack.last_edited = ''
+                    self.undoStack.storeFieldText()
                     self.my_cut()
                 if event.key() == (Qt.Key_Control and Qt.Key_V):
-                    print('Вставка')
+                    print('Вставка check')
+
             else:
                 if event.text():
-                    self.corrected_qt_number_of_lines, self.untilBlock, self.firstBlock= HLSyntax.addition_help_for_qt_highlight.corrected_number_of_lines(self, key)
+                    #self.corrected_qt_number_of_lines, self.untilBlock, self.firstBlock, self.undoStack.add_undo = HLSyntax.addition_help_for_qt_highlight.corrected_number_of_lines(self, key)
+                    if key == Qt.Key_Backspace:
+                        self.undoStack.edit_type = 'Backspace'
+                    elif key == Qt.Key_Delete:
+                        self.undoStack.edit_type = 'Delete'
+                    else:
+                        if key == Qt.Key_Space:
+                            self.undoStack.merging_world()
+                            self.undoStack.edit_type = 'space'
+                        elif key == Qt.Key_Return or key == Qt.Key_Enter:
+                            self.undoStack.merging_world()
+                            self.undoStack.edit_type = 'enter'
+                        else:
+                            self.undoStack.edit_type = 'symbol'
+                        self.undoStack.last_edited = event.text()
+                    self.corrected_qt_number_of_lines, self.untilBlock, self.firstBlock, self.undoStack.add_undo = HLSyntax.addition_help_for_qt_highlight.corrected_number_of_lines(
+                        self, key)
+                    self.undoStack.storeFieldText()
             if self._document.isModified():
                 print('was modified')
                 self._document.setModified(False)
@@ -333,36 +384,17 @@ class MyEdit(QPlainTextEdit):
         #self.blocks_before = self._document.blockCount()
 
         if source.hasText():
-            self.corrected_qt_number_of_lines, self.untilBlock, self.firstBlock = HLSyntax.addition_help_for_qt_highlight.corrected_number_of_lines(
+            self.corrected_qt_number_of_lines, self.untilBlock, self.firstBlock, self.undoStack.add_undo = HLSyntax.addition_help_for_qt_highlight.corrected_number_of_lines(
                self, key='insert')
+            self.undoStack.edit_type = 'Insert'
+            #insert_txt = source.text()
+            #if insert_txt != '':
+            self.undoStack.last_edited = source.text()#insert_txt
+            self.undoStack.storeFieldText()
             print('paaaste: ')
             QPlainTextEdit.insertFromMimeData(self, source)
 
 
-class StoreCommand(QUndoCommand):
-
-    def __init__(self, field):
-
-        QUndoCommand.__init__(self)
-
-        # Record the field that has changed.
-        self.field = field
-        print('self.field.text()', self.field.toPlainText())
-
-        # Record the text at the time the command was created.
-        self.text = field.toPlainText()
-
-    def undo(self):
-
-        # Remove the text from the file and set it in the field.
-        # ...
-        self.field.setText(self.text)
-
-    def redo(self):
-
-        # Store the text in the file and set it in the field.
-        # ...
-        self.field.setText(self.text)
 
 class Progress(QProgressBar):
     def __init__(self, base):
@@ -433,4 +465,127 @@ class ParentOfMyEdit(QWidget):
 
     def on_count_changed(self, value):
         self.progress_bar.setValue(value)
+
+###################################################################################################################
+
+class MyStack(QUndoStack):
+    def __init__(self, edit, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.edit = edit
+        self.last_edited = ''
+        self.sutulaya_sobaka = False
+        self.line_max_np_del = 0
+        self.line_max_np_insert = 0
+        # self.edit_type = something
+        self.previous_max_line = 0
+        self.add_undo = 0
+
+    def storeFieldText(self):
+        if self.edit_type == False:
+            return
+        command = StoreCommand(self)
+        self.edit_type = False
+        self.push(command)
+        print('command.field = ', command.text)
+
+    def merging_world(self):
+
+        print('merge')
+        while self.index() > 1 and (self.command(self.index() - 2).id != -1):
+            print('self.index() ==== ', self.index())
+            g = self.command(self.index() - 2).mergeWith(self.command(self.index() - 1))
+            self.sutulaya_sobaka = True
+            self.undo()  # silent undo
+            self.sutulaya_sobaka = False
+            # print('g = ', g)
+            # print('self.index() zzzz = ', self.index())
+
+class StoreCommand(QUndoCommand):
+
+    def __init__(self, stack):
+        QUndoCommand.__init__(self)
+        self.stack = stack
+        # Record the field that has changed.
+        self.field = self.stack.edit
+        self.store_cursor = self.field.textCursor()
+        self.text_inserted = self.stack.last_edited
+        self.text = self.stack.edit_type
+        self.add_undo = self.stack.add_undo
+        self.id = -1
+        self.corrected_qt_number_of_lines = self.field.corrected_qt_number_of_lines
+        # todo self.text перевести на self.id
+        print('new command')
+
+
+        if self.text == 'symbol' or self.text == 'enter' or self.text == 'space':  # остальные символы
+            if self.text == 'symbol':
+                self.id = 1
+            self.give_position()
+            self.pos3 = self.pos1 + 1
+        elif self.text == 'Backspace':
+            self.text_inserted = ''
+            if not self.store_cursor.hasSelection():
+                self.store_cursor.setPosition(self.store_cursor.position() - 1, 1)
+            self.give_position()
+            self.pos3 = self.pos1
+        elif self.text == 'Delete':
+            self.text_inserted = ''
+            if not self.store_cursor.hasSelection():
+                self.store_cursor.setPosition(self.store_cursor.position() + 1, 1)
+            self.give_position()
+            self.pos3 = self.pos1
+        elif self.text == 'Cut':
+            # self.text_inserted = ''
+            self.give_position()
+            self.pos3 = self.pos1
+        elif self.text == 'Insert':
+            self.give_position()
+            self.pos3 = self.pos1 + len(self.text_inserted)
+        self.command_created_only = True
+        #self.give_line_numbers()
+        print('text = ', self.field.toPlainText())
+        print('                    self.pos1 = {}, self.pos2 = {}'.format(self.pos1, self.pos2))
+        self.text_deleted = self.store_cursor.selectedText()
+        print('                    selectedText', self.text_deleted)
+
+        print('                    last_edited', self.text_inserted)
+
+    def give_position(self):
+        self.corrected_qt_number_of_lines = 1#получить с верхнего этажа
+        pos1 = self.store_cursor.position()
+        pos2 = self.store_cursor.anchor()
+        self.pos1 = min(pos1, pos2)
+        self.pos2 = max(pos1, pos2)
+
+
+    def mergeWith(self, other: 'QUndoCommand') -> bool:
+        print('{} mergeWith {}'.format(self.text_inserted, other.text_inserted))
+        self.text_inserted = self.text_inserted + other.text_inserted
+        self.pos3 = other.pos3
+        print('self.pos3 = ', self.pos3)
+        # other.setObsolete(True)
+        return True
+
+    def undo(self):
+        self.command_created_only = False
+        if self.stack.sutulaya_sobaka is True:
+            print('pseudo undo')
+        else:
+            print(
+                'undo text_inserted: {}, готов записать в команду № {}'.format(self.text_inserted, self.stack.index()))
+            self.stack.edit_type = 'undo'
+            self.store_cursor.setPosition(self.pos3, 0)  #
+            self.store_cursor.setPosition(self.pos1, 1)
+            self.stack.previous_max_line = self.field._document.findBlock(self.pos3).blockNumber()
+            self.store_cursor.insertText(self.text_deleted)#после onchange НАЧИНАЕТСЯ HighLight
+            print('check')
+
+    def redo(self):
+        print('redo: {}, готов записать в команду № {}'.format(self.text, self.stack.index()))
+        if self.command_created_only is False:
+            self.stack.edit_type = 'redo'
+            self.store_cursor.setPosition(self.pos1, 0)
+            self.store_cursor.setPosition(self.pos2, 1)
+            self.stack.previous_max_line = self.field._document.findBlock(self.pos2).blockNumber()
+            self.store_cursor.insertText(self.text_inserted)
 

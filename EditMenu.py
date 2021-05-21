@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QToolBar, QAction
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QKeySequence
 from PyQt5.QtCore import Qt
 import settings
 
@@ -14,7 +14,13 @@ def edit_opt(self):
     self.editMenu.addAction(self.findAction)
 
     self.undoAction = QAction('Undo', self)
+
+    #undoAction = self.centre.note.currentWidget().editor.undoStack.createUndoAction(self.centre.note.currentWidget().editor, self.tr("&Undo"))
+    #undoAction.setShortcuts(QKeySequence.Undo)
     self.redoAction = QAction("Redo", self)
+    #redoAction = self.centre.note.currentWidget().editor.undoStack.createRedoAction(self.centre.note.currentWidget().editor, self.tr("&Redo"))
+    #redoAction.setShortcuts(QKeySequence.Redo)
+#
     self.cutAction = QAction('Cut', self)
     self.copyAction = QAction('Copy', self)
     self.select_allAction = QAction('Select all', self)
