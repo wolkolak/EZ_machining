@@ -1,29 +1,13 @@
-from PyQt5.QtWidgets import QGridLayout,  QLabel,  QPushButton, QPlainTextEdit, QDialog,\
-    QCheckBox, QTextEdit, QWidget,  QProgressBar, QAction, QMenu, QUndoStack, QUndoCommand
-from PyQt5.QtCore import QRect, QSize, QTimer, QThread, QThreadPool, pyqtSlot, QEvent, Qt, pyqtSignal
+from PyQt5.QtWidgets import QPlainTextEdit, QTextEdit, QWidget, QMenu
+from PyQt5.QtCore import QRect, QSize, QEvent, Qt
 from PyQt5.QtGui import QTextOption, QColor, QPainter,  QTextCharFormat,\
-    QTextFormat,  QCursor, QKeyEvent, QKeySequence
-from settings import *
-from find_replace import finder
+    QTextFormat,  QCursor, QKeySequence
+from Settings.settings import *
+from Redactor.find_replace import finder
 import HLSyntax.HL_Syntax, HLSyntax.addition_help_for_qt_highlight
-import flow
-import runnable_flow
 import numpy as np
-import time
 import pyautogui
-import copy
-
-class QLineNumberArea(QWidget):
-    def __init__(self, editor):
-        super().__init__(editor)
-        self.codeEditor = editor
-        self.setFont(font1)
-
-    def sizeHint(self):
-        return QSize(self.editor.lineNumberAreaWidth(), 0)
-
-    def paintEvent(self, event):
-        self.codeEditor.lineNumberAreaPaintEvent(event)
+from Redactor.Undo_redo import MyStack
 
 
 class MyEdit(QPlainTextEdit):
@@ -33,7 +17,6 @@ class MyEdit(QPlainTextEdit):
         """ xyzcba"""
 
         self.flag_modificationChanged_workaround = True
-
 
         #modal coomnds
         self.g_modal = np.array([0], float)
@@ -78,7 +61,7 @@ class MyEdit(QPlainTextEdit):
         self.redoAction.setShortcuts(QKeySequence.Redo)
 
         self._document.contentsChange.connect(self.onChange)
-        #contex menu settings
+        #contex menu Settings
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.__contextMenu)
         self.arithmetic_ones()
@@ -394,198 +377,14 @@ class MyEdit(QPlainTextEdit):
             print('paaaste: ')
             QPlainTextEdit.insertFromMimeData(self, source)
 
+class QLineNumberArea(QWidget):
+    def __init__(self, editor):
+        super().__init__(editor)
+        self.codeEditor = editor
+        self.setFont(font1)
 
+    def sizeHint(self):
+        return QSize(self.editor.lineNumberAreaWidth(), 0)
 
-class Progress(QProgressBar):
-    def __init__(self, base):
-        super().__init__()
-        #self.setMaximum(100)
-        #self.hide()
-        self.base = base
-        self.valueChanged.connect(self.finish_current_batch)
-
-
-    def finish_current_batch(self, current_value):
-        self.base.highlight.count_in_step = 0
-        print('progressbar finish current batch Hcount ', self.base.highlight.count)
-
-        if current_value == self.maximum():
-            self.inserting_in_main_g_cod()
-            print('Load 100%')
-            self.base.reading_lines_number = 1
-
-            self.base.current_g_cod_pool = np.zeros((self.base.reading_lines_number, 7), float)
-            self.base.current_g_cod_pool[:] = np.nan
-            self.base.highlight.to_the_start()
-            print('specially here count', self.base.highlight.count)
-            self.setValue(0)
-
-        elif self.base.reading_lines_number < self.base.highlight.count + self.base.highlight.standart_step:
-                print('Делаем шаг поменьше: number_of_lines={}, self.base.highlight.count={}, self.base.highlight.standart_step={}'
-                      .format(self.base.reading_lines_number, self.base.highlight.count, self.base.highlight.standart_step))
-                self.base.highlight.standart_step = self.base.reading_lines_number - self.base.highlight.count# - 1?
-
-
-    def inserting_in_main_g_cod(self):
-
-        print('вставить {} перед строкой {}'.format(self.base.current_g_cod_pool, self.base.editor.min_line_np))
-        self.base.main_g_cod_pool = np.insert(self.base.main_g_cod_pool, self.base.editor.min_line_np, self.base.current_g_cod_pool, axis=0)
-        self.base.tab_.center_widget.left.left_tab.a.reset_np_array_in_left_field()
-
-
-class ParentOfMyEdit(QWidget):
-    def __init__(self, text, tab_, existing):
-        super().__init__()
-
-        self.index_insert = 1
-        self.tab_ = tab_
-
-        grid = QGridLayout()
-        self.setLayout(grid)
-        self.editor = MyEdit(text, existing=existing, tab_=self.tab_, base=self)
-        grid.addWidget(self.editor, 0, 0)
-
-        self.progress_bar = Progress(self)
-
-        self.reading_lines_number = self.editor.blockCount() or 1
-
-        self.current_g_cod_pool = np.zeros((self.reading_lines_number, 7), float)
-        self.current_g_cod_pool[:] = np.nan
-        print('START: Создан массив размером ', self.current_g_cod_pool.shape)
-        self.main_g_cod_pool = np.zeros((1, 7), float)
-        self.main_g_cod_pool[:] = np.nan
-        self.progress_bar.setMaximum(self.reading_lines_number)
-        grid.addWidget(self.progress_bar, 1, 0)
-        self.set_syntax()
-
-    def set_syntax(self):
-        print('SET syntax1')
-        self.highlight = HLSyntax.HL_Syntax.GMHighlighter(self.editor._document, base=self)
-        print('SET syntax2')
-
-    def on_count_changed(self, value):
-        self.progress_bar.setValue(value)
-
-###################################################################################################################
-
-class MyStack(QUndoStack):
-    def __init__(self, edit, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.edit = edit
-        self.last_edited = ''
-        self.sutulaya_sobaka = False
-        self.line_max_np_del = 0
-        self.line_max_np_insert = 0
-        # self.edit_type = something
-        self.previous_max_line = 0
-        self.add_undo = 0
-
-    def storeFieldText(self):
-        if self.edit_type == False:
-            return
-        command = StoreCommand(self)
-        self.edit_type = False
-        self.push(command)
-        print('command.field = ', command.text)
-
-    def merging_world(self):
-
-        print('merge')
-        while self.index() > 1 and (self.command(self.index() - 2).id != -1):
-            print('self.index() ==== ', self.index())
-            g = self.command(self.index() - 2).mergeWith(self.command(self.index() - 1))
-            self.sutulaya_sobaka = True
-            self.undo()  # silent undo
-            self.sutulaya_sobaka = False
-            # print('g = ', g)
-            # print('self.index() zzzz = ', self.index())
-
-class StoreCommand(QUndoCommand):
-
-    def __init__(self, stack):
-        QUndoCommand.__init__(self)
-        self.stack = stack
-        # Record the field that has changed.
-        self.field = self.stack.edit
-        self.store_cursor = self.field.textCursor()
-        self.text_inserted = self.stack.last_edited
-        self.text = self.stack.edit_type
-        self.add_undo = self.stack.add_undo
-        self.id = -1
-        self.corrected_qt_number_of_lines = self.field.corrected_qt_number_of_lines
-        # todo self.text перевести на self.id
-        print('new command')
-
-
-        if self.text == 'symbol' or self.text == 'enter' or self.text == 'space':  # остальные символы
-            if self.text == 'symbol':
-                self.id = 1
-            self.give_position()
-            self.pos3 = self.pos1 + 1
-        elif self.text == 'Backspace':
-            self.text_inserted = ''
-            if not self.store_cursor.hasSelection():
-                self.store_cursor.setPosition(self.store_cursor.position() - 1, 1)
-            self.give_position()
-            self.pos3 = self.pos1
-        elif self.text == 'Delete':
-            self.text_inserted = ''
-            if not self.store_cursor.hasSelection():
-                self.store_cursor.setPosition(self.store_cursor.position() + 1, 1)
-            self.give_position()
-            self.pos3 = self.pos1
-        elif self.text == 'Cut':
-            # self.text_inserted = ''
-            self.give_position()
-            self.pos3 = self.pos1
-        elif self.text == 'Insert':
-            self.give_position()
-            self.pos3 = self.pos1 + len(self.text_inserted)
-        self.command_created_only = True
-        #self.give_line_numbers()
-        print('text = ', self.field.toPlainText())
-        print('                    self.pos1 = {}, self.pos2 = {}'.format(self.pos1, self.pos2))
-        self.text_deleted = self.store_cursor.selectedText()
-        print('                    selectedText', self.text_deleted)
-
-        print('                    last_edited', self.text_inserted)
-
-    def give_position(self):
-        self.corrected_qt_number_of_lines = 1#получить с верхнего этажа
-        pos1 = self.store_cursor.position()
-        pos2 = self.store_cursor.anchor()
-        self.pos1 = min(pos1, pos2)
-        self.pos2 = max(pos1, pos2)
-
-
-    def mergeWith(self, other: 'QUndoCommand') -> bool:
-        print('{} mergeWith {}'.format(self.text_inserted, other.text_inserted))
-        self.text_inserted = self.text_inserted + other.text_inserted
-        self.pos3 = other.pos3
-        print('self.pos3 = ', self.pos3)
-        # other.setObsolete(True)
-        return True
-
-    def undo(self):
-        self.command_created_only = False
-        if self.stack.sutulaya_sobaka is True:
-            print('pseudo undo')
-        else:
-            print(
-                'undo text_inserted: {}, готов записать в команду № {}'.format(self.text_inserted, self.stack.index()))
-            self.stack.edit_type = 'undo'
-            self.store_cursor.setPosition(self.pos3, 0)  #
-            self.store_cursor.setPosition(self.pos1, 1)
-            self.stack.previous_max_line = self.field._document.findBlock(self.pos3).blockNumber()
-            self.store_cursor.insertText(self.text_deleted)#после onchange НАЧИНАЕТСЯ HighLight
-            print('check')
-
-    def redo(self):
-        print('redo: {}, готов записать в команду № {}'.format(self.text, self.stack.index()))
-        if self.command_created_only is False:
-            self.stack.edit_type = 'redo'
-            self.store_cursor.setPosition(self.pos1, 0)
-            self.store_cursor.setPosition(self.pos2, 1)
-            self.stack.previous_max_line = self.field._document.findBlock(self.pos2).blockNumber()
-            self.store_cursor.insertText(self.text_inserted)
-
+    def paintEvent(self, event):
+        self.codeEditor.lineNumberAreaPaintEvent(event)

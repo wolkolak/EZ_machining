@@ -1,16 +1,11 @@
-from PyQt5.QtWidgets import QMainWindow, QAction, qApp,  QToolBar
+from PyQt5.QtWidgets import QMainWindow, QToolBar
 from PyQt5.QtCore import Qt
-import gui_classes
-import settings
-import MyTxtToolBar, MyViewToolBar
-import re
-import fileinput
-import os
+from Gui import gui_classes, MyViewToolBar, MyTxtToolBar, test_button
+#MyTxtToolBar, MyViewToolBar,gui_classes
 import shutil
-import FileMenu, ViewMenu, OptionsMenu, EditMenu
-import bigCustomizer
-import change_setting
-import test_button
+from Menus import EditMenu, FileMenu, ViewMenu, OptionsMenu
+from Settings import bigCustomizer, change_setting, settings
+#from Gui import test_button
 
 class MyMainWindow(QMainWindow):
 
@@ -143,7 +138,7 @@ class MyMainWindow(QMainWindow):
         print('toolbasrs type', type(toolbars_plasemnt))
 
     def restore_all_options(self):
-        shutil.copyfile('default_settings.py', 'settings.py', follow_symlinks=True)
+        shutil.copyfile('../Settings/default_settings.py', 'Settings/settings.py', follow_symlinks=True)
 
         self.setGeometry(100, 100, settings.interface_settings['main_width'], settings.interface_settings['main_height'])
         self.centre.splitter.setSizes([settings.splitter_parameters['lefty'], settings.splitter_parameters['righty']])

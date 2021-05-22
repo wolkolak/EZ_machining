@@ -1,11 +1,9 @@
-from PyQt5.QtWidgets import QToolBar, QAction
-from PyQt5.QtGui import QIcon, QKeySequence
-from PyQt5.QtCore import Qt
-import settings
+from PyQt5.QtWidgets import QAction
+from PyQt5.QtGui import QIcon
 
 
 def edit_opt(self):
-    self.findAction = QAction(QIcon('icons\open.png'), 'Find', self)
+    self.findAction = QAction(QIcon('../icons/open.png'), 'Find', self)
     self.findAction.setStatusTip('find in current text')
     self.findAction.triggered.connect(self.find_obertka)
     self.findAction.setShortcut('Ctrl+F')

@@ -1,9 +1,10 @@
 from PyQt5.QtWidgets import  QSplitter, QTabWidget, QHBoxLayout,  \
     QFrame, QTabBar,  QMessageBox, QFileDialog, QFontDialog, QPushButton, QWidget, QGridLayout, QCheckBox
-from PyQt5.QtCore import Qt, QRect, QSize
-import redactor, left_part
-from settings import *
-import change_setting
+from PyQt5.QtCore import Qt
+from left_zone import left_part
+from Redactor import redactor
+from Settings import change_setting
+from Settings.settings import *
 import numpy as np
 
 
@@ -119,7 +120,7 @@ class Tabs(QTabWidget):
         if self.tabs[i][1] is None:
             self.tabs[i][1] = True
             print('new tab0')
-            self.insertTab(self.currentIndex()+1, redactor.ParentOfMyEdit(None, existing=False, tab_=self), self.tabs[i][0])
+            self.insertTab(self.currentIndex() + 1, redactor.ParentOfMyEdit(None, existing=False, tab_=self), self.tabs[i][0])
             #gbplf
 
 
@@ -223,7 +224,7 @@ class Tabs(QTabWidget):
             except ValueError:
                 name_open_file = path
 
-            self.insertTab(self.currentIndex()+1, redactor.ParentOfMyEdit(text, existing=path, tab_=self), name_open_file)
+            self.insertTab(self.currentIndex() + 1, redactor.ParentOfMyEdit(text, existing=path, tab_=self), name_open_file)
             #self.currentWidget().editor.set_syntax()
             self.setCurrentIndex(self.currentIndex()+1)
             self.currentWidget().editor.existing = path

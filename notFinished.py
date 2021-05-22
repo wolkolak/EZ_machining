@@ -39,7 +39,7 @@ def restore_some_options(self, name, defaultname):
     name = name + ' '
     defaultname = defaultname + ' '
 
-    with open('settings.py') as settings:
+    with open('Settings/settings.py') as settings:
         for index, line in enumerate(settings):
             if re.match(name, line):
                 x, cur_line = index, line
@@ -49,13 +49,13 @@ def restore_some_options(self, name, defaultname):
                 print('x=', x, 'y=', y)
                 break
     try:
-        with fileinput.FileInput('settings.py', inplace=True, backup='.bak') as settings:
+        with fileinput.FileInput('Settings.py', inplace=True, backup='.bak') as settings:
             for index, line in enumerate(settings):
                 if index != x:
                     print(line, end='')
                 else:
                     print(name + def_line[len(defaultname):])
-        os.unlink('settings.py' + '.bak')
+        os.unlink('Settings.py' + '.bak')
     except OSError:
         gui_classes.simple_warning('Ooh', 'Something went wrong \n ¯\_(ツ)_/¯')
     self.setGeometry(100, 100, interface_settings['main_width'], interface_settings['main_height'])

@@ -3,9 +3,9 @@
 
 
 import sys
-from PyQt5.QtWidgets import QApplication, QLabel, QStyleFactory
+from PyQt5.QtWidgets import QApplication
 
-import interface
+from Gui import interface
 
 if __name__ == '__main__':
     #sys.setswitchinterval(1000)

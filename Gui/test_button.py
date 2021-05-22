@@ -1,11 +1,11 @@
 from PyQt5.QtWidgets import QToolBar, QAction
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt
-import settings
+import Settings
 
 
 def test_opt(self):
-    self.testAction = QAction(QIcon('icons\open.png'), 'test', self)
+    self.testAction = QAction(QIcon('../icons/open.png'), 'test', self)
     self.testAction.setStatusTip('Test')
     self.testAction.triggered.connect(lambda: test_func(self))
     self.testAction.setShortcut('Ctrl+Q')

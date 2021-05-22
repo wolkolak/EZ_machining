@@ -1,11 +1,8 @@
-from PyQt5.QtWidgets import QSplitter, QTabWidget, QHBoxLayout,  \
-    QFrame, QTabBar,  QMessageBox, QPlainTextEdit,  QWidget, QGridLayout, QGraphicsScene, QPushButton
-from PyQt5.QtCore import Qt, QRect, QSize
-import redactor
-import OpenGL
+from PyQt5.QtWidgets import QTabWidget, QFrame, QPlainTextEdit,  QWidget, QGridLayout, QPushButton
+from PyQt5.QtCore import Qt
 from PyQt5.QtOpenGL import QGLWidget
 
-from settings import *
+from Settings.settings import *
 import numpy as np
 
 class Window3D(QGLWidget):

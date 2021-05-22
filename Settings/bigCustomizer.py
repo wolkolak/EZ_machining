@@ -1,10 +1,5 @@
 from PyQt5.QtWidgets import  QGridLayout,  QWidget, QTreeWidget, \
-    QListView, QTreeView, QTreeWidgetItem, QFrame
-from PyQt5.QtCore import Qt, QRect, QSize
-from PyQt5.QtGui import  QTextDocument, QTextCharFormat,\
-    QTextFormat, QGuiApplication
-from settings import *
-from find_replace import finder
+    QTreeWidgetItem, QFrame
 
 
 class OptionsQTWItem(QTreeWidgetItem):
