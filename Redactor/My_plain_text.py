@@ -216,7 +216,7 @@ class MyEdit(QPlainTextEdit):
         if self.undoStack.edit_type == 'undo':  # only for undo redo зщщы2
             z = self.undoStack.command(self.undoStack.index() - 1)
             line1 = self._document.findBlock(z.pos1).blockNumber() + 1# for numpy
-            line2 = self.undoStack.previous_max_line  + 1# for deleting last
+            line2 = self.undoStack.previous_max_line + 1# for deleting last
             line3 = self._document.findBlock(z.pos2).blockNumber() + 1
             self.min_line_np = line1
             self.second_place = line2 + z.add_undo #-1
@@ -240,9 +240,9 @@ class MyEdit(QPlainTextEdit):
             line2 = self.undoStack.previous_max_line + 1
             line3 = self._document.findBlock(z.pos3).blockNumber() + 1
             self.min_line_np = line1
-            self.second_place = line3 + z.corrected_qt_number_of_lines
-            self.base.reading_lines_number = line2 + z.corrected_qt_number_of_lines - line1
-
+            self.second_place = line2 + z.corrected_qt_number_of_lines
+            self.base.reading_lines_number = line3 - line1 + 1 #+ z.corrected_qt_number_of_lines #+ z.add_undo#+
+            print('self.base.reading_lines_number = ', self.base.reading_lines_number)
             print('delete с {} по {} включительно'.format(self.min_line_np, self.second_place))
             self.delete_lines_from_main_np_g_pool()
             print('insert c {} по {}'.format(self.min_line_np, line3 + z.corrected_qt_number_of_lines))
