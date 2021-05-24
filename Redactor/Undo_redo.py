@@ -12,6 +12,7 @@ class MyStack(QUndoStack):
         # self.edit_type = something
         self.previous_max_line = 0
         self.add_undo = 0
+        self.add_redo = 0
 
     def storeFieldText(self):
         if self.edit_type == False:
@@ -44,6 +45,7 @@ class StoreCommand(QUndoCommand):
         self.text_inserted = self.stack.last_edited
         self.text = self.stack.edit_type
         self.add_undo = self.stack.add_undo
+        self.add_redo = self.stack.add_redo
         self.id = -1
         self.corrected_qt_number_of_lines = self.field.corrected_qt_number_of_lines
         # todo self.text перевести на self.id
