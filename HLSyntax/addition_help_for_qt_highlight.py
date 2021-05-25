@@ -4,6 +4,7 @@ from PyQt5.QtGui import QKeySequence
 def corrected_number_of_lines(my_edit, key):
     print('writing key used')
     corrected_qt_number_of_lines = 0
+    add_redo = 0
     add_undo = 0
     my_cursor = my_edit.textCursor()
     pos1 = my_cursor.position()
@@ -31,6 +32,7 @@ def corrected_number_of_lines(my_edit, key):
             mladshii_block = mladshii_block - 1#backspace in the beginning of the line will update previous line too
         if important_clue and not starshiy_block + 1 == my_edit.blockCount():
             corrected_qt_number_of_lines = 1
+            add_redo = 1
 
 
 
@@ -44,6 +46,7 @@ def corrected_number_of_lines(my_edit, key):
             add_undo = 1
             if h:
                 corrected_qt_number_of_lines = 1
+                add_redo = 1
 
     elif key == 'cut':
         print('cut1')
@@ -57,14 +60,17 @@ def corrected_number_of_lines(my_edit, key):
         print('my_cursor.positionInBlock() + 1= {}, my_cursor.block().length() = {}'.format(my_cursor.positionInBlock() + 2, my_cursor.block().length()))
         if not h and my_cursor.positionInBlock() + 2 == my_cursor.block().length():
             corrected_qt_number_of_lines = 1
+            add_redo = 1
         elif important_clue and not starshiy_block + 1 == my_edit.blockCount():#h and
             corrected_qt_number_of_lines = 1
+            add_redo = 1
 
     elif key == Qt.Key_Enter or key == Qt.Key_Return:
         print('enter')
         add_undo = 1
         if h and important_clue:
             corrected_qt_number_of_lines = 1
+
 
     else:#symbol
         print('important clue = ', important_clue )
@@ -73,6 +79,7 @@ def corrected_number_of_lines(my_edit, key):
             add_undo = 1
             if h:
                 corrected_qt_number_of_lines = 1
+                add_redo = 1
         print('corrected_qt_number_of_lines = ', corrected_qt_number_of_lines)
 
     # есть следующая строка?
@@ -83,5 +90,5 @@ def corrected_number_of_lines(my_edit, key):
         add_undo = 0
     print('{} >= {}'.format(starshiy_block + corrected_qt_number_of_lines, my_edit.blocks_before))
     print('add_undo ', add_undo)
-    return corrected_qt_number_of_lines, starshiy_block, mladshii_block, add_undo
+    return corrected_qt_number_of_lines, starshiy_block, mladshii_block, add_undo, add_redo
 #my_edir.delete_line_corrector
