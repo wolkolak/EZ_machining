@@ -199,8 +199,11 @@ class MyEdit(QPlainTextEdit):
 
     def my_cut(self):
         print('my cut21')
+        self.undoStack.edit_type = 'Cut'
+        self.undoStack.last_edited = ''
         self.corrected_qt_number_of_lines, self.untilBlock, self.firstBlock, self.undoStack.add_undo, self.undoStack.add_redo = HLSyntax.addition_help_for_qt_highlight.corrected_number_of_lines(
             self, key='cut')
+        self.undoStack.storeFieldText()
         #self.cut()
         QPlainTextEdit.cut(self)
         #pyautogui.hotkey('ctrl', 'x')
@@ -240,12 +243,12 @@ class MyEdit(QPlainTextEdit):
             line2 = self.undoStack.previous_max_line + 1
             line3 = self._document.findBlock(z.pos3).blockNumber() + 1
             self.min_line_np = line1
-            self.second_place = line2 + z.corrected_qt_number_of_lines
+            self.second_place = line2 + z.add_redo
             self.base.reading_lines_number = line3 - line1 + 1 + z.add_redo#+ z.corrected_qt_number_of_lines #+ z.add_undo#+
             print('self.base.reading_lines_number = ', self.base.reading_lines_number)
             print('delete с {} по {} включительно'.format(self.min_line_np, self.second_place))
             self.delete_lines_from_main_np_g_pool()
-            print('insert c {} по {}'.format(self.min_line_np, line3 + z.corrected_qt_number_of_lines))
+            print('insert c {} по {}'.format(self.min_line_np, line3 + z.add_redo))
             self.creating_np_pool()
         else:
             self.onChange_new_command(position)
@@ -329,10 +332,8 @@ class MyEdit(QPlainTextEdit):
                     return True
                 if event.key() == (Qt.Key_Control and Qt.Key_X):
                     print('Вырез')
-                    self.undoStack.edit_type = 'Cut'
-                    self.undoStack.last_edited = ''
-                    self.undoStack.storeFieldText()
                     self.my_cut()
+                    return True
                 if event.key() == (Qt.Key_Control and Qt.Key_V):
                     print('Вставка check')
 

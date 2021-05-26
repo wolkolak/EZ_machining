@@ -52,6 +52,8 @@ def corrected_number_of_lines(my_edit, key):
         print('cut1')
         if important_clue and h:
             corrected_qt_number_of_lines = 1
+            add_redo = 1
+            print('add_redo = 1')
 
     elif key == Qt.Key_Delete:
         print('Delete')
@@ -70,6 +72,7 @@ def corrected_number_of_lines(my_edit, key):
         add_undo = 1
         if h and important_clue:
             corrected_qt_number_of_lines = 1
+            add_redo = 1
 
 
     else:#symbol
