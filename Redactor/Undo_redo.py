@@ -47,7 +47,7 @@ class StoreCommand(QUndoCommand):
         self.add_undo = self.stack.add_undo
         self.add_redo = self.stack.add_redo
         self.id = -1
-        self.corrected_qt_number_of_lines = self.field.corrected_qt_number_of_lines
+        #self.corrected_qt_number_of_lines = self.field.corrected_qt_number_of_lines
         # todo self.text перевести на self.id
         print('new command')
 
@@ -86,7 +86,7 @@ class StoreCommand(QUndoCommand):
         print('                    last_edited', self.text_inserted)
 
     def give_position(self):
-        self.corrected_qt_number_of_lines = 1#получить с верхнего этажа
+        #self.corrected_qt_number_of_lines = 1#получить с верхнего этажа
         pos1 = self.store_cursor.position()
         pos2 = self.store_cursor.anchor()
         self.pos1 = min(pos1, pos2)
