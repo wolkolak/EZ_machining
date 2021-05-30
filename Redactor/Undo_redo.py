@@ -109,10 +109,12 @@ class StoreCommand(QUndoCommand):
             print(
                 'undo text_inserted: {}, готов записать в команду № {}'.format(self.text_inserted, self.stack.index()))
             self.stack.edit_type = 'undo'
-            self.store_cursor.setPosition(self.pos3, 0)  #
-            self.store_cursor.setPosition(self.pos1, 1)
+            self.store_cursor.setPosition(self.pos1, 0)  #
+            self.store_cursor.setPosition(self.pos3, 1)
             self.stack.previous_max_line = self.field._document.findBlock(self.pos3).blockNumber()
             self.store_cursor.insertText(self.text_deleted)#после onchange НАЧИНАЕТСЯ HighLight
+            #выделю
+            self.select(self.pos2)
             print('check')
 
     def redo(self):
@@ -123,3 +125,9 @@ class StoreCommand(QUndoCommand):
             self.store_cursor.setPosition(self.pos2, 1)
             self.stack.previous_max_line = self.field._document.findBlock(self.pos2).blockNumber()
             self.store_cursor.insertText(self.text_inserted)
+            self.select(self.pos3)
+
+    def select(self, pos):
+        self.store_cursor.setPosition(self.pos1, 0)
+        self.store_cursor.setPosition(pos, 1)
+        self.field.setTextCursor(self.store_cursor)
