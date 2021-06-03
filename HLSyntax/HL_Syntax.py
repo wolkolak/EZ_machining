@@ -15,9 +15,7 @@ def format(color, style=''):
         _format.setFontWeight(QFont.Bold)
     if 'italic' in style:
         _format.setFontItalic(True)
-
     return _format
-
 
 # Синтаксические стили, которые могут использоваться
 STYLES = {
@@ -32,9 +30,7 @@ STYLES = {
     'numbers': format('brown'),
 }
 
-
 class GMHighlighter(QSyntaxHighlighter):
-
 
     """Синтаксические маркеры для языка. """
     # G-func
@@ -47,7 +43,7 @@ class GMHighlighter(QSyntaxHighlighter):
     for letter in axises:
         sorted_axis_rule += r'((?:{})(-?\d+\.\d*)\s*)?'.format(letter)
         #sorted_axis_rule += r'(([{}]\s*)(-)?(\d+.\d*)\s*)?'.format(letter)
-    sorted_axis_rule = '^' + '(?:G\d+)?\s*' + sorted_axis_rule + '$'
+    sorted_axis_rule = '^' + '(?:G0?\d)?\s*' + sorted_axis_rule + '$'
     #print('nabor XYZ:', sorted_axis_rule)
 
     main_rule = sorted_axis_rule
@@ -81,8 +77,8 @@ class GMHighlighter(QSyntaxHighlighter):
         # Keyword, operator, and brace rules
         # main rule
         #rules += [(r'{}'.format(GMHighlighter.axises), 0, STYLES['axis'])]#r'{}(-)?(\d+.(\d*))'
-        #rules += [(r'{}'.format(GMHighlighter.main_rule), 0, STYLES['axis'])]
-        rules += [(r'{}'.format(GMHighlighter.second_rule), 0, STYLES['axis'])]
+        rules += [(r'{}'.format(GMHighlighter.main_rule), 0, STYLES['axis'])]
+        rules += [(r'{}'.format(GMHighlighter.second_rule), 1, STYLES['axis'])]
         #rules += [(r'{}'.format(g), 1, STYLES['g_cod'])
         #          for g in GMHighlighter.g_cod]
 
@@ -92,16 +88,18 @@ class GMHighlighter(QSyntaxHighlighter):
         #rules += [(r'([XYZCAB])(-)?(\d+.(\d*))', 0, STYLES['axis'])]
 
         # comment rules
-        rules += [(r'{}'.format(GMHighlighter.comment_braces[0]), 2, STYLES['comment_brace'])]#rules += [(r'\([\w.]*\)', 0, STYLES['string'])]
+        #rules += [(r'{}'.format(GMHighlighter.comment_braces[0]), 2, STYLES['comment_brace'])]#rules += [(r'\([\w.]*\)', 0, STYLES['string'])]
 
 
         # Создайте QRegExp для каждого шаблона
         self.first_rule = [QRegularExpression(self.main_rule), 0, STYLES['axis']]
+        self.second_rule = [QRegularExpression(self.main_rule), 1, STYLES['axis']]
+
         self.rules = [(QRegularExpression(pat), index, fmt) for (pat, index, fmt) in rules]
         self.main_rule_regular_expression = self.first_rule[0]
         self.main_format = self.first_rule[2]
-        self.second_rule_regular_expression = self.rules[0][0]
-        self.second_format = self.rules[0][2]
+        self.second_rule_regular_expression = self.second_rule[0]#self.rules[0][0]
+        self.second_format = self.second_rule[2]#self.rules[0][2]
 
         self.too_little_number_check()
 
@@ -128,13 +126,20 @@ class GMHighlighter(QSyntaxHighlighter):
         len_match = nya.capturedLength()
         if len_match != 0:
             self.setFormat(index, len_match, self.main_format)
-            #print('self.base.current_g_cod_pool[0]  = ', self.base.current_g_cod_pool[0])
             print('nya = ', nya.captured())
             self.recount(nya)
             #print('main rule! index = {}, string = {}'.format(index, text))
         elif index == 0:#empty string
-            print('nya = pusto1')
-            self.recount2()
+            print('second rule')
+            nya = self.second_rule_regular_expression.match(text, 0)
+            index = nya.capturedStart()
+            len_match = nya.capturedLength()
+            if len_match != 0:
+                self.setFormat(index, len_match, self.main_format)
+                print('nya = ', nya.captured())
+                self.recount(nya)
+            else:
+                self.recount2()
             #print('index = {}, string = {}, запуск дополнительных правил'.format(index, text))
         else:
             print('nya = pusto2')

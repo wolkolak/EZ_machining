@@ -48,7 +48,8 @@ class MyMainWindow(QMainWindow):
 
         self.centre.note.currentChanged.connect(self.change_tab)
         self.custom = bigCustomizer.BigCustomizer(self)
-        self.light_out(False)
+        #self.light_out(False)
+        EditMenu.update_edit_menu(self, self.centre.note.currentIndex())
 
         print('foninf:', self.fontInfo())
         self.setFont(settings.font1)
@@ -70,11 +71,14 @@ class MyMainWindow(QMainWindow):
     def find_obertka(self):
         self.centre.note.currentWidget().editor.find_in_text()
 
+    def replace_obertka(self):
+        self.centre.note.currentWidget().editor.replace_in_text()
+
     def undo_obertka(self):
-        self.centre.note.currentWidget().editor.undoStack.undo()
+        self.centre.note.currentWidget().editor.my_undo()
 
     def redo_obertka(self):
-        self.centre.note.currentWidget().editor.undoStack.redo()
+        self.centre.note.currentWidget().editor.my_redo()
 
     def del_obertka(self):
         self.centre.note.currentWidget().editor.my_del()
@@ -103,20 +107,22 @@ class MyMainWindow(QMainWindow):
             else:
                 title2 = self.centre.note.currentWidget().editor.existing
             self.setWindowTitle('EZ machining:  {}'.format(title2))
-            self.light_out(True)
+            #self.light_out(True)
+            EditMenu.update_edit_menu(self, self.centre.note.currentIndex())
             self.centre.note.currentWidget().editor.setFocus()
             #self.centre.left.left_tab.a.reset_np_array_in_left_field()
         else:
             self.setWindowTitle('EZ machining')
-            self.light_out(False)
+            EditMenu.update_edit_menu(self, self.centre.note.currentIndex())
+            #self.light_out(False)
 
-    def light_out(self, gamlet):
-        self.saveAction.setEnabled(gamlet)
-        self.saveAsAction.setEnabled(gamlet)
-        self.centre.note.save_tab_button.setEnabled(gamlet)
-        self.findAction.setEnabled(gamlet)
-        self.editMenu.setEnabled(gamlet)
-        self.BackplotView.setEnabled(gamlet)
+    #def light_out(self, gamlet):
+    #    self.saveAction.setEnabled(gamlet)
+    #    self.saveAsAction.setEnabled(gamlet)
+    #    self.centre.note.save_tab_button.setEnabled(gamlet)
+    #    #self.findAction.setEnabled(gamlet)
+    #    self.editMenu.setEnabled(gamlet)
+    #    self.BackplotView.setEnabled(gamlet)
 
 
 

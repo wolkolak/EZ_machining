@@ -120,7 +120,7 @@ class MyLine(QPlainTextEdit):
                         self.undoStack.last_edited = insert_txt
                         self.undoStack.storeFieldText()
             else:
-                if event.text():
+                if event.text12345():
                     if key == Qt.Key_Backspace:
                         self.undoStack.edit_type = 'Backspace'
                     elif key == Qt.Key_Delete:
@@ -134,7 +134,7 @@ class MyLine(QPlainTextEdit):
                             self.undoStack.edit_type = 'enter'
                         else:
                             self.undoStack.edit_type = 'symbol'
-                        self.undoStack.last_edited = event.text()
+                        self.undoStack.last_edited = event.text12345()
                     self.undoStack.storeFieldText()
             if self._document.isModified():
                 print('was modified')

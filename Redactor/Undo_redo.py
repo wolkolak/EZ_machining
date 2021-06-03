@@ -20,7 +20,7 @@ class MyStack(QUndoStack):
         command = StoreCommand(self)
         self.edit_type = False
         self.push(command)
-        print('command.field = ', command.text)
+        print('command.field = ', command.text())
 
     def merging_world(self):
 
@@ -31,8 +31,6 @@ class MyStack(QUndoStack):
             self.sutulaya_sobaka = True
             self.undo()  # silent undo
             self.sutulaya_sobaka = False
-            # print('g = ', g)
-            # print('self.index() zzzz = ', self.index())
 
 class StoreCommand(QUndoCommand):
 
@@ -43,42 +41,52 @@ class StoreCommand(QUndoCommand):
         self.field = self.stack.edit
         self.store_cursor = self.field.textCursor()
         self.text_inserted = self.stack.last_edited
-        self.text = self.stack.edit_type
+        self.setText(self.stack.edit_type)
         self.add_undo = self.stack.add_undo
         self.add_redo = self.stack.add_redo
         self.id = -1
+        self.child_count = 0
         #self.corrected_qt_number_of_lines = self.field.corrected_qt_number_of_lines
         # todo self.text перевести на self.id
         print('new command')
+        text12345 = self.text()
 
-
-        if self.text == 'symbol' or self.text == 'enter' or self.text == 'space':  # остальные символы
-            if self.text == 'symbol':
+        if text12345 == 'symbol' or text12345 == 'enter' or text12345 == 'space':  # остальные символы
+            if text12345 == 'symbol':
                 self.id = 1
             self.give_position()
             self.pos3 = self.pos1 + 1
-        elif self.text == 'Backspace':
+        elif text12345 == 'backspace':
             self.text_inserted = ''
             if not self.store_cursor.hasSelection():
                 self.store_cursor.setPosition(self.store_cursor.position() - 1, 1)
             self.give_position()
             self.pos3 = self.pos1
-        elif self.text == 'Delete':
+        elif text12345 == 'delete':
             self.text_inserted = ''
             if not self.store_cursor.hasSelection():
                 self.store_cursor.setPosition(self.store_cursor.position() + 1, 1)
             self.give_position()
             self.pos3 = self.pos1
-        elif self.text == 'Cut':
+        elif text12345 == 'cut':
             # self.text_inserted = ''
             self.give_position()
             self.pos3 = self.pos1
-        elif self.text == 'Insert':
+        elif text12345 == 'insert':
             self.give_position()
             self.pos3 = self.pos1 + len(self.text_inserted)
+        elif text12345 == 'replace':
+            self.give_position()
+            self.pos3 = self.pos1 + len(self.text_inserted)
+        elif text12345 == 'glue':
+            print('emaaaa')
+            #self.command_created_only = True
+            print('self.childCount() = ', self.childCount())
+            return
+
         self.command_created_only = True
         #self.give_line_numbers()
-        print('text = ', self.field.toPlainText())
+
         print('                    self.pos1 = {}, self.pos2 = {}'.format(self.pos1, self.pos2))
         self.text_deleted = self.store_cursor.selectedText()
         print('                    selectedText', self.text_deleted)
@@ -106,28 +114,21 @@ class StoreCommand(QUndoCommand):
         if self.stack.sutulaya_sobaka is True:
             print('pseudo undo')
         else:
+            #u dont need to play around macroUndo cuz it nether dive here
             print(
                 'undo text_inserted: {}, готов записать в команду № {}'.format(self.text_inserted, self.stack.index()))
             self.stack.edit_type = 'undo'
-            self.store_cursor.setPosition(self.pos1, 0)  #
-            self.store_cursor.setPosition(self.pos3, 1)
+            self.store_cursor.setPosition(self.pos3, 0)  #
+            self.store_cursor.setPosition(self.pos1, 1)#pos3
             self.stack.previous_max_line = self.field._document.findBlock(self.pos3).blockNumber()
             self.store_cursor.insertText(self.text_deleted)#после onchange НАЧИНАЕТСЯ HighLight
-            #выделю
-            self.select(self.pos2)
             print('check')
 
     def redo(self):
-        print('redo: {}, готов записать в команду № {}'.format(self.text, self.stack.index()))
+        print('redo: {}, готов записать в команду № {}'.format(self.text(), self.stack.index()))
         if self.command_created_only is False:
             self.stack.edit_type = 'redo'
             self.store_cursor.setPosition(self.pos1, 0)
             self.store_cursor.setPosition(self.pos2, 1)
             self.stack.previous_max_line = self.field._document.findBlock(self.pos2).blockNumber()
             self.store_cursor.insertText(self.text_inserted)
-            self.select(self.pos3)
-
-    def select(self, pos):
-        self.store_cursor.setPosition(self.pos1, 0)
-        self.store_cursor.setPosition(pos, 1)
-        self.field.setTextCursor(self.store_cursor)

@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QAction
+from PyQt5.QtWidgets import QAction, QApplication
 from PyQt5.QtGui import QIcon
 
 
@@ -8,8 +8,15 @@ def edit_opt(self):
     self.findAction.triggered.connect(self.find_obertka)
     self.findAction.setShortcut('Ctrl+F')
 
+    self.replaceAction = QAction(QIcon('icons/open.png'), 'Replace', self) #../icons/open.png
+    self.replaceAction.setStatusTip('replace in current text')
+    self.replaceAction.triggered.connect(self.replace_obertka)
+    self.replaceAction.setShortcut('Ctrl+H')
+
+
     self.editMenu = self.menubar.addMenu('&Edit')
     self.editMenu.addAction(self.findAction)
+    self.editMenu.addAction(self.replaceAction)
 
     self.undoAction = QAction('Undo', self)
 
@@ -35,8 +42,7 @@ def edit_opt(self):
     add_action(self.editMenu, self.delAction, 'Delete text', self.del_obertka, 'Delete')
     self.editMenu.addSeparator()
     add_action(self.editMenu, self.select_allAction, 'Select all text', self.select_all_obertka, 'Ctrl+A')
-
-
+    self.menubar.hovered.connect(lambda: update_edit_menu(self, self.centre.note.currentIndex()))
 
 def add_action(menu, nameaction, tip, my_slot, short_cut):
     nameaction.setStatusTip(tip)
@@ -44,3 +50,31 @@ def add_action(menu, nameaction, tip, my_slot, short_cut):
     nameaction.setShortcut(short_cut)
     menu.addAction(nameaction)
 
+def update_edit_menu(self, current_index):
+    if current_index == -1:
+        #всё отключи
+        self.editMenu.setEnabled(False)
+        for action in self.editMenu.actions():
+            action.setEnabled(False)
+    else:
+        print('update_edit_menu')
+        self.editMenu.setEnabled(True)
+        edit = self.centre.note.currentWidget().editor
+        self.editMenu.actions()[0].setEnabled(True)
+        self.editMenu.actions()[1].setEnabled(True)
+        self.editMenu.actions()[11].setEnabled(True)
+        a = True if edit.undoStack.canUndo() else False
+        self.editMenu.actions()[3].setEnabled(a)
+        a = True if edit.undoStack.canRedo() else False
+        self.editMenu.actions()[4].setEnabled(a)
+        a = True if edit.textCursor().hasSelection() else False
+        self.editMenu.actions()[6].setEnabled(a)
+        self.editMenu.actions()[7].setEnabled(a)
+        self.editMenu.actions()[9].setEnabled(a)
+        a = True if QApplication.clipboard().text() else False
+        self.editMenu.actions()[8].setEnabled(a)
+
+        print('edit menu clipboard text:', QApplication.clipboard().text())
+
+        #self.editMenu.actions() =
+        #self.centre.note.currentWidget().editor

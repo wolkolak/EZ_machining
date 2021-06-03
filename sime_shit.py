@@ -80,7 +80,7 @@ class StoreCommand(QUndoCommand):
         self.field = field
 
         # Record the text at the time the command was created.
-        self.text = field.text()
+        self.text = field.text12345()
 
 
     def undo(self):
