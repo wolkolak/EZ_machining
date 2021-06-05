@@ -20,8 +20,8 @@ class Progress(QProgressBar):
             self.inserting_in_main_g_cod()
             print('Load 100%')
             self.base.reading_lines_number = 1
-
-            self.base.current_g_cod_pool = np.zeros((self.base.reading_lines_number, 7), float)
+            axises = 9
+            self.base.current_g_cod_pool = np.zeros((self.base.reading_lines_number, axises), float)
             self.base.current_g_cod_pool[:] = np.nan
             self.base.highlight.to_the_start()
             print('specially here count', self.base.highlight.count)
@@ -38,6 +38,8 @@ class Progress(QProgressBar):
         print('вставить {} перед строкой {}'.format(self.base.current_g_cod_pool, self.base.editor.min_line_np))
         self.base.main_g_cod_pool = np.insert(self.base.main_g_cod_pool, self.base.editor.min_line_np, self.base.current_g_cod_pool, axis=0)
         self.base.tab_.center_widget.left.left_tab.a.reset_np_array_in_left_field()
+
+        self.base.editor.rehighlightNextBlocks()
 
 
 class ParentOfMyEdit(QWidget):
@@ -56,14 +58,16 @@ class ParentOfMyEdit(QWidget):
 
         self.reading_lines_number = self.editor.blockCount() or 1
 
-        self.current_g_cod_pool = np.zeros((self.reading_lines_number, 7), float)
+        axises = 9
+        self.current_g_cod_pool = np.zeros((self.reading_lines_number, axises), float)
         self.current_g_cod_pool[:] = np.nan
         print('START: Создан массив размером ', self.current_g_cod_pool.shape)
-        self.main_g_cod_pool = np.zeros((1, 7), float)
+        self.main_g_cod_pool = np.zeros((1, axises), float)
         self.main_g_cod_pool[:] = np.nan
         self.progress_bar.setMaximum(self.reading_lines_number)
         grid.addWidget(self.progress_bar, 1, 0)
         self.set_syntax()
+
 
     def set_syntax(self):
         print('SET syntax1')

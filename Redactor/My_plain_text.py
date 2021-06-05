@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QPlainTextEdit, QTextEdit, QWidget, QMenu
-from PyQt5.QtCore import QRect, QSize, QEvent, Qt
+from PyQt5.QtCore import QRect, QSize, QEvent, Qt, QMimeData
 from PyQt5.QtGui import QTextOption, QColor, QPainter,  QTextCharFormat,\
-    QTextFormat,  QCursor, QKeySequence
+    QTextFormat,  QCursor, QKeySequence, QDropEvent
 from Settings.settings import *
 from Redactor.find_replace import finder
 import HLSyntax.HL_Syntax, HLSyntax.addition_help_for_qt_highlight
@@ -98,7 +98,9 @@ class MyEdit(QPlainTextEdit):
         if nya[:8] == 'file:///':
             nya = nya[8:]
             self.tab_.make_open_DRY(nya)
+            #e.accept()
         else:
+            #e.accept()
             self.undoStack.edit_type = 'glue'
             self.undoStack.beginMacro('glue')
             self.my_del()
@@ -108,7 +110,13 @@ class MyEdit(QPlainTextEdit):
 
             self.insertFromMimeData(mime)
             self.undoStack.endMacro()
-            print(' drop event: ',nya)
+            print(' drop event: ', nya)
+            #i do not know how to override proposed event, so i am making another hollow event to unfreeze text cursor
+            mimeData = QMimeData()
+            mimeData.setText("")
+            dummyEvent = QDropEvent(e.posF(), e.possibleActions(),
+                                          mimeData, e.mouseButtons(), e.keyboardModifiers())
+            QPlainTextEdit.dropEvent(self, dummyEvent)
 
 
     def lineNumberAreaWidth(self):
@@ -295,12 +303,13 @@ class MyEdit(QPlainTextEdit):
         self.delete_lines_from_main_np_g_pool()
 
     def creating_np_pool(self):
-        self.base.current_g_cod_pool = np.zeros((self.base.reading_lines_number, 7), float)
+        self.base.current_g_cod_pool = np.zeros((self.base.reading_lines_number, 9), float)
         self.base.current_g_cod_pool[:] = np.nan
         self.base.progress_bar.setMaximum(self.base.reading_lines_number)
         self.base.highlight.too_little_number_check()
 
     def delete_lines_from_main_np_g_pool(self):
+        self.base.highlight.previous_block_g = self.base.main_g_cod_pool[self.min_line_np][0] if self.min_line_np > 1 else 0
         self.base.main_g_cod_pool = np.delete(self.base.main_g_cod_pool, np.s_[self.min_line_np:self.second_place + 1], axis=0)
 
     def eventFilter(self, widget, event):
@@ -349,6 +358,33 @@ class MyEdit(QPlainTextEdit):
     def event_data_acquiring(self, key, replace_to_nothing=False):
         self.corrected_qt_number_of_lines, self.untilBlock, self.firstBlock, self.undoStack.add_undo, self.undoStack.add_redo = HLSyntax.addition_help_for_qt_highlight.corrected_number_of_lines(
             self, key, replace_to_nothing)
+
+    def rehighlightNextBlocks(self):
+        print('rehighlightNextBlock')
+
+        i = self.second_place + 1
+        g = self.base.main_g_cod_pool[self.second_place][0]
+        lines = 0
+        number_of_lines = self.blockCount()
+        while i < number_of_lines and self.base.main_g_cod_pool[i][0] != g:
+            lines = lines + 1
+            i = i + 1
+        print('lines = {}, self.second_place = {}, number_of_lines = {}'.format(lines, self.second_place,
+                                                                                number_of_lines))
+        if lines == 0:# or self.second_place == number_of_lines:
+            return
+        #now we know how many lines should be rehighlighted
+        self.base.reading_lines_number = lines
+        self.creating_np_pool()
+        self.min_line_np = self.second_place
+        print('delete from {} to {} включительно'.format(self.min_line_np, i-1))
+        self.base.main_g_cod_pool = np.delete(self.base.main_g_cod_pool,
+                                              np.s_[self.min_line_np:i], axis=0)#todo maybe i can be too mach
+
+        n = self.min_line_np + 1
+        while n < i:
+            self.base.highlight.rehighlightBlock(self._document.findBlockByNumber(i-2))
+
 
     def insertFromMimeData(self, source):
         # должен ссылаться на универсальную замену текста
