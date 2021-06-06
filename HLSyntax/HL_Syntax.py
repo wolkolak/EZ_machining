@@ -169,7 +169,7 @@ class GMHighlighter(QSyntaxHighlighter):
         len_match = nya.capturedLength()
         if len_match != 0:
             print('nya = ', nya.captured())
-            self.recount(nya, STYLES_list_G0, STYLES_list_G1, self)
+            self.recount(nya, STYLES_list_G0, STYLES_list_G1)
             #print('main rule! index = {}, string = {}'.format(index, text))
         elif start == 0:#empty string
             print('nya = pusto2')
@@ -192,19 +192,21 @@ class GMHighlighter(QSyntaxHighlighter):
 
 
     def recount2(self):
+        self.base.current_g_cod_pool[self.count][0] = self.previous_block_g
         self.count_in_step += 1
         self.count += 1
         if self.count_in_step == self.standart_step:
             self.base.on_count_changed(self.count)  # progressBar
         return
 
-    def recount(self, nya, STYLES_list_G0, STYLES_list_G1, parent):
+    def recount(self, nya, STYLES_list_G0, STYLES_list_G1):
+        print('self.count ===', self.count)
         self.base.current_g_cod_pool[self.count] = [nya.captured(i) or None for i in self.list_number_captured_1]
         #G0-G3
         if numpy.isnan(self.base.current_g_cod_pool[self.count][0]):
-            self.base.current_g_cod_pool[self.count][0] = parent.previous_block_g
-        parent.previous_block_g = self.base.current_g_cod_pool[self.count][0]
-        stile = STYLES_list_G0 if parent.previous_block_g == 0 else STYLES_list_G1
+            self.base.current_g_cod_pool[self.count][0] = self.previous_block_g
+        self.previous_block_g = self.base.current_g_cod_pool[self.count][0]
+        stile = STYLES_list_G0 if self.previous_block_g == 0 else STYLES_list_G1
         #colors
         # простая подсветка одним цветом
         # self.setFormat(index, len_match, self.simple_format)
@@ -215,7 +217,7 @@ class GMHighlighter(QSyntaxHighlighter):
         while i < 8:
             if ax != 0:
                 self.setFormat(start, ax, stile[i])
-                print('start = {}, ax = {}, styles = {}'.format(start, ax, stile[i]))
+                #print('start = {}, ax = {}, styles = {}'.format(start, ax, stile[i]))
             start = start + ax
             i = i + 1
             ax = len(nya.captured(i * 2 + 1))
@@ -224,7 +226,9 @@ class GMHighlighter(QSyntaxHighlighter):
         self.count_in_step += 1
         self.count += 1
         if self.count_in_step == self.standart_step:
+            print('ниже сигнал на count_change и далее finish banch')
             self.base.on_count_changed(self.count)  # progressBar
+            print('выше сигнал на count_change и далее finish banch')
 
             #QApplication.processEvents()
         return
@@ -278,4 +282,4 @@ class GMHighlighter(QSyntaxHighlighter):
         self.standart_step = 1
         self.count = 0
         self.base.progress_bar.setMaximum(1)
-        print("the end")
+        print("the end1")

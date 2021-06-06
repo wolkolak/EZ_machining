@@ -9,23 +9,36 @@ class Progress(QProgressBar):
         #self.setMaximum(100)
         #self.hide()
         self.base = base
-        self.valueChanged.connect(self.finish_current_batch)
+        self.valueChanged.connect(self.finish_current_batch2)
+        self.rehighlight = False
 
-
+    def finish_current_batch2(self, current_value):
+        print('finish_current_batch2 start')
+        if self.value() != 0:
+            self.finish_current_batch(current_value)
+            print('ща зпущу self.base.editor.rehighlightNextBlocks()')
+            if self.rehighlight is True:
+                self.base.editor.rehighlightNextBlocks()
+        print('finish_current_batch2 end')
     def finish_current_batch(self, current_value):
         self.base.highlight.count_in_step = 0
         print('progressbar finish current batch Hcount ', self.base.highlight.count)
 
         if current_value == self.maximum():
+            print('finish_current_batch->inserting_in_main_g_cod')
             self.inserting_in_main_g_cod()
             print('Load 100%')
+            #print('ещё rehighlight')
+
+
+            #создаю пустышку на одну строку на всякий случай. как минимум при разработке это полезно
             self.base.reading_lines_number = 1
             axises = 9
             self.base.current_g_cod_pool = np.zeros((self.base.reading_lines_number, axises), float)
             self.base.current_g_cod_pool[:] = np.nan
             self.base.highlight.to_the_start()
-            print('specially here count', self.base.highlight.count)
             self.setValue(0)
+
 
         elif self.base.reading_lines_number < self.base.highlight.count + self.base.highlight.standart_step:
                 print('Делаем шаг поменьше: number_of_lines={}, self.base.highlight.count={}, self.base.highlight.standart_step={}'
@@ -34,12 +47,11 @@ class Progress(QProgressBar):
 
 
     def inserting_in_main_g_cod(self):
-
-        print('вставить {} перед строкой {}'.format(self.base.current_g_cod_pool, self.base.editor.min_line_np))
+        print('вставить {} перед np строкой {}'.format(self.base.current_g_cod_pool, self.base.editor.min_line_np))
         self.base.main_g_cod_pool = np.insert(self.base.main_g_cod_pool, self.base.editor.min_line_np, self.base.current_g_cod_pool, axis=0)
         self.base.tab_.center_widget.left.left_tab.a.reset_np_array_in_left_field()
 
-        self.base.editor.rehighlightNextBlocks()
+        print('insert end')
 
 
 class ParentOfMyEdit(QWidget):

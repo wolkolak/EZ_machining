@@ -243,6 +243,7 @@ class MyEdit(QPlainTextEdit):
                 и pos1_del pos1_insert
                  в self.undoStack.command(self.undoStack.index()-1)
                 """
+        self.base.progress_bar.rehighlight = True
         if self.undoStack.edit_type == 'undo':  # only for undo redo зщщы2
             z = self.undoStack.command(self.undoStack.index() - 1)
             if z.childCount() > 0:
@@ -309,7 +310,7 @@ class MyEdit(QPlainTextEdit):
         self.base.highlight.too_little_number_check()
 
     def delete_lines_from_main_np_g_pool(self):
-        self.base.highlight.previous_block_g = self.base.main_g_cod_pool[self.min_line_np][0] if self.min_line_np > 1 else 0
+        self.base.highlight.previous_block_g = self.base.main_g_cod_pool[self.min_line_np-1][0] if self.min_line_np > 1 else 0
         self.base.main_g_cod_pool = np.delete(self.base.main_g_cod_pool, np.s_[self.min_line_np:self.second_place + 1], axis=0)
 
     def eventFilter(self, widget, event):
@@ -365,26 +366,43 @@ class MyEdit(QPlainTextEdit):
         i = self.second_place + 1
         g = self.base.main_g_cod_pool[self.second_place][0]
         lines = 0
-        number_of_lines = self.blockCount()
+        number_of_lines = self.blockCount()+1
+        print('self.base.main_g_cod_pool size = ', self.base.main_g_cod_pool.shape)
         while i < number_of_lines and self.base.main_g_cod_pool[i][0] != g:
             lines = lines + 1
             i = i + 1
         print('lines = {}, self.second_place = {}, number_of_lines = {}'.format(lines, self.second_place,
                                                                                 number_of_lines))
         if lines == 0:# or self.second_place == number_of_lines:
+            print( 'rehighlightNextBlock выходит без редктирования numpy')
             return
         #now we know how many lines should be rehighlighted
-        self.base.reading_lines_number = lines
+
+        #self.base.progress_bar.rehighlight = False
+        self.base.reading_lines_number = lines#lines
+        #self.base.progress_bar.setValue(0)
+        self.base.highlight.to_the_start()
+        self.base.progress_bar.setMaximum(lines-1)#lines-1
         self.creating_np_pool()
-        self.min_line_np = self.second_place
+        self.min_line_np = self.second_place + 1
         print('delete from {} to {} включительно'.format(self.min_line_np, i-1))
+        #self.base.main_g_cod_pool = np.delete(self.base.main_g_cod_pool, np.s_[self.min_line_np:self.min_line_np+1], axis=0)
+        #self.base.highlight.rehighlightBlock(self._document.findBlockByNumber(self.min_line_np - 1))
         self.base.main_g_cod_pool = np.delete(self.base.main_g_cod_pool,
                                               np.s_[self.min_line_np:i], axis=0)#todo maybe i can be too mach
-
-        n = self.min_line_np + 1
+#
+        n = self.min_line_np
+        print('n={}m i={}'.format(n,i))
+        self.base.progress_bar.rehighlight = False
         while n < i:
-            self.base.highlight.rehighlightBlock(self._document.findBlockByNumber(i-2))
+            print('n_=',n)
+            print('count1 = ', self.base.highlight.count)
+            print(' rehighlightNextBlock:  ', self._document.findBlockByNumber(n-1).text())
+            self.base.highlight.rehighlightBlock(self._document.findBlockByNumber(n-1))
+            n = n + 1
+        print('new pool = ', self.base.main_g_cod_pool)
 
+        print('while end')
 
     def insertFromMimeData(self, source):
         # должен ссылаться на универсальную замену текста
@@ -398,6 +416,7 @@ class MyEdit(QPlainTextEdit):
             self.undoStack.storeFieldText()
             print('paaaste: ')
             QPlainTextEdit.insertFromMimeData(self, source)
+            print('paaaste2 ')
 
 class QLineNumberArea(QWidget):
     def __init__(self, editor):
