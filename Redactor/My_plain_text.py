@@ -393,7 +393,7 @@ class MyEdit(QPlainTextEdit):
 #
         n = self.min_line_np
         print('n={}m i={}'.format(n,i))
-        self.base.progress_bar.rehighlight = False
+
         while n < i:
             print('n_=',n)
             print('count1 = ', self.base.highlight.count)
@@ -401,7 +401,7 @@ class MyEdit(QPlainTextEdit):
             self.base.highlight.rehighlightBlock(self._document.findBlockByNumber(n-1))
             n = n + 1
         print('new pool = ', self.base.main_g_cod_pool)
-
+        self.base.progress_bar.rehighlight = False
         print('while end')
 
     def insertFromMimeData(self, source):

@@ -15,9 +15,11 @@ class Progress(QProgressBar):
     def finish_current_batch2(self, current_value):
         print('finish_current_batch2 start')
         if self.value() != 0:
-            self.finish_current_batch(current_value)
-            print('ща зпущу self.base.editor.rehighlightNextBlocks()')
-            if self.rehighlight is True:
+            if self.rehighlight is False:
+                self.finish_current_batch(current_value)
+                self.base.editor.rehighlightNextBlocks()
+                #print('ща зпущу self.base.editor.rehighlightNextBlocks()')
+            else:
                 self.base.editor.rehighlightNextBlocks()
         print('finish_current_batch2 end')
     def finish_current_batch(self, current_value):

@@ -70,7 +70,7 @@ class GMHighlighter(QSyntaxHighlighter):
     # axises
     axises0 = [ 'X', 'Y', 'Z', 'C', 'B', 'A']
     axises = ['X', 'Y', 'Z', 'C', 'B', 'A', 'R']#- , 'G', 'F'
-    g_prefix = r'(G0?(\d))?'
+    g_prefix = r'(G0?([0123]))?'
     f_postfix = r'(F(\d+.))?'
     r_postfix = r'(R(\d+.\d*))?'
     # most strings look like 'main_rule'
