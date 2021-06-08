@@ -1,7 +1,7 @@
 import sys
 import time
 
-import numpy
+import numpy as np
 from PyQt5.QtGui import QColor, QTextCharFormat, QFont, QSyntaxHighlighter
 from PyQt5.QtCore import QRegExp, QRegularExpression, pyqtSignal, QEventLoop
 from PyQt5.QtWidgets import *
@@ -114,7 +114,7 @@ class GMHighlighter(QSyntaxHighlighter):
 
     def __init__(self, document, base):
         QSyntaxHighlighter.__init__(self, document)
-        self.list_number_captured_1 = [i * 2 for i in range(1, 10)]
+        self.list_number_captured_1 = [i * 2 for i in range(1, 11)]
         #print('list_number_captured_1 = ', self.list_number_captured_1)
         #self.list_number_captured_2 = self.list_number_captured_1
         #self.max_number_ax = [1, 3, 5, 7, 9, 11, 13, 15, 17]
@@ -199,9 +199,10 @@ class GMHighlighter(QSyntaxHighlighter):
     def recount(self, nya, STYLES_list_G0, STYLES_list_G1):
         self.base.current_g_cod_pool[self.count] = [nya.captured(i) or None for i in self.list_number_captured_1]
         #G0-G3
-        if numpy.isnan(self.base.current_g_cod_pool[self.count][0]):
+        if np.isnan(self.base.current_g_cod_pool[self.count][0]):
             self.base.current_g_cod_pool[self.count][0] = self.previous_block_g
         else:
+            self.base.current_g_cod_pool[self.count][9] = self.base.current_g_cod_pool[self.count][0]
             self.previous_block_g = self.base.current_g_cod_pool[self.count][0]
         stile = STYLES_list_G0 if self.previous_block_g == 0 else STYLES_list_G1
         #colors
@@ -230,9 +231,10 @@ class GMHighlighter(QSyntaxHighlighter):
         #    print('nya.captured({}) = {}'.format(i, nya.captured(i)))
         # G0-G3
         self.base.current_g_cod_pool[self.count][0] = nya.captured(2) or None
-        if numpy.isnan(self.base.current_g_cod_pool[self.count][0]):
+        if np.isnan(self.base.current_g_cod_pool[self.count][0]):
             self.base.current_g_cod_pool[self.count][0] = self.previous_block_g
         else:
+            self.base.current_g_cod_pool[self.count][9] = self.base.current_g_cod_pool[self.count][0]
             self.previous_block_g = self.base.current_g_cod_pool[self.count][0]
         stile = STYLES_list_G0 if self.previous_block_g == 0 else STYLES_list_G1
         start = 0

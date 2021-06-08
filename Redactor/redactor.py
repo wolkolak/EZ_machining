@@ -20,7 +20,7 @@ class Progress(QProgressBar):
             print('Load 100%')
             # создаю пустышку на одну строку на всякий случай. как минимум при разработке это полезно
             self.base.reading_lines_number = 1
-            axises = 9
+            axises = 10
             self.base.current_g_cod_pool = np.zeros((self.base.reading_lines_number, axises), float)
             self.base.current_g_cod_pool[:] = np.nan
             self.base.highlight.to_the_start()
@@ -53,7 +53,7 @@ class ParentOfMyEdit(QWidget):
         self.progress_bar = Progress(self)
         self.reading_lines_number = self.editor.blockCount() or 1
 
-        axises = 9
+        axises = 10
         self.current_g_cod_pool = np.zeros((self.reading_lines_number, axises), float)
         self.current_g_cod_pool[:] = np.nan
         print('START: Создан массив размером ', self.current_g_cod_pool.shape)

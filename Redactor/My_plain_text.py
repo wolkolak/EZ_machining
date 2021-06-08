@@ -16,7 +16,7 @@ class MyEdit(QPlainTextEdit):
         super().__init__(*args, **kwargs)
         """ xyzcba"""
         #modal coomnds
-        self.g_modal = np.array([0], float)
+        #self.g_modal = np.array([0], float)
 
         self.tab_ = tab_
         self.base = base
@@ -27,7 +27,7 @@ class MyEdit(QPlainTextEdit):
         if text:
             self.setPlainText(text)
         self.changed = False
-        self.LastGCod = 0
+        #self.LastGCod = 0
         self.zoomIn(5)
 
         self.fmt = QTextCharFormat()
@@ -277,14 +277,14 @@ class MyEdit(QPlainTextEdit):
         self.delete_lines_from_main_np_g_pool()
 
     def creating_np_pool(self):
-        self.base.current_g_cod_pool = np.zeros((self.base.reading_lines_number, 9), float)
+        self.base.current_g_cod_pool = np.zeros((self.base.reading_lines_number, 10), float)
         self.base.current_g_cod_pool[:] = np.nan
         self.base.progress_bar.setMaximum(self.base.reading_lines_number)
         self.base.highlight.too_little_number_check()
 
     def delete_lines_from_main_np_g_pool(self):
         self.base.highlight.previous_block_g = self.base.main_g_cod_pool[self.min_line_np-1][0] if self.min_line_np > 1 else 0
-        self.LastGCod = self.base.main_g_cod_pool[self.second_place][0]
+        #self.LastGCod = self.base.main_g_cod_pool[self.second_place][0]
         self.base.main_g_cod_pool = np.delete(self.base.main_g_cod_pool, np.s_[self.min_line_np:self.second_place + 1], axis=0)
 
     def eventFilter(self, widget, event):
@@ -359,11 +359,12 @@ class MyEdit(QPlainTextEdit):
 
     def rehighlightNextBlocks(self):
         i = self.second_place + 1
-        g_old = self.LastGCod
+        #g_old = self.LastGCod
         g_new = self.base.main_g_cod_pool[self.second_place][0]
         lines = 0
         number_of_lines = self.blockCount() + 1
-        while i < number_of_lines and self.base.main_g_cod_pool[i][0] != g_new and self.base.main_g_cod_pool[i][0] == g_old: #and self.base.main_g_cod_pool[i][0] == g_old:
+        while i < number_of_lines and self.base.main_g_cod_pool[i][0] != g_new and np.isnan(self.base.main_g_cod_pool[i][9]):
+                #self.base.main_g_cod_pool[i][0] == g_old: #and self.base.main_g_cod_pool[i][0] == g_old:
             lines = lines + 1
             i = i + 1
         if lines == 0:# or self.second_place == number_of_lines:
