@@ -15,9 +15,6 @@ class MyEdit(QPlainTextEdit):
     def __init__(self, text, tab_, base, existing, *args, **kwargs):
         super().__init__(*args, **kwargs)
         """ xyzcba"""
-
-        self.flag_modificationChanged_workaround = True
-
         #modal coomnds
         self.g_modal = np.array([0], float)
 
@@ -30,7 +27,7 @@ class MyEdit(QPlainTextEdit):
         if text:
             self.setPlainText(text)
         self.changed = False
-
+        self.LastGCod = 0
         self.zoomIn(5)
 
         self.fmt = QTextCharFormat()
@@ -40,17 +37,12 @@ class MyEdit(QPlainTextEdit):
 
         #number line
         self.lineNumberArea = QLineNumberArea(self)
-
         self.blockCountChanged.connect(self.updateLineNumberAreaWidth)
-
         self.cursorPositionChanged.connect(self.highlightCurrentLine)
         self.updateLineNumberAreaWidth(0)
-
         self.setAcceptDrops(True)
-        #self.previousBlockCount = 1
 
         self.updateRequest.connect(self.updateLineNumberArea)
-        print('self.blockCount() = ', self.blockCount())
         self.installEventFilter(self)
         self._document = self.document()
         #undo/redo
@@ -61,12 +53,11 @@ class MyEdit(QPlainTextEdit):
         self.redoAction.setShortcuts(QKeySequence.Redo)
 
         self._document.contentsChange.connect(self.onChange)
+        #self.textChanged.connect(self.textChanged_check)
         #contex menu Settings
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.__contextMenu)
         self.arithmetic_ones()
-
-        #self.i = 0#for tests
 
     def arithmetic_ones(self):
         self.corrected_qt_number_of_lines = 0
@@ -81,11 +72,8 @@ class MyEdit(QPlainTextEdit):
 
     def replace_in_text(self):
         self.rez = finder(self, 1).show()
-        print('rez = ', self.rez)
-        #self.rez.tab.setCurrentIndex(1)
 
     def dragEnterEvent(self, e):
-
         if e.mimeData().hasText():
             e.accept()
         else:
@@ -98,9 +86,7 @@ class MyEdit(QPlainTextEdit):
         if nya[:8] == 'file:///':
             nya = nya[8:]
             self.tab_.make_open_DRY(nya)
-            #e.accept()
         else:
-            #e.accept()
             self.undoStack.edit_type = 'glue'
             self.undoStack.beginMacro('glue')
             self.my_del()
@@ -136,9 +122,6 @@ class MyEdit(QPlainTextEdit):
             self.lineNumberArea.scroll(0, dy)
         else:
             self.lineNumberArea.update(0, rect.y(), self.lineNumberArea.width(), rect.height())
-            """        if rect.contains(self.viewport().rect()):
-            pass
-            self.updateLineNumberAreaWidth(0)"""
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -160,9 +143,7 @@ class MyEdit(QPlainTextEdit):
 
     def lineNumberAreaPaintEvent(self, event):
         painter = QPainter(self.lineNumberArea)
-
         painter.fillRect(event.rect(), Qt.lightGray)
-
         block = self.firstVisibleBlock()
         blockNumber = block.blockNumber()
         top = self.blockBoundingGeometry(block).translated(self.contentOffset()).top()
@@ -191,14 +172,13 @@ class MyEdit(QPlainTextEdit):
         for i in range(2, 12):
             new_menu1.addAction(old_menu.actions()[i])
 
-
     def my_undo(self):
         print('undo21')
         if self.undoStack.canUndo():
             if self.undoStack.command(self.undoStack.index()-1).text() == 'glue':# todo
                 self.undoStack.child_count = self.undoStack.command(self.undoStack.index()-1).childCount() - 1
-                print('zdeeees!')
         self.undoStack.undo()
+        self.rehighlightNextBlocks()
 
     def my_redo(self):
         print('redo21')
@@ -206,6 +186,7 @@ class MyEdit(QPlainTextEdit):
             if self.undoStack.command(self.undoStack.index()).text() == 'glue':
                 self.undoStack.child_count = 0
         self.undoStack.redo()
+        self.rehighlightNextBlocks()
 
     def my_del(self):
         print('my_del21')
@@ -213,10 +194,8 @@ class MyEdit(QPlainTextEdit):
             self.blocks_before = self._document.blockCount()
             self.event_data_acquiring(Qt.Key_Delete)
             self.undoStack.storeFieldText()
-            if self._document.isModified():
-                print('was modified')
-                self._document.setModified(False)
             self.textCursor().removeSelectedText()
+            self.rehighlightNextBlocks()
 
     def my_paste(self):
         #seems, it can not work directly, we need insertFromMimeData :((
@@ -236,6 +215,7 @@ class MyEdit(QPlainTextEdit):
         self.event_data_acquiring('cut')
         self.undoStack.storeFieldText()
         QPlainTextEdit.cut(self)
+        self.rehighlightNextBlocks()
 
     def onChange(self, position, charsRemoved, charsAdded):
         """
@@ -258,7 +238,6 @@ class MyEdit(QPlainTextEdit):
             self.base.reading_lines_number = line3 - line1 + 1 + z.add_undo #+ z.corrected_qt_number_of_lines
             self.creating_np_pool()
 
-
         elif self.undoStack.edit_type == 'redo':
             z = self.undoStack.command(self.undoStack.index())
             if z.childCount() > 0:
@@ -277,18 +256,12 @@ class MyEdit(QPlainTextEdit):
 
 
     def onChange_new_command(self, position):
-
-        print('начало onChange new_command')
-        print('last operation = ', self.undoStack.last_edited)
-        #print('type operation = ', self.undoStack.command(self.undoStack.index()-1).text())
         self.changed = True
         self.change_position = position
         self.line_arithmetic()
-        print('after line_arithmetic')
         self.universal_replace_new()
         if self.make_undo_work_1_time == 1:
             self.make_undo_work_1_time = 2
-        print('конец onChange new_command')
 
     def line_arithmetic(self):
         self.text_lines_delete = self.untilBlock - self.firstBlock + 1
@@ -311,6 +284,7 @@ class MyEdit(QPlainTextEdit):
 
     def delete_lines_from_main_np_g_pool(self):
         self.base.highlight.previous_block_g = self.base.main_g_cod_pool[self.min_line_np-1][0] if self.min_line_np > 1 else 0
+        self.LastGCod = self.base.main_g_cod_pool[self.second_place][0]
         self.base.main_g_cod_pool = np.delete(self.base.main_g_cod_pool, np.s_[self.min_line_np:self.second_place + 1], axis=0)
 
     def eventFilter(self, widget, event):
@@ -341,72 +315,74 @@ class MyEdit(QPlainTextEdit):
                     print('Вставка check')
             else:
                 if event.text():
-                    if not key == Qt.Key_Backspace or key == Qt.Key_Delete:
+                    if key == Qt.Key_Backspace:
+                        self.event_data_acquiring(key)
+                        self.undoStack.storeFieldText()
+                        c = self.textCursor()
+                        if c.hasSelection():
+                            self.my_del()
+                        else:
+                            c.movePosition(c.PreviousCharacter, c.KeepAnchor)
+                            self.setTextCursor(c)
+                            self.my_del()
+                        return True
+                    elif key == Qt.Key_Delete:
+                        self.event_data_acquiring(key)
+                        self.undoStack.storeFieldText()
+                        c = self.textCursor()
+                        if c.hasSelection():
+                            self.my_del()
+                        else:
+                            c.movePosition(c.NextCharacter, c.KeepAnchor)
+                            self.setTextCursor(c)
+                            self.my_del()
+                        return True
+                    else:
                         if key == Qt.Key_Space:
                             self.undoStack.merging_world()
                             print('space')
                         elif key == Qt.Key_Return or key == Qt.Key_Enter:
                             print('enter')
                         self.undoStack.last_edited = event.text()
-                    self.event_data_acquiring(key)
-                    self.undoStack.storeFieldText()
-            if self._document.isModified():
-                print('was modified')
-                self._document.setModified(False)
-
+                        self.event_data_acquiring(key)
+                        self.undoStack.storeFieldText()
+                        self.insertPlainText(self.undoStack.last_edited)
+                        self.rehighlightNextBlocks()
+                        return True
         return QWidget.eventFilter(self, widget, event)
+
+
 
     def event_data_acquiring(self, key, replace_to_nothing=False):
         self.corrected_qt_number_of_lines, self.untilBlock, self.firstBlock, self.undoStack.add_undo, self.undoStack.add_redo = HLSyntax.addition_help_for_qt_highlight.corrected_number_of_lines(
             self, key, replace_to_nothing)
 
     def rehighlightNextBlocks(self):
-        print('rehighlightNextBlock')
-
         i = self.second_place + 1
-        g = self.base.main_g_cod_pool[self.second_place][0]
+        g_old = self.LastGCod
+        g_new = self.base.main_g_cod_pool[self.second_place][0]
         lines = 0
-        number_of_lines = self.blockCount()+1
-        print('self.base.main_g_cod_pool size = ', self.base.main_g_cod_pool.shape)
-        while i < number_of_lines and self.base.main_g_cod_pool[i][0] != g:
+        number_of_lines = self.blockCount() + 1
+        while i < number_of_lines and self.base.main_g_cod_pool[i][0] != g_new and self.base.main_g_cod_pool[i][0] == g_old: #and self.base.main_g_cod_pool[i][0] == g_old:
             lines = lines + 1
             i = i + 1
-        print('lines = {}, self.second_place = {}, number_of_lines = {}'.format(lines, self.second_place,
-                                                                                number_of_lines))
         if lines == 0:# or self.second_place == number_of_lines:
-            print( 'rehighlightNextBlock выходит без редктирования numpy')
             return
         #now we know how many lines should be rehighlighted
-
-        #self.base.progress_bar.rehighlight = False
         self.base.reading_lines_number = lines#lines
         #self.base.progress_bar.setValue(0)
         self.base.highlight.to_the_start()
         self.base.progress_bar.setMaximum(lines-1)#lines-1
         self.creating_np_pool()
         self.min_line_np = self.second_place + 1
-        print('delete from {} to {} включительно'.format(self.min_line_np, i-1))
-        #self.base.main_g_cod_pool = np.delete(self.base.main_g_cod_pool, np.s_[self.min_line_np:self.min_line_np+1], axis=0)
-        #self.base.highlight.rehighlightBlock(self._document.findBlockByNumber(self.min_line_np - 1))
         self.base.main_g_cod_pool = np.delete(self.base.main_g_cod_pool,
                                               np.s_[self.min_line_np:i], axis=0)#todo maybe i can be too mach
-#
         n = self.min_line_np
-        print('n={}m i={}'.format(n,i))
-        self.base.progress_bar.rehighlight = False
         while n < i:
-            print('n_=',n)
-            print('count1 = ', self.base.highlight.count)
-            print(' rehighlightNextBlock:  ', self._document.findBlockByNumber(n-1).text())
             self.base.highlight.rehighlightBlock(self._document.findBlockByNumber(n-1))
             n = n + 1
-        print('new pool = ', self.base.main_g_cod_pool)
-
-        print('while end')#сюда точку
 
     def insertFromMimeData(self, source):
-        # должен ссылаться на универсальную замену текста
-        #self.blocks_before = self._document.blockCount()
         #мы можем сюда напрямую кинуть source
 
         if source.hasText():
@@ -414,9 +390,8 @@ class MyEdit(QPlainTextEdit):
             self.event_data_acquiring('insert')
             self.undoStack.last_edited = source.text()#insert_txt
             self.undoStack.storeFieldText()
-            print('paaaste: ')
             QPlainTextEdit.insertFromMimeData(self, source)
-            print('paaaste2 ')
+            self.rehighlightNextBlocks()
 
 class QLineNumberArea(QWidget):
     def __init__(self, editor):

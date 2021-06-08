@@ -33,7 +33,7 @@ def file_open(self):
     self.exitAction = QAction(QIcon('icons/exit24.png'), 'Exit', self)
     self.exitAction.setShortcut('Ctrl+Q')
     self.exitAction.setStatusTip('Exit application')
-    self.exitAction.triggered.connect(self.super_out)#qApp.quit
+    self.exitAction.triggered.connect(self.super_out)#qApp.quit Но пока тоже что и Close All
 
     self.lastAllAction = QAction(QIcon('icons/exit24.png'), 'All', self)
     self.lastAllAction.setStatusTip('All previous files')

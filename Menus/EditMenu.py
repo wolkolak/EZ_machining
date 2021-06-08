@@ -57,7 +57,7 @@ def update_edit_menu(self, current_index):
         for action in self.editMenu.actions():
             action.setEnabled(False)
     else:
-        print('update_edit_menu')
+        #print('update_edit_menu')
         self.editMenu.setEnabled(True)
         edit = self.centre.note.currentWidget().editor
         self.editMenu.actions()[0].setEnabled(True)
@@ -74,7 +74,7 @@ def update_edit_menu(self, current_index):
         a = True if QApplication.clipboard().text() else False
         self.editMenu.actions()[8].setEnabled(a)
 
-        print('edit menu clipboard text:', QApplication.clipboard().text())
+        print('Update_edit_menu')
 
         #self.editMenu.actions() =
         #self.centre.note.currentWidget().editor

@@ -47,6 +47,8 @@ STYLES_list_G0 = [
     format('#ff5429'),#'g_cod_C':
     format('#650953'),#'g_cod_A':
     format('#813709'),#'g_cod_B':
+    format('blue'),  #R
+    format('blue'),  #F
 ]
 
 STYLES_list_G1 = [
@@ -57,6 +59,8 @@ STYLES_list_G1 = [
     format('#ff5429', 'bold'),#'g_cod_C':
     format('#650953', 'bold'),#'g_cod_A':
     format('#813709', 'bold' ),#'g_cod_B':
+    format('blue', 'bold'), #R
+    format('blue', 'bold'), #F
 ]
 
 stile_g1 = [
@@ -68,11 +72,11 @@ class GMHighlighter(QSyntaxHighlighter):
     # G-func
     #g_cod = ['G0', 'G1', 'G2', 'G3']
     # axises
-    axises0 = [ 'X', 'Y', 'Z', 'C', 'B', 'A']
+    axises0 = ['X', 'Y', 'Z', 'C', 'B', 'A']
     axises = ['X', 'Y', 'Z', 'C', 'B', 'A', 'R']#- , 'G', 'F'
-    g_prefix = r'(G0?([0123]))?'
-    f_postfix = r'(F(\d+.))?'
-    r_postfix = r'(R(\d+.\d*))?'
+    g_prefix = r'(G0?([0123])\s*)?'
+    f_postfix = r'(F(\d+.\d*))?\s*'
+    r_postfix = r'(R(\d+.\d*))?\s*'
     # most strings look like 'main_rule'
 
     sorted_axis_rule = ''
@@ -111,8 +115,8 @@ class GMHighlighter(QSyntaxHighlighter):
     def __init__(self, document, base):
         QSyntaxHighlighter.__init__(self, document)
         self.list_number_captured_1 = [i * 2 for i in range(1, 10)]
-        print('list_number_captured_1 = ', self.list_number_captured_1)
-        self.list_number_captured_2 = self.list_number_captured_1
+        #print('list_number_captured_1 = ', self.list_number_captured_1)
+        #self.list_number_captured_2 = self.list_number_captured_1
         #self.max_number_ax = [1, 3, 5, 7, 9, 11, 13, 15, 17]
         self.previous_block_g = 0
         self.base = base
@@ -148,17 +152,13 @@ class GMHighlighter(QSyntaxHighlighter):
         self.main_rule_regular_expression = QRegularExpression(self.sorted_axis_rule)
         self.simple_format = STYLES['axis']#self.first_rule[2]
         self.second_rule_regular_expression = QRegularExpression(self.unsorted_axis_rule)#self.rules[0][0]
-
-        print('self.main_rule_regular_expression = ', self.main_rule_regular_expression)
-        print('self.second_rule_regular_expression = ', self.second_rule_regular_expression)
         self.too_little_number_check()
 
     def too_little_number_check(self):
         print('too_little_number_check')
         if self.base.reading_lines_number < self.const_step:
             self.standart_step = self.base.reading_lines_number
-        print('Шаг ныне ', self.standart_step)
-        print('А reading_lines_number = ', self.base.reading_lines_number)
+
 
     def highlightBlock(self, text):
         """Применить выделение синтаксиса к данному блоку текста. """
@@ -168,24 +168,21 @@ class GMHighlighter(QSyntaxHighlighter):
         start = nya.capturedStart()
         len_match = nya.capturedLength()
         if len_match != 0:
-            print('nya = ', nya.captured())
+            #print('nya = ', nya.captured())
             self.recount(nya, STYLES_list_G0, STYLES_list_G1)
-            #print('main rule! index = {}, string = {}'.format(index, text))
+
         elif start == 0:#empty string
             print('nya = pusto2')
             self.recount2()
             #print('index = {}, string = {}, запуск дополнительных правил'.format(index, text))
         else:
-            print('second rule?')
             nya = self.second_rule_regular_expression.match(text, 0)
-            index = nya.capturedStart()
             len_match = nya.capturedLength()
-            print('nya.captured() in 2 rule = ', nya.captured())
             if len_match != 0:
-                print('second rule!')
-                self.setFormat(index, len_match, self.simple_format)
-                print('nya = ', nya.captured())
-                self.unsorted_recount(nya)
+                #print('second rule!')
+                #self.setFormat(index, len_match, self.simple_format)
+                self.unsorted_recount(nya, STYLES_list_G0, STYLES_list_G1)
+                #print('nya = ', nya.captured())
             else:
                 self.recount2()
                 print('ERROR LINE')
@@ -200,12 +197,12 @@ class GMHighlighter(QSyntaxHighlighter):
         return
 
     def recount(self, nya, STYLES_list_G0, STYLES_list_G1):
-        print('self.count ===', self.count)
         self.base.current_g_cod_pool[self.count] = [nya.captured(i) or None for i in self.list_number_captured_1]
         #G0-G3
         if numpy.isnan(self.base.current_g_cod_pool[self.count][0]):
             self.base.current_g_cod_pool[self.count][0] = self.previous_block_g
-        self.previous_block_g = self.base.current_g_cod_pool[self.count][0]
+        else:
+            self.previous_block_g = self.base.current_g_cod_pool[self.count][0]
         stile = STYLES_list_G0 if self.previous_block_g == 0 else STYLES_list_G1
         #colors
         # простая подсветка одним цветом
@@ -214,41 +211,53 @@ class GMHighlighter(QSyntaxHighlighter):
         i = 0
         ax = len(nya.captured(i * 2 + 1))
         start = 0
-        while i < 8:
+        while i < 9:
             if ax != 0:
                 self.setFormat(start, ax, stile[i])
-                #print('start = {}, ax = {}, styles = {}'.format(start, ax, stile[i]))
             start = start + ax
             i = i + 1
             ax = len(nya.captured(i * 2 + 1))
-
-        start = 0
         self.count_in_step += 1
         self.count += 1
         if self.count_in_step == self.standart_step:
-            print('ниже сигнал на count_change и далее finish banch')
-            self.base.on_count_changed(self.count)  # progressBar
-            print('выше сигнал на count_change и далее finish banch')
-
+            self.base.on_count_changed(self.count)
             #QApplication.processEvents()
         return
 
-    def unsorted_recount(self, nya):
-        for i in range(35):
-            print('nya.captured({}) = {}'.format(i, nya.captured(i)))
-        #разобраться что это и сунуть в нужную ячейку
-        #self.base.current_g_cod_pool[self.count][:] = [None]#todo возможно не нужно
+    def unsorted_recount(self, nya, STYLES_list_G0, STYLES_list_G1):
+
+        #for i in range(35):
+        #    print('nya.captured({}) = {}'.format(i, nya.captured(i)))
+        # G0-G3
         self.base.current_g_cod_pool[self.count][0] = nya.captured(2) or None
+        if numpy.isnan(self.base.current_g_cod_pool[self.count][0]):
+            self.base.current_g_cod_pool[self.count][0] = self.previous_block_g
+        else:
+            self.previous_block_g = self.base.current_g_cod_pool[self.count][0]
+        stile = STYLES_list_G0 if self.previous_block_g == 0 else STYLES_list_G1
+        start = 0
+        ax = len(nya.captured(1))
+        if ax != 0:
+            self.setFormat(start, ax, stile[0])
+            start = start + ax
+        ax = len(nya.captured(3))
         #Альтернативно
         n = 4
-        while n < 28 and nya.captured(n) != '':
-            self.nesting(n, nya)
+        while nya.captured(n) != '' and n < 21 :#вероятно, избыточное условие
+            self.nesting(n, nya, start, ax, stile)
+            start = start + ax
             n = n + 3
-        #[self.nesting(n, nya) for n in range(4, 29, 3)]
+            ax = len(nya.captured(n-1))
+        ax = len(nya.captured(21))
+        if ax != 0:
+            self.setFormat(start, ax, stile[7])
+            start = start + ax
         self.base.current_g_cod_pool[self.count][7] = nya.captured(22) or None
+        ax = len(nya.captured(23))
+        if ax != 0:
+            self.setFormat(start, ax, stile[8])
+            #start = start + ax
         self.base.current_g_cod_pool[self.count][8] = nya.captured(24) or None
-
-
         self.count_in_step += 1
         self.count += 1
         if self.count_in_step == self.standart_step:
@@ -256,7 +265,7 @@ class GMHighlighter(QSyntaxHighlighter):
             # QApplication.processEvents()
         return
 
-    def nesting(self, n, nya):
+    def nesting(self, n, nya, start, ax, stile):
         symbol = nya.captured(n)
         if symbol == 'X':
             i = 1
@@ -271,10 +280,9 @@ class GMHighlighter(QSyntaxHighlighter):
         elif symbol == 'B':
             i = 6
         else:
-            return #todo можно прервать дальнейшие запуски функции, если через while написать.
-        print('nya.captured(n ) = ', nya.captured(n))
-        print('nya.captured(n + 1) = ', nya.captured(n + 1))
-
+            print('Ты не должен сюда попасть, но вдруг')
+            return
+        self.setFormat(start, ax, stile[i])
         self.base.current_g_cod_pool[self.count][i] = nya.captured(n+1)
 
 

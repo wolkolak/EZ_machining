@@ -58,14 +58,14 @@ class StoreCommand(QUndoCommand):
             self.pos3 = self.pos1 + 1
         elif text12345 == 'backspace':
             self.text_inserted = ''
-            if not self.store_cursor.hasSelection():
-                self.store_cursor.setPosition(self.store_cursor.position() - 1, 1)
+            #if not self.store_cursor.hasSelection():#no longer need it. i was forsed to not use default event ending
+            #    self.store_cursor.setPosition(self.store_cursor.position() - 1, 1)
             self.give_position()
             self.pos3 = self.pos1
         elif text12345 == 'delete':
             self.text_inserted = ''
-            if not self.store_cursor.hasSelection():
-                self.store_cursor.setPosition(self.store_cursor.position() + 1, 1)
+            #if not self.store_cursor.hasSelection():#the same as backspace. i'll move cursor in event
+            #    self.store_cursor.setPosition(self.store_cursor.position() + 1, 1)
             self.give_position()
             self.pos3 = self.pos1
         elif text12345 == 'cut':

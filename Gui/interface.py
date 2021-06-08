@@ -3,6 +3,7 @@ from PyQt5.QtCore import Qt
 from Gui import gui_classes, MyViewToolBar, MyTxtToolBar, test_button
 #MyTxtToolBar, MyViewToolBar,gui_classes
 import shutil
+import sys
 from Menus import EditMenu, FileMenu, ViewMenu, OptionsMenu
 from Settings import bigCustomizer, change_setting, settings
 #from Gui import test_button
@@ -61,12 +62,18 @@ class MyMainWindow(QMainWindow):
         #Test
         test_button.test_opt(self)
 
+    def closeEvent(self, evnt):
+        self.super_out()
+        evnt.ignore()
 
     def return_files(self):
         pass
 
     def super_out(self):
         self.centre.note.close_all()
+        if self.centre.note.currentIndex() == -1:
+            print('outta')
+            sys.exit()
 
     def find_obertka(self):
         self.centre.note.currentWidget().editor.find_in_text()

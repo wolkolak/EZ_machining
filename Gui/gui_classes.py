@@ -18,7 +18,6 @@ class coloredTabBar(QTabBar):
         super().__init__(*args, **kwargs)
         self.setFont(font2)
 
-
 current_files = []
 
 
@@ -35,7 +34,6 @@ class MyOpenDialog(QWidget):
         #self.self.layout().addWidget(self.remember_directory)
         #print('niheraaaaaaaaaaa', self.layout)
         #grid = QGridLayout()
-
         #grid.addWidget(self.remember_directory, 5, 5)
         #self.setLayout(grid)
         #self.remember_directory.setParent(self)
@@ -88,7 +86,6 @@ class Tabs(QTabWidget):
 
 
     def delete_tab(self, n):
-
         name = self.widget(n).editor.existing
         if not name:
             name = self.tabText(n)
@@ -97,13 +94,13 @@ class Tabs(QTabWidget):
             if 'Cancel' != simple_2_dialog(self.save_file, lambda: self.close_only(n), "Save changes in {}?".format(self.tabText(n))):
                 self.removeTab(n)
                 remove_new_name(name)
-
+            else:
+                print('tab delete CANCEL')
         else:
             self.close_only(n)
             self.removeTab(n)
             if name:
                 remove_new_name(name)
-
 
     def close_only(self, n):
         if self.widget(n).editor.existing is False:
@@ -122,13 +119,8 @@ class Tabs(QTabWidget):
             print('new tab0')
             self.insertTab(self.currentIndex() + 1, redactor.ParentOfMyEdit(None, existing=False, tab_=self), self.tabs[i][0])
             #gbplf
-
-
-
-            print('self.currentWidget().main_g_cod_pool', self.currentWidget().main_g_cod_pool)
-
+            #print('self.currentWidget().main_g_cod_pool', self.currentWidget().main_g_cod_pool)
             #self.currentWidget().editor.set_syntax()
-
             self.setCurrentIndex(self.currentIndex()+1)
             self.currentWidget().main_g_cod_pool = np.insert(self.currentWidget().main_g_cod_pool, 0,
                                                              self.currentWidget().main_g_cod_pool, axis=0)
@@ -140,11 +132,14 @@ class Tabs(QTabWidget):
 
 
     def close_all(self):
-        while self.currentIndex() != -1:
+        i = -1 #we don't want endless close cycle, aren't we?
+        while self.currentIndex() != -1 and self.currentIndex() != i:
+            i = self.currentIndex()
             self.close_current()
 
     def close_current(self):
-        self.delete_tab(self.currentIndex())
+        self.tabCloseRequested.emit(self.currentIndex())
+        #self.delete_tab(self.currentIndex())
 
     def open_file(self):
         options = QFileDialog.Options()
