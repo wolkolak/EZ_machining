@@ -18,37 +18,75 @@ class Window3D(QGLWidget):
         print('start opengl')
         self.setMinimumSize(100, 100)
         self.gcod = gcod
-        self.horizontal = 0
+        self.old_horizo = 0
+        self.old_height = 0
+        self.old_depth = 1
+        self.m_grabbing = False
+        self.setMouseTracking(True)
+        self.cam_horizontal = 0
+        self.cam_height = 0
+        self.cam_depth = 1
+        self.w = self.width()#maybe it will work faster
+        self.h = self.height()
         self.my_timer = QTimer()
         self.my_timer.timeout.connect(self.showTime)
-        #self.mouseGrabber.connect(self.camera_move)
 
-    #def mousePressEvent(self, a0: QtGui.QMouseEvent) -> None:
+
+    def mousePressEvent(self, a0: QtGui.QMouseEvent) -> None:
+        self.m_grabbing = True
     #    self.horizontal = self.horizontal - 0.01
+    def mouseReleaseEvent(self, a0: QtGui.QMouseEvent) -> None:
+        self.m_grabbing = False
 
-
-    def grabMouse(self) -> None:
-        self.horizontal = self.horizontal - 0.01
+    def mouseMoveEvent(self, a0: QtGui.QMouseEvent) -> None:
+        #работает только на грабе?
+        new_horizo = a0.x()
+        #print('self.m_grabbing = ', self.m_grabbing)
+        new_height = a0.y()
+        if self.m_grabbing is True:
+            self.cam_horizontal = self.cam_horizontal + (new_horizo - self.old_horizo)/self.w
+            self.cam_height = self.cam_height + (self.old_height - new_height)/self.h
+            #self.cam_height = new_height
+        self.old_horizo = new_horizo
+        self.old_height = new_height
 
     #def eventFilter(self, a0: 'QObject', a1: 'QEvent') -> bool:
 
+    def wheelEvent(self, a0: QtGui.QWheelEvent) -> None:
+        print('wheel')
+        glScale(0.9, 0.9, 0.9)
 
     def showTime(self):
         #Animation
-        print('show')
+        #print('show')
         #glTranslatef(0.01, 0.0, 0.0)
+
         self.update()
 
+    def reshape(self, w, h):
+
+        #glViewport(0, 0, w, h)#(GLsizei)
+        glMatrixMode(GL_PROJECTION)
+        glLoadIdentity()
+
+        aspect = w / h
+        #glOrtho() определяет координатную систему .
+        glOrtho(-2.0 * aspect, 2.0 * aspect, -2.0, 2.0, -1.0, 1.0)
+        glMatrixMode(GL_MODELVIEW)
+        glLoadIdentity()
 
 
 
     def resizeGL(self, w: int, h: int) -> None:
         #print('ggg')
         glViewport(0, 0, w, h)
+        self.w = w
+        self.h = h
         glLoadIdentity()
+        glScale(1,1,1)
         #Тут размещаются смещения СК глобальные
         #glTranslatef(0.5, 0.0, 0.0)
-
+        #self.reshape(w, h)
 
 
     def view_zone(self, Width, Height):
@@ -61,29 +99,64 @@ class Window3D(QGLWidget):
     def paintGL(self):
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        glEnable(GL_POINT_SMOOTH)
+        self.paint_point(0.5, 0.5, 0.)
         glPushMatrix()
         #Тут размещаются смещения СК для объектов
-        glTranslatef(self.horizontal, 0.0, 0.0)
+        glTranslatef(self.cam_horizontal, self.cam_height, 0.0)
 
 
-        glEnable(GL_POINT_SMOOTH)
+
 
         glColor3f(1.5, 0.5, 0.5)
         #glPolygonMode(GL_FRONT, GL_FILL)
-        glPointSize(20)
+        self.cub(0.5)
 
         #angley = 45.
         #glRotate(angley, 0.5, 1, 0.3)
-        self.paint_point(0.5, 0.5, 0.)
+
         glFlush()
         #print('screen updated')
         # print(glGetString(GL_VERSION))
 
         glPopMatrix()
 
+    def cub(self, z):
+        glLineWidth(5)
+        #z = -0.5
+        glBegin(GL_LINE_LOOP)
+        glColor3f(1, 0, 0)
+        glVertex3f(-0.5, -0.5, z)
+        glVertex3f(-0.5, 0.5, z)
+        glVertex3f(0.5, 0.5, z)
+        glVertex3f(0.5, -0.5, z)
+        glEnd()
+
+        glBegin(GL_LINES)
+        glColor3f(0, 0, 1)
+        glVertex3f(-0.5, -0.5, -z)
+        glVertex3f(-0.5, -0.5, z)
+        glVertex3f(-0.5, 0.5, -z)
+        glVertex3f(-0.5, 0.5, z)
+        glVertex3f(0.5, 0.5, -z)
+        glVertex3f(0.5, 0.5, z)
+        glVertex3f(0.5, -0.5, -z)
+        glVertex3f(0.5, -0.5, z)
+        glEnd()
+
+        glBegin(GL_LINE_LOOP)
+        z = z * (-1)
+        glColor3f(0, 1, 0)
+        glVertex3f(-0.5, -0.5, z)
+        glVertex3f(-0.5, 0.5, z)
+        glVertex3f(0.5, 0.5, z)
+        glVertex3f(0.5, -0.5, z)
+        glEnd()
+
 
 
     def paint_point(self, x, y, z):
+        glPointSize(20)
         glBegin(GL_POINTS)
         glColor3f(1.5, 0.5, 0.5)
         glVertex3f(0.0, 0.0, 0.0)
@@ -108,12 +181,8 @@ class Window3D(QGLWidget):
         self.view_zone(700, 600)
         self.my_timer.start(100)
 
-    def camera_move(self):
-        #glTranslatef(0.1, 0.0, 0.0)
-        print('move')
 
-    def camera_turn(self):
-        print('turn')
+
 
         #r = 20
         # move camera a distance r away from the center
