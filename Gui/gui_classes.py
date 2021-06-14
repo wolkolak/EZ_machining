@@ -6,7 +6,7 @@ from Redactor import redactor
 from Settings import change_setting
 from Settings.settings import *
 import numpy as np
-
+import time
 
 class My_Button(QPushButton):
     def __init__(self, *args, **kwargs):
@@ -97,12 +97,16 @@ class Tabs(QTabWidget):
             else:
                 print('tab delete CANCEL')
         else:
+            print('111111111')
             self.close_only(n)
+            print('222222222222')
             self.removeTab(n)
             if name:
                 remove_new_name(name)
+            print('333333333333333333')
 
     def close_only(self, n):
+        #time.sleep(8)
         if self.widget(n).editor.existing is False:
             for i in range(1, self.quantity - 1):
                 if self.tabs[i][0] == self.tabText(n):
@@ -142,7 +146,7 @@ class Tabs(QTabWidget):
         #self.delete_tab(self.currentIndex())
 
     def open_file(self):
-        options = QFileDialog.Options()
+        #options = QFileDialog.Options()
 
         #options |= QFileDialog.DontUseNativeDialog
         print('QFileDialog.DontUseNativeDialog')
@@ -174,7 +178,6 @@ class Tabs(QTabWidget):
         if path:
             text = self.currentWidget().editor.toPlainText()
             with open(path, 'w') as file:
-
                 file.write(text)
             self.currentWidget().editor.changed = False
             self.currentWidget().editor.existing = path

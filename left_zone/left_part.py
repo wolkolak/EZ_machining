@@ -4,19 +4,7 @@ from PyQt5.QtOpenGL import QGLWidget
 
 from Settings.settings import *
 import numpy as np
-
-class Window3D(QGLWidget):
-    """Визуализацию ты можешь разместить где то тут.
-    Класс QGLWidget это 3д класс для работы с OpenGL графонием.
-    Необходим ли он нам и насколько он похож на то, про что ты читал, я пока не знаю.
-    https://doc.qt.io/qt-5/qglwidget.html
-    """
-    def __init__(self, gcod, gmodal, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        print('start opengl')
-        self.setMinimumSize(100, 100)
-        self.gcod = gcod
-        self.gmodal = gmodal
+from left_zone.Scene import Window3D
 
 
 class SomeInTab(QFrame):
@@ -68,6 +56,7 @@ class leftTab(QTabWidget):
         self.addTab(self.a, 'whole array')
         self.b = SomeInTab()
         self.addTab(self.b, 'visual')
+        self.setCurrentIndex(1)
 
 class NumpyPrint(QPlainTextEdit):
     def __init__(self, base, *args, **kwargs):

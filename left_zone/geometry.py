@@ -1,94 +1,61 @@
-import sys
+from OpenGL.GL import *
+from OpenGL.GLU import *
+from PyQt5 import QtGui
+from PyQt5.QtOpenGL import *
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QTabWidget, QFrame, QPlainTextEdit,  QWidget, QGridLayout, QPushButton, QHBoxLayout
 
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QKeySequence
+class MainWindow(QWidget):
+    def __init__(self):
+        super(MainWindow, self).__init__()
+        self.widget = glWidget(self)
+        self.button = QPushButton('Test', self)
+        self.button.setMaximumWidth(80)
+        mainLayout = QHBoxLayout()
+        mainLayout.addWidget(self.widget)
+        mainLayout.addWidget(self.button)
+        self.setLayout(mainLayout)
 
-class Form(QWidget):
-    def __init__(self, parent = None):
-        QWidget.__init__(self, parent)
-
-        self.undoStack = QUndoStack()
-
-        undoAction = self.undoStack.createUndoAction(self, self.tr("&Undo"))
-        undoAction.setShortcuts(QKeySequence.Undo)
-        redoAction = self.undoStack.createRedoAction(self, self.tr("&Redo"))
-        redoAction.setShortcuts(QKeySequence.Redo)
-
-        nameEdit = QPlainTextEdit()
-        nameEdit.document = nameEdit.document()
-        #addressEdit = QLineEdit()
-
-        undoButton = QToolButton()
-        undoButton.setDefaultAction(undoAction)
-        redoButton = QToolButton()
-        redoButton.setDefaultAction(redoAction)
-
-        nameEdit.document.contentsChange.connect(self.obertka_storeFieldText)# <- СМОТРЕТЬ СЮДА
-        #nameEdit.editingFinished.connect(self.storeFieldText)
-        #addressEdit.editingFinished.connect(self.storeFieldText)
-
-        formLayout = QFormLayout()
-        formLayout.addRow(self.tr("&Name"), nameEdit)
-        #formLayout.addRow(self.tr("&Address"), addressEdit)
-
-        buttonLayout = QVBoxLayout()
-        buttonLayout.addWidget(undoButton)
-        buttonLayout.addWidget(redoButton)
-
-        layout = QHBoxLayout(self)
-        layout.addLayout(formLayout)
-        layout.addLayout(buttonLayout)
-
-        self.setWindowTitle(self.tr("Undo Example"))
-        self.ind = 0
-
-    def obertka_storeFieldText(self):
-        if self.ind == 0:
-            self.storeFieldText()
-
-
-    def storeFieldText(self):
-        self.ind = 1
-        command = StoreCommand(self.sender())
-        self.undoStack.push(command)
-        self.ind = 0
+class glWidget(QGLWidget):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.setMinimumSize(840, 480)
 
 
 
-class StoreCommand(QUndoCommand):
+    def paintGL(self):
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        glLoadIdentity()
+        glEnable(GL_POINT_SMOOTH)
+        glTranslatef(-1.1, 0.0, 0.0)
+        glColor3f(1.5, 0.5, 0.5)
+        glPolygonMode(GL_FRONT, GL_FILL)
+        glPointSize(30)
+        self.paint_point(0.5, 0.5, 0.)
+        glFlush()
+        #print(glGetString(GL_VERSION))
 
-    def __init__(self, field):
-
-        QUndoCommand.__init__(self)
-
-        # Record the field that has changed.
-        self.field = field
-        print('type field = ', type(self.field))
-        print('self.field.text()', self.field.toPlainText())
-
-        # Record the text at the time the command was created.
-        self.text = field.toPlainText()
-
-    def undo(self):
-        print('undo start')
-        # Remove the text from the file and set it in the field.
-        # ...
-        self.field.setPlainText(self.text)
-        print('undo end')
-
-    def redo(self):
-        print('redo start')
-        # Store the text in the file and set it in the field.
-        # ...
-        self.field.setPlainText(self.text)
-        print('redo end')
+    def paint_point(self, x, y, z):
+        glBegin(GL_POINTS)
+        glVertex3f(0.0, 0.0, 0.0)
+        glVertex3f(0.0, 1.0, 0.0)
+        glVertex3f(1.0, 0.0, 0.0)
+        glEnd()
 
 
-if __name__ == "__main__":
+    def initializeGL(self):
+        glClearDepth(1.0)
+        glDepthFunc(GL_LESS)
+        glEnable(GL_DEPTH_TEST)
+        glShadeModel(GL_SMOOTH)
+        glMatrixMode(GL_PROJECTION)
+        glLoadIdentity()
+        #gluPerspective(0.0,0.,0.0, 0.0)
+        #glMatrixMode(GL_MODELVIEW)
 
-    app = QApplication(sys.argv)
-    form = Form()
-    form.show()
-    sys.exit(app.exec_())
 
-    
+if __name__ == '__main__':
+    app = QApplication(['Yo'])
+    window = MainWindow()
+    window.show()
+    app.exec_()

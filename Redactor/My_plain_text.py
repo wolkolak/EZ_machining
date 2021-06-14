@@ -287,10 +287,10 @@ class MyEdit(QPlainTextEdit):
         #self.LastGCod = self.base.main_g_cod_pool[self.second_place][0]
         self.base.main_g_cod_pool = np.delete(self.base.main_g_cod_pool, np.s_[self.min_line_np:self.second_place + 1], axis=0)
 
+
     def eventFilter(self, widget, event):
         if (event.type() == QEvent.KeyPress and widget is self):
             key = event.key()
-
             self.blocks_before  = self._document.blockCount()
             if Qt.KeypadModifier:
                 print('KeypadModifie', int(event.modifiers()))
@@ -360,7 +360,9 @@ class MyEdit(QPlainTextEdit):
     def rehighlightNextBlocks(self):
         i = self.second_place + 1
         #g_old = self.LastGCod
-        g_new = self.base.main_g_cod_pool[self.second_place][0]
+        axis = 10
+        len = int(self.base.current_g_cod_pool.size/axis) + self.min_line_np-1
+        g_new = self.base.main_g_cod_pool[len][0]
         lines = 0
         number_of_lines = self.blockCount() + 1
         while i < number_of_lines and self.base.main_g_cod_pool[i][0] != g_new and np.isnan(self.base.main_g_cod_pool[i][9]):

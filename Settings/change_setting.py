@@ -7,7 +7,7 @@ def change_settins(names):
     """Принимает список вида [[name1, value1]...]
     Полностью переписывает файл Settings.py"""
     try:
-        with fileinput.FileInput('Settings.py', inplace=True, backup='.bak') as settings:
+        with fileinput.FileInput('Settings\settings.py', inplace=True, backup='.bak') as settings:
             for line in settings:
                 for i in names:
                     if re.match(i[0], line):
@@ -15,6 +15,6 @@ def change_settins(names):
                         break
                 else:
                     print(line, end='')
-        os.unlink('Settings.py' + '.bak')
+        os.unlink('Settings\settings.py' + '.bak')
     except OSError:
-        gui_classes.simple_warning('Ooh', 'Something went wrong \n ¯\_(ツ)_/¯')
+        gui_classes.simple_warning('Ooh', 'Something 1went wrong \n ¯\_(ツ)_/¯')
