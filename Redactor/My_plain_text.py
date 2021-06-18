@@ -16,7 +16,7 @@ class MyEdit(QPlainTextEdit):
         super().__init__(*args, **kwargs)
         """ xyzcba"""
         #modal coomnds
-        #self.g_modal = np.array([0], float)
+        self.g_modal = np.array([0], float)
 
         self.tab_ = tab_
         self.base = base
@@ -277,7 +277,7 @@ class MyEdit(QPlainTextEdit):
         self.delete_lines_from_main_np_g_pool()
 
     def creating_np_pool(self):
-        self.base.current_g_cod_pool = np.zeros((self.base.reading_lines_number, 10), float)
+        self.base.current_g_cod_pool = np.zeros((self.base.reading_lines_number, 11), float)
         self.base.current_g_cod_pool[:] = np.nan
         self.base.progress_bar.setMaximum(self.base.reading_lines_number)
         self.base.highlight.too_little_number_check()
@@ -358,9 +358,10 @@ class MyEdit(QPlainTextEdit):
             self, key, replace_to_nothing)
 
     def rehighlightNextBlocks(self):
+        print('rehighlight start')
         i = self.second_place + 1
         #g_old = self.LastGCod
-        axis = 10
+        axis = 11
         len = int(self.base.current_g_cod_pool.size/axis) + self.min_line_np-1
         g_new = self.base.main_g_cod_pool[len][0]
         lines = 0
@@ -370,6 +371,7 @@ class MyEdit(QPlainTextEdit):
             lines = lines + 1
             i = i + 1
         if lines == 0:# or self.second_place == number_of_lines:
+            print('rehighlight end0')
             return
         #now we know how many lines should be rehighlighted
         self.base.reading_lines_number = lines#lines
@@ -384,6 +386,7 @@ class MyEdit(QPlainTextEdit):
         while n < i:
             self.base.highlight.rehighlightBlock(self._document.findBlockByNumber(n-1))
             n = n + 1
+        print('rehighlight end1')
 
     def insertFromMimeData(self, source):
         #мы можем сюда напрямую кинуть source

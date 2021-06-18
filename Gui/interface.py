@@ -107,8 +107,8 @@ class MyMainWindow(QMainWindow):
         if self.centre.note.currentIndex() != -1:
             print('cur index = ', self.centre.note.currentIndex())
             #todo self.centre.note.currentWidget().current_g_cod_pool
-            print('здесь: {}'.format(self.centre.left.left_tab.a.reset_np_array_in_left_field))
-            self.centre.left.left_tab.a.reset_np_array_in_left_field()
+            #self.centre.left.left_tab.a.reset_np_array_in_left_field()
+            self.centre.left.reset_np_array_in_left_field()
             if self.centre.note.currentWidget().editor.existing is False:
                 title2 = self.centre.note.tabText(n)
             else:
@@ -117,7 +117,9 @@ class MyMainWindow(QMainWindow):
             #self.light_out(True)
             EditMenu.update_edit_menu(self, self.centre.note.currentIndex())
             self.centre.note.currentWidget().editor.setFocus()
-            #self.centre.left.left_tab.a.reset_np_array_in_left_field()
+            self.centre.left.left_tab.b.openGL.processor = \
+                self.centre.note.currentWidget().highlight.reversal_post_processor #update current processor
+
         else:
             self.setWindowTitle('EZ machining')
             EditMenu.update_edit_menu(self, self.centre.note.currentIndex())

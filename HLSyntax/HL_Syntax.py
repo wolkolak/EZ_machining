@@ -5,6 +5,9 @@ import numpy as np
 from PyQt5.QtGui import QColor, QTextCharFormat, QFont, QSyntaxHighlighter
 from PyQt5.QtCore import QRegExp, QRegularExpression, pyqtSignal, QEventLoop
 from PyQt5.QtWidgets import *
+#from HLSyntax.PostProcessors_revers import *
+from HLSyntax.PostProcessors_revers.Fanuc_NT import Fanuc_NT
+#HLSyntax.PostProcessors_revers.
 
 def format(color, style=''):
     """ Верните QTextCharFormat с указанными атрибутами. """
@@ -98,57 +101,18 @@ class GMHighlighter(QSyntaxHighlighter):
     unsorted_axis_rule = axises_coord * 6
     unsorted_axis_rule = g_prefix + unsorted_axis_rule + r_postfix + f_postfix
     unsorted_axis_rule = '^' + unsorted_axis_rule +'$'
-    #condition operators
-    condition_operators = ['WHILE', 'IF']
-
-    # comment braces
-    comment_braces = ['\([\w.]*\)']
-
-    #condition braces
-    logic_op = ['EQ', 'NE', 'GT', 'LT', 'GE', 'LE']
-    #condition_braces = ['\([\w.]*\)']
-
-    #rehighlightBlock.connect
-
-    #countChanged = pyqtSignal(int)
 
     def __init__(self, document, base):
         QSyntaxHighlighter.__init__(self, document)
-        self.list_number_captured_1 = [i * 2 for i in range(1, 11)]
-        #print('list_number_captured_1 = ', self.list_number_captured_1)
-        #self.list_number_captured_2 = self.list_number_captured_1
-        #self.max_number_ax = [1, 3, 5, 7, 9, 11, 13, 15, 17]
+        self.list_number_captured_1 = [i * 2 for i in range(1, 12)]
         self.previous_block_g = 0
         self.base = base
         self.count = 0
         self.count_in_step = 0
         self.const_step = 1000
         self.standart_step = self.const_step
-        rules = []
-        # Keyword, operator, and brace rules
-        # main rule
-        #rules += [(r'{}'.format(GMHighlighter.axises), 0, STYLES['axis'])]#r'{}(-)?(\d+.(\d*))'
-        rules += [(r'{}'.format(GMHighlighter.sorted_axis_rule), 0, STYLES['axis'])]
-        rules += [(r'{}'.format(GMHighlighter.unsorted_axis_rule), 1, STYLES['axis'])]
-        #rules += [(r'{}'.format(g), 1, STYLES['g_cod'])
-        #          for g in GMHighlighter.g_cod]
+        self.reversal_post_processor = Fanuc_NT()
 
-        #rules += [(r'({})(-)?(\d+.(\d*))'.format(a), 0, STYLES['axis'])#r'{}(-)?(\d+.(\d*))'
-        #         for a in GMHighlighter.axises]
-
-        #rules += [(r'([XYZCAB])(-)?(\d+.(\d*))', 0, STYLES['axis'])]
-
-        # comment rules
-        #rules += [(r'{}'.format(GMHighlighter.comment_braces[0]), 2, STYLES['comment_brace'])]#rules += [(r'\([\w.]*\)', 0, STYLES['string'])]
-
-
-        # Создайте QRegExp для каждого шаблона
-        #self.first_rule = [QRegularExpression(self.sorted_axis_rule), 0, STYLES['axis']]
-        #self.second_rule = [QRegularExpression(self.unsorted_axis_rule), 1, STYLES['axis']]
-
-
-
-        #self.rules = [(QRegularExpression(pat), index, fmt) for (pat, index, fmt) in rules]
         self.main_rule_regular_expression = QRegularExpression(self.sorted_axis_rule)
         self.simple_format = STYLES['axis']#self.first_rule[2]
         self.second_rule_regular_expression = QRegularExpression(self.unsorted_axis_rule)#self.rules[0][0]
@@ -172,31 +136,46 @@ class GMHighlighter(QSyntaxHighlighter):
             self.recount(nya, STYLES_list_G0, STYLES_list_G1)
 
         elif start == 0:#empty string
-            print('nya = pusto2')
-            self.recount2()
+            print('special case')
+            self.recount_empty_line()
             #print('index = {}, string = {}, запуск дополнительных правил'.format(index, text))
         else:
             nya = self.second_rule_regular_expression.match(text, 0)
             len_match = nya.capturedLength()
             if len_match != 0:
-                #print('second rule!')
-                #self.setFormat(index, len_match, self.simple_format)
                 self.unsorted_recount(nya, STYLES_list_G0, STYLES_list_G1)
-                #print('nya = ', nya.captured())
             else:
-                self.recount2()
+                self.recount2(text)
                 print('ERROR LINE')
 
-
-    def recount2(self):
+    def recount_empty_line(self):
         self.base.current_g_cod_pool[self.count][0] = self.previous_block_g
+        self.base.current_g_cod_pool[self.count][10] = 9999
         self.count_in_step += 1
         self.count += 1
         if self.count_in_step == self.standart_step:
             self.base.on_count_changed(self.count)  # progressBar
         return
 
+    def recount2(self, text):
+        self.base.current_g_cod_pool[self.count][0] = self.previous_block_g
+        self.special_rare_case(text, self.count)
+        self.count_in_step += 1
+        self.count += 1
+        if self.count_in_step == self.standart_step:
+            self.base.on_count_changed(self.count)  # progressBar
+        return
+
+    def special_rare_case(self, text, count):
+        #print('self.base.current_g_cod_pool[self.count] ', self.base.current_g_cod_pool[self.count])
+        #G28 U0. V0.
+        self.reversal_post_processor.check_command(text, self.base.current_g_cod_pool[count], self.base.editor.g_modal)
+        #print('self.start_pointXYZ = ', self.reversal_post_processor.start_pointXYZ)
+        print('text = ', text)
+
     def recount(self, nya, STYLES_list_G0, STYLES_list_G1):
+        #print('self.list_number_captured_1 shape = ', len(self.list_number_captured_1))
+        #print('self.base.current_g_cod_pool shape = ', self.base.current_g_cod_pool.shape)
         self.base.current_g_cod_pool[self.count] = [nya.captured(i) or None for i in self.list_number_captured_1]
         #G0-G3
         if np.isnan(self.base.current_g_cod_pool[self.count][0]):

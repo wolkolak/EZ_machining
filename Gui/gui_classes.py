@@ -128,7 +128,7 @@ class Tabs(QTabWidget):
             self.setCurrentIndex(self.currentIndex()+1)
             self.currentWidget().main_g_cod_pool = np.insert(self.currentWidget().main_g_cod_pool, 0,
                                                              self.currentWidget().main_g_cod_pool, axis=0)
-            self.center_widget.left.left_tab.a.reset_np_array_in_left_field()
+            self.center_widget.left.reset_np_array_in_left_field()
             add_new_name(self.tabs[i][0])
             print('new tab1')
         else:
@@ -276,11 +276,12 @@ class CenterWindow(QWidget):
         self.splitter.setStyleSheet('background-color:green')
 
         centr_grid.addWidget(self.splitter)
+        self.note = Tabs(center_widget=self)
         self.left = left_part.left1(self)
         self.splitter.addWidget(self.left)
         self.right = right2(self)
         self.splitter.addWidget(self.right)
-        self.note = Tabs(center_widget=self)
+
         grid_right = QGridLayout()
         self.right.setLayout(grid_right)
         grid_right.addWidget(self.note, 0, 0)
