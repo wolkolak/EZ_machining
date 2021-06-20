@@ -163,7 +163,7 @@ class Window3D(QGLWidget):
 
         aspect = w / h
         #glOrtho() определяет координатную систему .
-        glOrtho(-2.0 * aspect, 2.0 * aspect, -2.0, 2.0,  -2.0* aspect, 2.0 * aspect)
+        glOrtho(-2.0 * aspect, 2.0 * aspect, -2.0, 2.0,  -2.0 * aspect, 2.0 * aspect)
         #self.k_rapprochement = self.k_rapprochement + self.k_rapprochement * aspect
         #glOrtho(-self.h/2, self.h, -self.w/2, self.w/2, -1.0, 1.0)
         glMatrixMode(GL_MODELVIEW)
