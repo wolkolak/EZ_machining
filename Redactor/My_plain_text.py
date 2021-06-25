@@ -16,7 +16,7 @@ class MyEdit(QPlainTextEdit):
         super().__init__(*args, **kwargs)
         """ xyzcba"""
         #modal coomnds
-        self.g_modal = np.array([0], float)
+
 
         self.tab_ = tab_
         self.base = base
@@ -277,7 +277,8 @@ class MyEdit(QPlainTextEdit):
         self.delete_lines_from_main_np_g_pool()
 
     def creating_np_pool(self):
-        self.base.current_g_cod_pool = np.zeros((self.base.reading_lines_number, 11), float)
+        #axis
+        self.base.current_g_cod_pool = np.zeros((self.base.reading_lines_number, 15), float)
         self.base.current_g_cod_pool[:] = np.nan
         self.base.progress_bar.setMaximum(self.base.reading_lines_number)
         self.base.highlight.too_little_number_check()
@@ -361,7 +362,7 @@ class MyEdit(QPlainTextEdit):
         print('rehighlight start')
         i = self.second_place + 1
         #g_old = self.LastGCod
-        axis = 11
+        axis = 15
         len = int(self.base.current_g_cod_pool.size/axis) + self.min_line_np-1
         g_new = self.base.main_g_cod_pool[len][0]
         lines = 0

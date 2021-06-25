@@ -5,7 +5,7 @@ from PyQt5.QtOpenGL import QGLWidget
 from Settings.settings import *
 import numpy as np
 from left_zone.Scene import Window3D
-import copy
+
 
 class SomeInTab(QFrame):
     def __init__(self, left_tab, np_arr, *args, **kwargs):
@@ -58,7 +58,7 @@ class leftTab(QTabWidget):
         self.parent = parent
         self.a = NumpyPrint(self)
         self.addTab(self.a, 'whole array')
-        self.b = SomeInTab(left_tab=self, np_arr=self.parent.visible_np)
+        self.b = SomeInTab(left_tab=self, np_arr=self.parent.visible_np_left)
         self.addTab(self.b, 'visual')
         self.setCurrentIndex(1)
 
@@ -83,7 +83,9 @@ class left1(QWidget):
         self.central_widget = central_widget
         self.setAttribute(Qt.WA_StyledBackground)
         self.setStyleSheet("background-color: {}".format(color1))
-        self.visible_np = np.zeros((1, 11), float)
+        #axis
+        self.visible_np_empty = np.zeros((1, 15), float)
+        self.visible_np_left = self.visible_np_empty
         #self.visible_np[1][:] = 1.
         grid = QGridLayout()
         self.setLayout(grid)
@@ -91,37 +93,21 @@ class left1(QWidget):
         grid.addWidget(self.left_tab, 0, 0)
 
 
-    def reset_np_array_in_left_field(self):
-        #self.setPlainText(np.array2string(np_array))
-        self.visible_np = copy.deepcopy(self.central_widget.note.currentWidget().main_g_cod_pool)
-        #self.clear()
-        self.special_options_applying()
-        self.left_tab.a.setPlainText(np.array2string(self.visible_np))
 
-        self.left_tab.b.openGL.gcod = self.visible_np
         #print('shape of visible_np = ', self.visible_np.shape)
         #print('np.array2string(visible_np):', np.array2string(visible_np))
 
-    def special_options_applying(self):
-        #processor = self.central_widget.note.currentWidget().highlight.reversal_post_processor
-        print('clear zyzcab from Nan')
-        #заполнить первую строку
-        start_pointXYZ = self.central_widget.note.currentWidget().highlight.reversal_post_processor.start_pointXYZ
-        new_np_line = [0, *start_pointXYZ, 0, 0, 0, 0]
-        v = self.visible_np
-        v[0] = new_np_line
+    def update_visible_np_left(self):
+        if self.central_widget.note.currentIndex() != -1:
+            self.visible_np_left = self.central_widget.note.currentWidget().visible_np.copy()
+        else:
+            self.visible_np_left = self.visible_np_empty
+        self.left_tab.a.setPlainText(np.array2string(self.visible_np_left))
+        self.left_tab.b.openGL.gcod = self.visible_np_left
 
-        for i in range(len(v)):
-            if np.isnan(v[i, 10]):
-                for c in range(1, 7):
-                    if np.isnan(v[i, c]):
-                        v[i, c] = v[i-1, c]
-                #print('v[i] = ', v[i])
+    def reset_np_array_in_left_field(self):
 
+        self.left_tab.a.setPlainText(np.array2string(self.visible_np_left))
 
-
-
-        print('diameter')
-        self.central_widget.note.currentWidget().highlight.reversal_post_processor.k_appliying(self.visible_np)
-
+        self.left_tab.b.openGL.gcod = self.visible_np_left
 

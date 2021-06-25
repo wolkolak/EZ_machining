@@ -320,40 +320,14 @@ class Window3D(QGLWidget):
         glPointSize(5)
         glPushMatrix()
         glColor3f(0.3, 0.3, 0.3)
-        #glBegin(GL_LINE_STRIP)
         glBegin(GL_POINTS)
-        new_np_line = [0, *self.processor.start_pointXYZ, 0, 0, 0, 0]
-        previous_list = copy.deepcopy(new_np_line)
-        #print('self.processor.start_pointXYZ[:] = ', *self.processor.start_pointXYZ)
-        #print('new_np_line = ', new_np_line)
-        glVertex3f(new_np_line[1], new_np_line[2], new_np_line[3])
-        #print('staart')
         for i in np_list:
-            #print('x = {}, y = {}, z = {}'.format(i[1], i[2], i[3]))
-            #glRotate(i[5] or new_np_line[5], 1., 0., 0.)
-            #glRotate(i[6] or new_np_line[6], 0., 1., 0.)
-            #glRotate(i[4] or new_np_line[4], 0., 0., 1.)
-            if np.isnan(i[10]):
-                #x, y, z = i[1], i[2], i[3]
-                #if np.isnan(x):
-                #    x = previous_list[1]
-                #if np.isnan(y):
-                #    y = previous_list[2]
-                #if np.isnan(z):
-                #    z = previous_list[3]
-                #print('isnan c =', c)
-                glVertex3f(i[1], i[2], i[3])
-                #previous_list[1:4] = x, y, z
-                #print('previous_list = ', previous_list[1:4])
-                #glVertex3f(c, np.nan, c)
-            #c = c + 1
-                #print('isnan c =', c)
-
-                #previous_list = i
-            #else:
-            #    pass
-            #    #print('special paint')
-
+            if np.isnan(i[14]):
+                glVertex3f(i[2], i[3], i[4])
+                if i[0] == 2 or i[0] == 3:
+                    glVertex3f(i[8], i[9], i[10])
+            else:
+                special_pont_options(i[14], i[2], i[3], i[4])
         glEnd()
         glPopMatrix()
 
@@ -363,18 +337,22 @@ class Window3D(QGLWidget):
         glLineWidth(3)
         glColor3f(0.3, 0.3, 0.3)
         glBegin(GL_LINE_STRIP)
-        new_np_line = [0, *self.processor.start_pointXYZ, 0, 0, 0, 0]
-        previous_list = copy.deepcopy(new_np_line)
+        #new_np_line = [0, *self.processor.start_pointXYZ, 0, 0, 0, 0]
+        #previous_list = copy.deepcopy(new_np_line)
         # print('self.processor.start_pointXYZ[:] = ', *self.processor.start_pointXYZ)
         # print('new_np_line = ', new_np_line)
-        glVertex3f(new_np_line[1], new_np_line[2], new_np_line[3])
+        #glVertex3f(new_np_line[1], new_np_line[2], new_np_line[3])
         for i in np_list:
             # print('x = {}, y = {}, z = {}'.format(i[1], i[2], i[3]))
             # glRotate(i[5] or new_np_line[5], 1., 0., 0.)
             # glRotate(i[6] or new_np_line[6], 0., 1., 0.)
             # glRotate(i[4] or new_np_line[4], 0., 0., 1.)
-            if np.isnan(i[10]):
-                glVertex3f(i[1], i[2], i[3])
+            #print('zero')
+            if np.isnan(i[14]):
+                #print('np.isnan(i[14])')
+                glVertex3f(i[2], i[3], i[4])
+            else:
+                special_pont_options(i[14], i[2], i[3], i[4])
                 #x, y, z = i[1], i[2], i[3]
                 #if np.isnan(x):
                 #    x = previous_list[1]
@@ -390,6 +368,9 @@ class Window3D(QGLWidget):
         glEnd()
         glPopMatrix()
 
+def special_pont_options(i, i1, i2, i3):
+    if i == 0:
+        glVertex3f(i1, i2, i3)
         #r = 20
         # move camera a distance r away from the center
         #glTranslatef(0, 0, -r)

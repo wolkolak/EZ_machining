@@ -108,7 +108,8 @@ class MyMainWindow(QMainWindow):
             print('cur index = ', self.centre.note.currentIndex())
             #todo self.centre.note.currentWidget().current_g_cod_pool
             #self.centre.left.left_tab.a.reset_np_array_in_left_field()
-            self.centre.left.reset_np_array_in_left_field()
+            #self.centre.left.reset_np_array_in_left_field()
+            self.centre.left.update_visible_np_left()
             if self.centre.note.currentWidget().editor.existing is False:
                 title2 = self.centre.note.tabText(n)
             else:

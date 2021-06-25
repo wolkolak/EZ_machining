@@ -128,7 +128,7 @@ class Tabs(QTabWidget):
             self.setCurrentIndex(self.currentIndex()+1)
             self.currentWidget().main_g_cod_pool = np.insert(self.currentWidget().main_g_cod_pool, 0,
                                                              self.currentWidget().main_g_cod_pool, axis=0)
-            self.center_widget.left.reset_np_array_in_left_field()
+            self.center_widget.left.update_visible_np_left()
             add_new_name(self.tabs[i][0])
             print('new tab1')
         else:
