@@ -31,7 +31,10 @@ class Window3D(QGLWidget):
         self.processor = Fanuc_NT()
             #self.frame.left_tab.parent.central_widget.note.currentWidget().\
             #highlight.reversal_post_processor
-
+        self.animation_flag = False
+        self.frame_frequency = 100
+        self.my_timer.start(self.frame_frequency)
+        #self.my_timer.stop()
 
     def init_vars(self):
         self.old_horizo_mouse = 0
@@ -41,9 +44,9 @@ class Window3D(QGLWidget):
         self.m_turning = False
         self.cam_horizontal = 0
         self.cam_height = 0
-        self.cam_turn_x = 0
-        self.cam_turn_y = 0
-        self.cam_turn_z = 0
+        #self.cam_turn_x = 0
+        #self.cam_turn_y = 0
+        #self.cam_turn_z = 0
         self.turn_angle = 0
         self.k_rapprochement = 1.0
         self.cam_depth = 1
@@ -63,6 +66,7 @@ class Window3D(QGLWidget):
         self.turn_angleZ = 90.
 
     def mousePressEvent(self, a0: QtGui.QMouseEvent) -> None:
+        self.my_timer.start(100)
         print('a0.button() = ', a0.button())
         b = a0.button()
         self.where_clicked_x = a0.x()
@@ -81,19 +85,22 @@ class Window3D(QGLWidget):
             self.m_grabbing = False
         elif b == 4:  # wheel button
             self.m_turning = False
+        #self.timer_stop()
 
     def mouseMoveEvent(self, a0: QtGui.QMouseEvent) -> None:
+
         #работает только на грабе?
         new_horizo = a0.x()
         #print('self.m_grabbing = ', self.m_grabbing)
         new_height = a0.y()
         if self.m_grabbing is True:
+            #self.timer_start()
             self.cam_horizontal = self.cam_horizontal + self.k_rapprochement * (new_horizo - self.old_horizo_mouse) / self.h
             self.cam_height = self.cam_height + self.k_rapprochement * (self.old_height_mouse - new_height) / self.h
             #self.cam_height = new_height
         elif self.m_turning is True:
             #print('turn turn turn')
-
+            #self.timer_start()
             #if 0.2 * self.w < self.where_clicked_x < 0.8 * self.w and 0.2 * self.h < self.where_clicked_y < 0.8 * self.h:
             if (self.where_clicked_x - self.w/2) ** 2 + (self.where_clicked_y - self.h/2) ** 2 < 0.1 * self.h * self.h:
                 #print('внутри')
@@ -107,8 +114,8 @@ class Window3D(QGLWidget):
                 if self.turn_angleY > 360. or self.turn_angleY < 360:
                     self.turn_angleY = self.turn_angleY % 360.
 
-                self.cam_turn_x = self.cam_turn_x + -(self.old_height_mouse - new_height) / self.h
-                self.cam_turn_y = self.cam_turn_y + -(new_horizo - self.old_horizo_mouse) / self.h
+                #self.cam_turn_x = self.cam_turn_x + -(self.old_height_mouse - new_height) / self.h
+                #self.cam_turn_y = self.cam_turn_y + -(new_horizo - self.old_horizo_mouse) / self.h
                     #self.cam_turn_z = self.cam_turn_z
 
                 #print('turn_angle ', self.turn_angle)
@@ -127,7 +134,7 @@ class Window3D(QGLWidget):
                 self.turn_angleZ = self.turn_angleZ + angle_v + angle_h
                 if self.turn_angleZ > 360. or self.turn_angleZ < 360:
                     self.turn_angleZ = self.turn_angleZ % 360.
-                self.cam_turn_z = self.cam_turn_z + (new_horizo - self.old_horizo_mouse) / self.h
+                #self.cam_turn_z = self.cam_turn_z + (new_horizo - self.old_horizo_mouse) / self.h
 
 
         self.old_horizo_mouse = new_horizo
@@ -146,7 +153,13 @@ class Window3D(QGLWidget):
             #print('2222')
         #print('wheel k_rapprochement = ', self.k_rapprochement)
 
+    def timer_start(self):
+        if self.animation_flag is False:
+            self.my_timer.start(self.frame_frequency)
 
+    def timer_stop(self):
+        if self.animation_flag is False:
+            self.my_timer.stop()
 
     def showTime(self):
         #Animation
@@ -314,7 +327,7 @@ class Window3D(QGLWidget):
         glLoadIdentity()
 
         #self.view_zone(700, 600)
-        self.my_timer.start(100)
+        #
 
     def part_turn_points(self, np_list):
         glPointSize(5)

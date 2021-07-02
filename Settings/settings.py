@@ -14,7 +14,7 @@ color3 = 'rgb(47, 69, 82)'
 color4 = 'rgb(195,221,234)' #бледный
 splitter_parameters = {'lefty': 449, 'righty': 944, 'flag': 1 }
 #self.splitter_flag
-
+min_ark_step = 0.1
 g_programs_folder = 'D:/Users/72014/Desktop/EZ_machining-master/examples'
 
 

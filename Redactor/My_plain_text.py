@@ -284,7 +284,9 @@ class MyEdit(QPlainTextEdit):
         self.base.highlight.too_little_number_check()
 
     def delete_lines_from_main_np_g_pool(self):
-        self.base.highlight.previous_block_g = self.base.main_g_cod_pool[self.min_line_np-1][0] if self.min_line_np > 1 else 0
+        self.base.highlight.previous_block_g = self.base.main_g_cod_pool[self.min_line_np-1][1] if self.min_line_np > 0 else 0
+        print('Вставить из строки {}'.format(self.min_line_np-1))
+        #print(('Там лежит 'б ))
         #self.LastGCod = self.base.main_g_cod_pool[self.second_place][0]
         self.base.main_g_cod_pool = np.delete(self.base.main_g_cod_pool, np.s_[self.min_line_np:self.second_place + 1], axis=0)
 

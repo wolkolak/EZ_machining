@@ -1,6 +1,7 @@
 from PyQt5.QtCore import QRegExp, QRegularExpression
 from abc import ABC, abstractmethod
 from PyQt5.QtGui import QColor, QTextCharFormat, QFont
+import copy
 
 def format(color, style=''):
     """ Верните QTextCharFormat с указанными атрибутами. """
@@ -36,27 +37,33 @@ STYLES = {
 
 STYLES_list_G0 = [#todo По-хорошему это бы тоже перенести в постпроцессор
     #, 'italic' это перебор
-    format('blue'), #'axis':
-    format('#c9211e'),#'g_cod_X':
-    format('#0084d1'),#'g_cod_Y':
-    format('#468a1a'),#'g_cod_Z':
-    format('#650953'),#'g_cod_A':
-    format('#813709'),#'g_cod_B':
-    format('#ff5429'),#'g_cod_C':
-    format('blue'),  #R
-    format('blue'),  #F
+    format('blue'),     #'axis':
+    format('#c9211e'),  #'g_cod_X':
+    format('#0084d1'),  #'g_cod_Y':
+    format('#468a1a'),  #'g_cod_Z':
+    format('#650953'),  #'g_cod_A':
+    format('#813709'),  #'g_cod_B':
+    format('#ff5429'),  #'g_cod_C':
+    format('#c9211e'),  #I
+    format('#0084d1'),  #J
+    format('#468a1a'),  #K
+    format('blue'),     #R
+    format('blue'),     #F
 ]
 
 STYLES_list_G1 = [
-    format('blue', 'bold'), #'axis':
-    format('#c9211e', 'bold'),#'g_cod_X':
-    format('#0084d1', 'bold'),#'g_cod_Y':
-    format('#468a1a', 'bold'),#'g_cod_Z':
-    format('#ff5429', 'bold'),#'g_cod_C':
-    format('#650953', 'bold'),#'g_cod_A':
-    format('#813709', 'bold' ),#'g_cod_B':
-    format('blue', 'bold'), #R
-    format('blue', 'bold'), #F
+    format('blue', 'bold'),     #'axis':
+    format('#c9211e', 'bold'),  #'g_cod_X':
+    format('#0084d1', 'bold'),  #'g_cod_Y':
+    format('#468a1a', 'bold'),  #'g_cod_Z':
+    format('#650953', 'bold'),  #'g_cod_A':
+    format('#813709', 'bold'),  #'g_cod_B':
+    format('#ff5429', 'bold'),  #'g_cod_C':
+    format('#c9211e', 'bold'),  # I
+    format('#0084d1', 'bold'),  # J
+    format('#468a1a', 'bold'),  # K
+    format('blue', 'bold'),     #R
+    format('blue', 'bold'),     #F
 ]
 
 class ReversalPostProcessor0(ABC):#metaclass=ABCMeta
@@ -79,6 +86,7 @@ class ReversalPostProcessor0(ABC):#metaclass=ABCMeta
                          'B': 1.,
                          }
         self.k_XYZABC_list = []
+        self.G_MODAL_commands = G_MODAL_DICT()
         self.update_options_postprocessor()
 
         self.condition_operators = ['WHILE', 'IF']
@@ -112,18 +120,19 @@ class ReversalPostProcessor0(ABC):#metaclass=ABCMeta
         #visible_np[:, 11] = visible_np[:, 1] * self.k_XYZCAB['X']
 
     def check_command(self, lineBlock, text, np_line, g_modal):
-        print("type(lineBlock) = ", type(lineBlock))
-        print('CHECK COMMAND START')
+        #print("type(lineBlock) = ", type(lineBlock))
+        #print('CHECK COMMAND START')
         for i in range(len(self.special_commands)):
             #print('i[0] = ', i[0])
             nya = self.special_commands[i][0].match(text, 0)
             len_match = nya.capturedLength()
             if len_match != 0:
                 self.special_commands[i][1](lineBlock, nya, np_line, g_modal, i)
-                return
+                return True
         if len_match == 0:
             np_line[14] = 9999
-        print('CHECK COMMAND END')
+            return  False
+        #print('CHECK COMMAND END')
 
     def update_rules(self):
         """Синтаксические маркеры для языка. """
@@ -139,7 +148,7 @@ class ReversalPostProcessor0(ABC):#metaclass=ABCMeta
         i_postfix = '(' + I + r'(\d+.\d*))?\s*'
         j_postfix = '(' + J + r'(\d+.\d*))?\s*'
         k_postfix = '(' + K + r'(\d+.\d*))?\s*'
-        r_postfix = '(' + R + r'(\d+.\d*))?\s*'
+        r_postfix = '(' + R + r'(-?\d+.\d*))?\s*'
         # most strings look like 'main_rule'
 
         sorted_axis_rule = ''
@@ -153,9 +162,66 @@ class ReversalPostProcessor0(ABC):#metaclass=ABCMeta
 
         axises_str = ''.join(axises0)
         axises_coord = r'(([{}])\s*(-?\d+\.\d*)\s*)?'.format(axises_str)
-
+        ijk_str = I + J + K
+        ijk_coord = r'(([{}])\s*(-?\d+\.\d*)\s*)?'.format(ijk_str)
         # unsorted_axis_rule = r'(G0?\d)?\s*{}+(F\d(\.)?)?(?:;)?$'.format(axises_coord)#r'^\d((?:X)(-?\d+\.\d*)\s*)$'
 
-        unsorted_axis_rule = axises_coord * 6
-        unsorted_axis_rule = g_prefix + unsorted_axis_rule + i_postfix + j_postfix + k_postfix + r_postfix + f_postfix
+        unsorted_axis_rule = axises_coord * 6 + ijk_coord * 3
+        print('unsorted_axis_rule = ', unsorted_axis_rule)
+        unsorted_axis_rule = g_prefix + unsorted_axis_rule + r_postfix + f_postfix
         self.unsorted_axis_rule = '^' + unsorted_axis_rule + '$'
+
+
+class G_MODAL_DICT(dict):#dict of lists of lists.
+    def __init__(self):
+        super().__init__()
+        self['plane'] = [[0, 18], ]
+        self['absolute_or_incremental'] = [[0, 90], ]
+        self.base_g_modal = self.create_base_g_modal()
+        print('1base_dict = ', self.base_g_modal)
+        self.insert_in_main_gmodal('plane', 2)
+
+    def create_base_g_modal(self):
+        base_dict = {}
+        for i in self:
+            base_dict[i] = self.get(i)[0][1]
+        #print('base_dict = ', base_dict)
+        return base_dict
+
+    def create_current_from_g_modal(self, line_number_start):#по очереди, хотя можно и х2 идти
+
+        new_g_modal_dict = self.base_g_modal.copy()#todo должен быть базовый g_modal_dict
+
+        for i in self:#dict search
+            i_current = 0
+            for j in self.get(i):#search for tuple in list
+                i_current = j[1]
+                if j[0] > line_number_start:
+                    break
+            new_g_modal_dict[i] = i_current
+        return new_g_modal_dict
+
+    def del_modal_commands(self, n_start, n_end, doc_end, delta_lines):
+        #del and change nuer lines
+        for i in self:
+            list1 = self.get(i)
+            for j in range(len(list1)):
+                if n_start <= list1[j][0]:
+                    if list1[j][0] <= n_end:
+                        list1.pop([j])
+                    else:
+                        list1[j][0] = list1[j][0] + delta_lines
+
+    def insert_in_main_gmodal(self, key, line_number):
+        print('insert_in_main_gmodal')
+        list1 = self.get(key)
+        for j in range(len(list1)):
+            if line_number >= list1[j][0]:#todo А если закончатся значения, куда добавлять?
+                position = j
+                break
+        print('qwertyui')
+        if position:
+            print('jjjj = ', position)
+        else:
+            print('jjj нет')
+
