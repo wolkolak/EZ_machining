@@ -102,11 +102,12 @@ class left1(QWidget):
         #np.set_printoptions( formatter={'float': lambda x: format(x, ' 2f')}, floatmode='fixed')
 
         if self.central_widget.note.currentIndex() != -1:
-            self.visible_np_left = self.central_widget.note.currentWidget().visible_np.copy()
+            self.visible_np_left = self.central_widget.note.currentWidget().np_box.visible_np.copy()
         else:
             self.visible_np_left = self.visible_np_empty
-        self.left_tab.a.setPlainText(np.array2string(self.visible_np_left))
-        self.left_tab.b.openGL.gcod = self.visible_np_left
+        #self.left_tab.a.setPlainText(np.array2string(self.visible_np_left))
+        #self.left_tab.b.openGL.gcod = self.visible_np_left
+        self.reset_np_array_in_left_field(self.visible_np_left)
 
     def reset_np_array_in_left_field(self, v):
         mapper = lambda x: np.format_float_positional(x, precision=2)
@@ -114,15 +115,6 @@ class left1(QWidget):
              linewidth=350, floatmode='fixed', threshold=sys.maxsize,
             suppress=False, formatter={'float': mapper}
         )
-
-        #if len(self.visible_np_left) > 3:#bug 2-9
-        #    print('2-9 = ', type(self.visible_np_left[2,9]))
-        #    print('2-8 = ', type(self.visible_np_left[2, 8]))
-        #row_labels = 'G1','G1','X','Y','Z','A','B','C','cX','cY','cZ','R','F','np_line','n_type'
-
-
-        #self.left_tab.a.setPlainText(np.array2string(self.visible_np_left))
-        #elf.left_tab.b.openGL.gcod = self.visible_np_left
         self.left_tab.a.setPlainText(np.array2string(v))
         self.left_tab.b.openGL.gcod = v
         print('self.left_tab.b.openGL.gcod.shape = ', self.left_tab.b.openGL.gcod.shape)

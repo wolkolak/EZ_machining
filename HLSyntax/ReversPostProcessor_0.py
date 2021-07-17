@@ -1,6 +1,7 @@
 from PyQt5.QtCore import QRegExp, QRegularExpression
 from abc import ABC, abstractmethod
 from PyQt5.QtGui import QColor, QTextCharFormat, QFont
+from Redactor.G_MODAL_commands import G_MODAL_DICT
 import copy
 
 def format(color, style=''):
@@ -75,7 +76,8 @@ class ReversalPostProcessor0(ABC):#metaclass=ABCMeta
     """
 
 
-    def __init__(self):
+    def __init__(self, redactor):
+        self.redactor = redactor
         self.update_rules()
         self.start_pointXYZ = [500., 0., 50., 0., 0., 0]
         self.k_XYZABC = {'X': 1.,
@@ -86,7 +88,7 @@ class ReversalPostProcessor0(ABC):#metaclass=ABCMeta
                          'B': 1.,
                          }
         self.k_XYZABC_list = []
-        self.G_MODAL_commands = G_MODAL_DICT()
+        #self.G_MODAL_commands = G_MODAL_DICT()
         self.update_options_postprocessor()
 
         self.condition_operators = ['WHILE', 'IF']
@@ -119,7 +121,8 @@ class ReversalPostProcessor0(ABC):#metaclass=ABCMeta
         visible_np[:, 2] = visible_np[:, 2] * self.k_XYZABC['X']
         #visible_np[:, 11] = visible_np[:, 1] * self.k_XYZCAB['X']
 
-    def check_command(self, lineBlock, text, np_line, g_modal):
+    def check_command(self, lineBlock, text, np_line, count, g_modal):
+        print('np_line type = ', type(np_line))
         #print("type(lineBlock) = ", type(lineBlock))
         #print('CHECK COMMAND START')
         for i in range(len(self.special_commands)):
@@ -127,7 +130,7 @@ class ReversalPostProcessor0(ABC):#metaclass=ABCMeta
             nya = self.special_commands[i][0].match(text, 0)
             len_match = nya.capturedLength()
             if len_match != 0:
-                self.special_commands[i][1](lineBlock, nya, np_line, g_modal, i)
+                self.special_commands[i][1](lineBlock, nya, np_line, count, g_modal, i)
                 return True
         if len_match == 0:
             np_line[14] = 9999
@@ -172,56 +175,7 @@ class ReversalPostProcessor0(ABC):#metaclass=ABCMeta
         self.unsorted_axis_rule = '^' + unsorted_axis_rule + '$'
 
 
-class G_MODAL_DICT(dict):#dict of lists of lists.
-    def __init__(self):
-        super().__init__()
-        self['plane'] = [[0, 18], ]
-        self['absolute_or_incremental'] = [[0, 90], ]
-        self.base_g_modal = self.create_base_g_modal()
-        print('1base_dict = ', self.base_g_modal)
-        self.insert_in_main_gmodal('plane', 2)
 
-    def create_base_g_modal(self):
-        base_dict = {}
-        for i in self:
-            base_dict[i] = self.get(i)[0][1]
-        #print('base_dict = ', base_dict)
-        return base_dict
 
-    def create_current_from_g_modal(self, line_number_start):#по очереди, хотя можно и х2 идти
 
-        new_g_modal_dict = self.base_g_modal.copy()#todo должен быть базовый g_modal_dict
-
-        for i in self:#dict search
-            i_current = 0
-            for j in self.get(i):#search for tuple in list
-                i_current = j[1]
-                if j[0] > line_number_start:
-                    break
-            new_g_modal_dict[i] = i_current
-        return new_g_modal_dict
-
-    def del_modal_commands(self, n_start, n_end, doc_end, delta_lines):
-        #del and change nuer lines
-        for i in self:
-            list1 = self.get(i)
-            for j in range(len(list1)):
-                if n_start <= list1[j][0]:
-                    if list1[j][0] <= n_end:
-                        list1.pop([j])
-                    else:
-                        list1[j][0] = list1[j][0] + delta_lines
-
-    def insert_in_main_gmodal(self, key, line_number):
-        print('insert_in_main_gmodal')
-        list1 = self.get(key)
-        for j in range(len(list1)):
-            if line_number >= list1[j][0]:#todo А если закончатся значения, куда добавлять?
-                position = j
-                break
-        print('qwertyui')
-        if position:
-            print('jjjj = ', position)
-        else:
-            print('jjj нет')
 

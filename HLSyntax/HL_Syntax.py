@@ -24,12 +24,18 @@ class GMHighlighter(QSyntaxHighlighter):
         self.count_in_step = 0
         self.const_step = 1000
         self.standart_step = self.const_step
-        self.reversal_post_processor = Fanuc_NT()
+        self.reversal_post_processor = Fanuc_NT(base)
+        self.remember_np_box_parts()  # todo Нужна ли отдельная функция вообще? потребуется ли она
 
         self.main_rule_regular_expression = QRegularExpression(self.reversal_post_processor.sorted_axis_rule)
         self.simple_format = STYLES['axis']#self.first_rule[2]
         self.second_rule_regular_expression = QRegularExpression(self.reversal_post_processor.unsorted_axis_rule)#self.rules[0][0]
         self.too_little_number_check()
+
+
+    def remember_np_box_parts(self):
+        self.current_g_cod_pool = self.base.np_box.current_g_cod_pool
+
 
     def too_little_number_check(self):
         print('too_little_number_check')
@@ -62,8 +68,8 @@ class GMHighlighter(QSyntaxHighlighter):
                     print('ERROR LINE')
 
     def recount_empty_line(self):
-        self.base.current_g_cod_pool[self.count][0] = self.previous_block_g
-        self.base.current_g_cod_pool[self.count][14] = 9999#type
+        self.current_g_cod_pool[self.count][0] = self.previous_block_g
+        self.current_g_cod_pool[self.count][14] = 9999#type
         self.count_in_step += 1
         self.count += 1
         if self.count_in_step == self.standart_step:
@@ -71,7 +77,7 @@ class GMHighlighter(QSyntaxHighlighter):
         return
 
     def recount_special_rules(self, text):
-        self.base.current_g_cod_pool[self.count][1] = self.previous_block_g
+        self.current_g_cod_pool[self.count][1] = self.previous_block_g
         result = self.special_rare_case(text, self.count)
         self.count_in_step += 1
         self.count += 1
@@ -83,24 +89,24 @@ class GMHighlighter(QSyntaxHighlighter):
         #print('self.base.current_g_cod_pool[self.count] ', self.base.current_g_cod_pool[self.count])
         #G28 U0. V0.
         print('text = ', text)
-        if self.reversal_post_processor.check_command(self, text, self.base.current_g_cod_pool[count], self.base.g_modal):
+        if self.reversal_post_processor.check_command(self, text, self.current_g_cod_pool[count], count, self.base.g_modal):#todo это не тот g_modal
             return True
         else:
-            return  False
+            return False
 
         #print('self.start_pointXYZ = ', self.reversal_post_processor.start_pointXYZ)
 
 
     def recount(self, nya, STYLES_list_G0, STYLES_list_G1):
-        self.base.current_g_cod_pool[self.count, np.r_[1:13]] = [nya.captured(i) or None for i in self.list_number_captured_1]
+        self.current_g_cod_pool[self.count, np.r_[1:13]] = [nya.captured(i) or None for i in self.list_number_captured_1]
         #Заполнения здесь не происходит, так как оно только между numpy массивами
         #print('current_g_cod_pool == ', self.base.current_g_cod_pool[self.count])
         #G0-G3
-        if np.isnan(self.base.current_g_cod_pool[self.count][1]):
-            self.base.current_g_cod_pool[self.count][1] = self.previous_block_g
+        if np.isnan(self.current_g_cod_pool[self.count][1]):
+            self.current_g_cod_pool[self.count][1] = self.previous_block_g
         else:
-            self.previous_block_g = self.base.current_g_cod_pool[self.count][1]
-            self.base.current_g_cod_pool[self.count, 0] = self.previous_block_g
+            self.previous_block_g = self.current_g_cod_pool[self.count][1]
+            self.current_g_cod_pool[self.count, 0] = self.previous_block_g
         stile = STYLES_list_G0 if self.previous_block_g == 0 else STYLES_list_G1
         #colors
         # простая подсветка одним цветом
@@ -119,7 +125,7 @@ class GMHighlighter(QSyntaxHighlighter):
             ax = len(nya.captured(i * 2 + 1))
 
 
-        #print('current_g_cod_pool again == ', self.base.current_g_cod_pool[self.count])
+        print('recount current_g_cod_pool again == ', self.current_g_cod_pool[self.count])
         self.count_in_step += 1
         self.count += 1
         if self.count_in_step == self.standart_step:
@@ -133,12 +139,12 @@ class GMHighlighter(QSyntaxHighlighter):
         #for i in range(35):
         #    print('nya.captured({}) = {}'.format(i, nya.captured(i)))
         # G0-G3
-        self.base.current_g_cod_pool[self.count][1] = nya.captured(2) or None
-        if np.isnan(self.base.current_g_cod_pool[self.count][1]):
-            self.base.current_g_cod_pool[self.count][1] = self.previous_block_g
+        self.current_g_cod_pool[self.count][1] = nya.captured(2) or None
+        if np.isnan(self.current_g_cod_pool[self.count][1]):
+            self.current_g_cod_pool[self.count][1] = self.previous_block_g
         else:
-            self.previous_block_g = self.base.current_g_cod_pool[self.count][1]
-            self.base.current_g_cod_pool[self.count][0] = self.previous_block_g
+            self.previous_block_g = self.current_g_cod_pool[self.count][1]
+            self.current_g_cod_pool[self.count][0] = self.previous_block_g
 
         stile = STYLES_list_G0 if self.previous_block_g == 0 else STYLES_list_G1
         start = 0
@@ -171,14 +177,15 @@ class GMHighlighter(QSyntaxHighlighter):
         if ax != 0:
             self.setFormat(start, ax, stile[10])
             start = start + ax
-        self.base.current_g_cod_pool[self.count][11] = nya.captured(31) or None#R - nya.captured(22)
+        self.current_g_cod_pool[self.count][11] = nya.captured(31) or None#R - nya.captured(22)
         #ax = len(nya.captured(29))
 
         ax = len(nya.captured(32))
         if ax != 0:
             self.setFormat(start, ax, stile[11])
             #start = start + ax
-        self.base.current_g_cod_pool[self.count][11] = nya.captured(31) or None#F
+        self.current_g_cod_pool[self.count][11] = nya.captured(31) or None#F
+        print('unsorted recount current_g_cod_pool again == ', self.current_g_cod_pool[self.count])
         self.count_in_step += 1
         self.count += 1
         if self.count_in_step == self.standart_step:
@@ -199,7 +206,7 @@ class GMHighlighter(QSyntaxHighlighter):
             print('Ты не должен сюда попасть, но вдруг')
             return
         self.setFormat(start, ax, stile[i])
-        self.base.current_g_cod_pool[self.count][i+1] = nya.captured(n+1)
+        self.current_g_cod_pool[self.count][i+1] = nya.captured(n+1)
 
 
     def nesting(self, n, nya, start, ax, stile):
@@ -221,7 +228,7 @@ class GMHighlighter(QSyntaxHighlighter):
             print('Ты не должен сюда попасть, но вдруг')
             return
         self.setFormat(start, ax, stile[i])
-        self.base.current_g_cod_pool[self.count][i+1] = nya.captured(n+1)
+        self.current_g_cod_pool[self.count][i+1] = nya.captured(n+1)
 
 
     def to_the_start(self):

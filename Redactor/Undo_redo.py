@@ -122,6 +122,7 @@ class StoreCommand(QUndoCommand):
             self.store_cursor.setPosition(self.pos1, 1)#pos3
             self.stack.previous_max_line = self.field._document.findBlock(self.pos3).blockNumber()
             self.store_cursor.insertText(self.text_deleted)#после onchange НАЧИНАЕТСЯ HighLight
+            print('index undostack: ', self.stack.index())
             print('check')
 
     def redo(self):

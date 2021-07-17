@@ -9,6 +9,7 @@ import numpy as np
 import pyautogui
 from Redactor.Undo_redo import MyStack
 from Menus.EditMenu import update_edit_menu
+from Settings.settings import axises
 
 class MyEdit(QPlainTextEdit):
 
@@ -177,16 +178,16 @@ class MyEdit(QPlainTextEdit):
         if self.undoStack.canUndo():
             if self.undoStack.command(self.undoStack.index()-1).text() == 'glue':# todo
                 self.undoStack.child_count = self.undoStack.command(self.undoStack.index()-1).childCount() - 1
-        self.undoStack.undo()
-        self.rehighlightNextBlocks()
+            self.undoStack.undo()
+            self.rehighlightNextBlocks()
 
     def my_redo(self):
         print('redo21')
         if self.undoStack.canRedo():
             if self.undoStack.command(self.undoStack.index()).text() == 'glue':
                 self.undoStack.child_count = 0
-        self.undoStack.redo()
-        self.rehighlightNextBlocks()
+            self.undoStack.redo()
+            self.rehighlightNextBlocks()
 
     def my_del(self):
         print('my_del21')
@@ -234,9 +235,11 @@ class MyEdit(QPlainTextEdit):
             line3 = self._document.findBlock(z.pos2).blockNumber() + 1
             self.min_line_np = line1
             self.second_place = line2 + z.add_undo #-1
-            self.delete_lines_from_main_np_g_pool()
-            self.base.reading_lines_number = line3 - line1 + 1 + z.add_undo #+ z.corrected_qt_number_of_lines
-            self.creating_np_pool()
+            #self.delete_lines_from_main_np_g_pool()
+            self.base.reading_lines_number = line3 - line1 + 1 + z.add_undo  # + z.corrected_qt_number_of_lines
+            #self.base.np_box.delete_lines_from_np_box()
+            #self.creating_np_pool()
+            self.universal_replace_new()
 
         elif self.undoStack.edit_type == 'redo':
             z = self.undoStack.command(self.undoStack.index())
@@ -249,8 +252,10 @@ class MyEdit(QPlainTextEdit):
             self.min_line_np = line1
             self.second_place = line2 + z.add_redo
             self.base.reading_lines_number = line3 - line1 + 1 + z.add_redo#+ z.corrected_qt_number_of_lines #+ z.add_undo#+
-            self.delete_lines_from_main_np_g_pool()
-            self.creating_np_pool()
+            # self.delete_lines_from_main_np_g_pool()
+            #self.base.np_box.delete_lines_from_np_box()
+            #self.creating_np_pool()
+            self.universal_replace_new()
         else:
             self.onChange_new_command(position)
 
@@ -274,21 +279,15 @@ class MyEdit(QPlainTextEdit):
     def universal_replace_new(self):
         self.base.highlight.standart_step = 1#todo ЗАЧЕЕМ?!
         self.creating_np_pool()
-        self.delete_lines_from_main_np_g_pool()
+        self.base.np_box.delete_lines_from_np_box()#todo тут что то не так
+        #self.delete_lines_from_main_np_g_pool()
 
     def creating_np_pool(self):
         #axis
-        self.base.current_g_cod_pool = np.zeros((self.base.reading_lines_number, 15), float)
-        self.base.current_g_cod_pool[:] = np.nan
+        self.base.np_box.create_new_currents_in_np_box(axises)
+        self.base.highlight.current_g_cod_pool = self.base.np_box.current_g_cod_pool
         self.base.progress_bar.setMaximum(self.base.reading_lines_number)
         self.base.highlight.too_little_number_check()
-
-    def delete_lines_from_main_np_g_pool(self):
-        self.base.highlight.previous_block_g = self.base.main_g_cod_pool[self.min_line_np-1][1] if self.min_line_np > 0 else 0
-        print('Вставить из строки {}'.format(self.min_line_np-1))
-        #print(('Там лежит 'б ))
-        #self.LastGCod = self.base.main_g_cod_pool[self.second_place][0]
-        self.base.main_g_cod_pool = np.delete(self.base.main_g_cod_pool, np.s_[self.min_line_np:self.second_place + 1], axis=0)
 
 
     def eventFilter(self, widget, event):
@@ -320,7 +319,7 @@ class MyEdit(QPlainTextEdit):
                 if event.text():
                     if key == Qt.Key_Backspace:
                         self.event_data_acquiring(key)
-                        self.undoStack.storeFieldText()
+                        #self.undoStack.storeFieldText()
                         c = self.textCursor()
                         if c.hasSelection():
                             self.my_del()
@@ -331,7 +330,7 @@ class MyEdit(QPlainTextEdit):
                         return True
                     elif key == Qt.Key_Delete:
                         self.event_data_acquiring(key)
-                        self.undoStack.storeFieldText()
+                        #self.undoStack.storeFieldText()
                         c = self.textCursor()
                         if c.hasSelection():
                             self.my_del()
@@ -359,17 +358,20 @@ class MyEdit(QPlainTextEdit):
     def event_data_acquiring(self, key, replace_to_nothing=False):
         self.corrected_qt_number_of_lines, self.untilBlock, self.firstBlock, self.undoStack.add_undo, self.undoStack.add_redo = HLSyntax.addition_help_for_qt_highlight.corrected_number_of_lines(
             self, key, replace_to_nothing)
+        self.base.g_modal.create_current_from_g_modal(self.firstBlock)
+
 
     def rehighlightNextBlocks(self):
+        return
         print('rehighlight start')
         i = self.second_place + 1
         #g_old = self.LastGCod
-        axis = 15
-        len = int(self.base.current_g_cod_pool.size/axis) + self.min_line_np-1
-        g_new = self.base.main_g_cod_pool[len][0]
+
+        len = int(self.base.np_box.current_g_cod_pool.size/axises) + self.min_line_np-1
+        g_new = self.base.np_box.main_g_cod_pool[len][0]
         lines = 0
         number_of_lines = self.blockCount() + 1
-        while i < number_of_lines and self.base.main_g_cod_pool[i][0] != g_new and np.isnan(self.base.main_g_cod_pool[i][9]):
+        while i < number_of_lines and self.base.np_box.main_g_cod_pool[i][0] != g_new and np.isnan(self.base.np_box.main_g_cod_pool[i][9]):
                 #self.base.main_g_cod_pool[i][0] == g_old: #and self.base.main_g_cod_pool[i][0] == g_old:
             lines = lines + 1
             i = i + 1
@@ -381,10 +383,12 @@ class MyEdit(QPlainTextEdit):
         #self.base.progress_bar.setValue(0)
         self.base.highlight.to_the_start()
         self.base.progress_bar.setMaximum(lines-1)#lines-1
-        self.creating_np_pool()
+        #self.creating_np_pool()
         self.min_line_np = self.second_place + 1
-        self.base.main_g_cod_pool = np.delete(self.base.main_g_cod_pool,
-                                              np.s_[self.min_line_np:i], axis=0)#todo maybe i can be too mach
+        self.second_place = self.second_place + lines
+        self.universal_replace_new()
+        #self.base.np_box.main_g_cod_pool = np.delete(self.base.np_box.main_g_cod_pool,
+        #                                      np.s_[self.min_line_np:i], axis=0)#todo maybe i can be too mach
         n = self.min_line_np
         while n < i:
             self.base.highlight.rehighlightBlock(self._document.findBlockByNumber(n-1))

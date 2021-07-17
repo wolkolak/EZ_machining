@@ -28,13 +28,15 @@ class Window3D(QGLWidget):
         self.my_timer = QTimer()
         self.my_timer.timeout.connect(self.showTime)
         d3_interface(self)
-        self.processor = Fanuc_NT()
+        #self.processor = Fanuc_NT()#todo
             #self.frame.left_tab.parent.central_widget.note.currentWidget().\
             #highlight.reversal_post_processor
         self.animation_flag = False
         self.frame_frequency = 100
         self.my_timer.start(self.frame_frequency)
         #self.my_timer.stop()
+    #def choosing_backplotter(self):
+    #    self.processor = self.frame.left_tab.parent.central_widget.note.currentWidget()
 
     def init_vars(self):
         self.old_horizo_mouse = 0

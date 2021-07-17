@@ -14,8 +14,8 @@ def centre_ijk_ARK(v_i, n_h, n_v, n_p):
         if v_i[c_const_i] != v_i[c_const_from_main_point_i]:
             print('ARK problem with G{}X{}Y{}Z{}I{}J{}K{}'.format(*v_i[1:5], *v_i[8:11]))
     R = math.sqrt((h2 - c_h)**2 + (v2 - c_v)**2)
-    v_i[11] = R
-    #return R
+    #v_i[11] = R
+    return R
 
 def centre_R_ARK(turn_direction, plane, v_iA, v_iC, n_h, n_v, n_p):
     R = v_iC[11]
@@ -30,9 +30,9 @@ def centre_R_ARK(turn_direction, plane, v_iA, v_iC, n_h, n_v, n_p):
     else:
         h = math.sqrt(for_sqrt)
     H1 = H_A + (H_C - H_A) / 2 + h * (V_C - V_A) / d
-    V1 = V_A + (V_C - V_A ) / 2 - h * (H_C - H_A) / d
+    V1 = V_A + (V_C - V_A) / 2 - h * (H_C - H_A) / d
     H2 = H_A + (H_C - H_A) / 2 - h * (V_C - V_A) / d
-    V2 = V_A + (V_C - V_A ) / 2 + h * (H_C - H_A) / d
+    V2 = V_A + (V_C - V_A) / 2 + h * (H_C - H_A) / d
     #https://www.sql.ru/forum/158538/vychislenie-centra-okruzhnosti
     #Оба     решения     лежат     в     квадрате
     #min(X1, X2) - R <= X <= max(X1, X2) = R
@@ -44,8 +44,8 @@ def centre_R_ARK(turn_direction, plane, v_iA, v_iC, n_h, n_v, n_p):
     #vector_cross2 = (H_C - H_A) * (V2 - V_A) - (V_C - V_A) * (H2 - H_A)
 
     k1 = -1 if vector_cross1 > 0 else 1
-    gARK = -1 if turn_direction == 3 else 2
-    if k1 * gARK * R > 0:
+    gARK = -1 if turn_direction == 3 else 1
+    if k1 * gARK * R > 0:#todo here might be a problem
         var1 = H1
         var2 = V1
     else:
@@ -55,5 +55,5 @@ def centre_R_ARK(turn_direction, plane, v_iA, v_iC, n_h, n_v, n_p):
         return var2, v_iA[n_p], var1
     elif plane == 17:
         return var1, var2, v_iA[n_p]
-    else:
+    else:#19
         return v_iA[n_p], var1, var2
