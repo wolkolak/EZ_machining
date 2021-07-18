@@ -358,7 +358,8 @@ class MyEdit(QPlainTextEdit):
     def event_data_acquiring(self, key, replace_to_nothing=False):
         self.corrected_qt_number_of_lines, self.untilBlock, self.firstBlock, self.undoStack.add_undo, self.undoStack.add_redo = HLSyntax.addition_help_for_qt_highlight.corrected_number_of_lines(
             self, key, replace_to_nothing)
-        self.base.g_modal.create_current_from_g_modal(self.firstBlock)
+        print('self.firstBlock = ', self.firstBlock)
+        #self.base.g_modal.create_current_from_g_modal(self.firstBlock)
 
 
     def rehighlightNextBlocks(self):

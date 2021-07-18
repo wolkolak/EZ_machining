@@ -51,9 +51,13 @@ def centre_R_ARK(turn_direction, plane, v_iA, v_iC, n_h, n_v, n_p):
     else:
         var1 = H2
         var2 = V2
-    if plane == 18:
+    print('plane in ark solving', type(plane))
+    if plane == '18':
+        print('plan 18')
         return var2, v_iA[n_p], var1
-    elif plane == 17:
+    elif plane == '17':
+        print('plan 17')
         return var1, var2, v_iA[n_p]
     else:#19
+        print('plan 19')
         return v_iA[n_p], var1, var2
