@@ -268,7 +268,7 @@ class MyEdit(QPlainTextEdit):
         if self.make_undo_work_1_time == 1:
             self.make_undo_work_1_time = 2
 
-    def line_arithmetic(self):
+    def line_arithmetic(self):#todo self.firstBlock возможно не нужен
         self.text_lines_delete = self.untilBlock - self.firstBlock + 1
         self.text_lines_insert = self.blockCount() - self.blocks_before + self.text_lines_delete
         self.min_line_np = self.firstBlock + 1

@@ -73,6 +73,10 @@ class ReversalPostProcessor0(ABC):#metaclass=ABCMeta
     To add command, create behavior function; add to special_commands list string, color, style.
     Note, that pattern will be checked one after another, so if u have patternA thant includes patternB as part,
     order matters.
+
+    Lets divide the rule type np[14] by groups: nan - ordinary line, 0 - absolute move somewhere like G28,
+    9999 - empty line, 9998 - comment line, 9997 - unidentified line, 1 - G modal command, 2 - machining cycles,
+    3 - creating vars, 4 - logic cycles and conditions.
     """
 
 
@@ -87,6 +91,8 @@ class ReversalPostProcessor0(ABC):#metaclass=ABCMeta
                          'A': 1.,
                          'B': 1.,
                          }
+        self.stright_G2_G3 = True
+        self.ARK_modal = 1#or 0 if not
         self.k_XYZABC_list = []
         #self.G_MODAL_commands = G_MODAL_DICT()
         self.update_options_postprocessor()
@@ -156,7 +162,7 @@ class ReversalPostProcessor0(ABC):#metaclass=ABCMeta
 
         sorted_axis_rule = ''
         for letter in axises:
-            sorted_axis_rule += r'((?:{})(-?\d+\.\d*)\s*)?'.format(letter)
+            sorted_axis_rule += r'(\s*(?:{})(-?\d+\.\d*)\s*)?'.format(letter)
             # sorted_axis_rule += r'(([{}]\s*)(-)?(\d+.\d*)\s*)?'.format(letter)
 
         self.sorted_axis_rule = '^' + g_prefix + sorted_axis_rule + f_postfix + '$'  # '(?:G0?\d)?\s*'   + f_postfix
@@ -164,7 +170,7 @@ class ReversalPostProcessor0(ABC):#metaclass=ABCMeta
         # sorted_axis_rule = r'^(?:X)(\d)$'  # UDALIT
 
         axises_str = ''.join(axises0)
-        axises_coord = r'(([{}])\s*(-?\d+\.\d*)\s*)?'.format(axises_str)
+        axises_coord = r'(\s*([{}])\s*(-?\d+\.\d*)\s*)?'.format(axises_str)
         ijk_str = I + J + K
         ijk_coord = r'(([{}])\s*(-?\d+\.\d*)\s*)?'.format(ijk_str)
         # unsorted_axis_rule = r'(G0?\d)?\s*{}+(F\d(\.)?)?(?:;)?$'.format(axises_coord)#r'^\d((?:X)(-?\d+\.\d*)\s*)$'

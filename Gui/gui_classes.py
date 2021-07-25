@@ -130,6 +130,7 @@ class Tabs(QTabWidget):
                                                              self.currentWidget().np_box.main_g_cod_pool, axis=0)
             self.center_widget.left.update_visible_np_left()
             add_new_name(self.tabs[i][0])
+            self.currentWidget().np_box.add_line_in_new_tab()
             print('new tab1')
         else:
             simple_warning('warning', "Притормози \n ¯\_(ツ)_/¯")

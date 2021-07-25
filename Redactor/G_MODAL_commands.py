@@ -28,9 +28,9 @@ class G_MODAL_DICT(dict):#dict of lists of lists.
         for i in self:#dict search
             i_current = 0
             for j in self.get(i):#search for tuple in list
-                i_current = j[1]
                 if j[0] > line_number_start:
                     break
+                i_current = j[1]
             new_g_modal_dict[i] = i_current
         return new_g_modal_dict
 

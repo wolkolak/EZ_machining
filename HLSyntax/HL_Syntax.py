@@ -125,7 +125,7 @@ class GMHighlighter(QSyntaxHighlighter):
             ax = len(nya.captured(i * 2 + 1))
 
 
-        print('recount current_g_cod_pool again == ', self.current_g_cod_pool[self.count])
+        #print('recount current_g_cod_pool again == ', self.current_g_cod_pool[self.count])
         self.count_in_step += 1
         self.count += 1
         if self.count_in_step == self.standart_step:
