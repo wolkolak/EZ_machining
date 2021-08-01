@@ -84,7 +84,7 @@ class left1(QWidget):
         self.setAttribute(Qt.WA_StyledBackground)
         self.setStyleSheet("background-color: {}".format(color1))
         #axis
-        self.visible_np_empty = np.zeros((1, 15), float)
+        self.visible_np_empty = np.zeros((1, axises), float)
         self.visible_np_left = self.visible_np_empty
         #self.visible_np[1][:] = 1.
         grid = QGridLayout()

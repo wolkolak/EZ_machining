@@ -38,7 +38,9 @@ STYLES = {
 
 STYLES_list_G0 = [#todo По-хорошему это бы тоже перенести в постпроцессор
     #, 'italic' это перебор
-    format('blue'),     #'axis':
+    format('blue'),     #N100
+    format('gray'),     #G40
+    format('blue'),     #'interpolation':
     format('#c9211e'),  #'g_cod_X':
     format('#0084d1'),  #'g_cod_Y':
     format('#468a1a'),  #'g_cod_Z':
@@ -48,12 +50,14 @@ STYLES_list_G0 = [#todo По-хорошему это бы тоже перене�
     format('#c9211e'),  #I
     format('#0084d1'),  #J
     format('#468a1a'),  #K
-    format('blue'),     #R
+    format('gray'),     #R
     format('blue'),     #F
 ]
 
 STYLES_list_G1 = [
-    format('blue', 'bold'),     #'axis':
+    format('blue', 'bold'),     # N100
+    format('gray', 'bold'),     # G40
+    format('blue', 'bold'),     #'interpolation':
     format('#c9211e', 'bold'),  #'g_cod_X':
     format('#0084d1', 'bold'),  #'g_cod_Y':
     format('#468a1a', 'bold'),  #'g_cod_Z':
@@ -63,7 +67,7 @@ STYLES_list_G1 = [
     format('#c9211e', 'bold'),  # I
     format('#0084d1', 'bold'),  # J
     format('#468a1a', 'bold'),  # K
-    format('blue', 'bold'),     #R
+    format('gray', 'bold'),     #R
     format('blue', 'bold'),     #F
 ]
 
@@ -92,7 +96,7 @@ class ReversalPostProcessor0(ABC):#metaclass=ABCMeta
                          'B': 1.,
                          }
         self.stright_G2_G3 = True
-        self.ARK_modal = 1#or 0 if not
+        self.ARK_modal = 3#or 0 if not
         self.k_XYZABC_list = []
         #self.G_MODAL_commands = G_MODAL_DICT()
         self.update_options_postprocessor()
@@ -124,7 +128,7 @@ class ReversalPostProcessor0(ABC):#metaclass=ABCMeta
    #     print('G28_U0_V0')
 
     def k_appliying(self, visible_np):
-        visible_np[:, 2] = visible_np[:, 2] * self.k_XYZABC['X']
+        visible_np[:, 4] = visible_np[:, 4] * self.k_XYZABC['X']
         #visible_np[:, 11] = visible_np[:, 1] * self.k_XYZCAB['X']
 
     def check_command(self, lineBlock, text, np_line, count, g_modal):
@@ -137,10 +141,11 @@ class ReversalPostProcessor0(ABC):#metaclass=ABCMeta
             len_match = nya.capturedLength()
             if len_match != 0:
                 self.special_commands[i][1](lineBlock, nya, np_line, count, g_modal, i)
-                return True
         if len_match == 0:
             np_line[14] = 9999
-            return  False
+            return False
+        else:
+            return True#Это чтобы проверять всё
         #print('CHECK COMMAND END')
 
     def update_rules(self):
@@ -153,11 +158,13 @@ class ReversalPostProcessor0(ABC):#metaclass=ABCMeta
         I, J, K, R = 'I', 'J', 'K', 'R'  # R_how_it_look = 'CR='
         axises = ['X', 'Y', 'Z', 'A', 'B', 'C', I, J, K, R]  # - , 'G', 'F'
         g_prefix = r'(G0?([0123])\s*)?'
-        f_postfix = r'(F(\d+.\d*))?\s*'
-        i_postfix = '(' + I + r'(\d+.\d*))?\s*'
+        f_postfix = r'(F\s*(\d+(.\d*)?\s*))?'#todo вопрос: а не должен ли "?" стоять в конце?
+        NumberN = r'(N(\d+)\s*)?'
+        Corrector = r'(G(4[012])\s*)?'
+        i_postfix = '(' + I + r'(\d+.\d*))?\s*'#todo сейчас только R реализован для несортированного варианта
         j_postfix = '(' + J + r'(\d+.\d*))?\s*'
         k_postfix = '(' + K + r'(\d+.\d*))?\s*'
-        r_postfix = '(' + R + r'(-?\d+.\d*))?\s*'
+        r_postfix = '(' + R + r'(-?\d+.\d*)\s*)?'
         # most strings look like 'main_rule'
 
         sorted_axis_rule = ''
@@ -165,7 +172,7 @@ class ReversalPostProcessor0(ABC):#metaclass=ABCMeta
             sorted_axis_rule += r'(\s*(?:{})(-?\d+\.\d*)\s*)?'.format(letter)
             # sorted_axis_rule += r'(([{}]\s*)(-)?(\d+.\d*)\s*)?'.format(letter)
 
-        self.sorted_axis_rule = '^' + g_prefix + sorted_axis_rule + f_postfix + '$'  # '(?:G0?\d)?\s*'   + f_postfix
+        self.sorted_axis_rule = '^' + NumberN + Corrector + g_prefix + sorted_axis_rule + f_postfix + '$'  # '(?:G0?\d)?\s*'   + f_postfix
 
         # sorted_axis_rule = r'^(?:X)(\d)$'  # UDALIT
 
@@ -176,10 +183,10 @@ class ReversalPostProcessor0(ABC):#metaclass=ABCMeta
         # unsorted_axis_rule = r'(G0?\d)?\s*{}+(F\d(\.)?)?(?:;)?$'.format(axises_coord)#r'^\d((?:X)(-?\d+\.\d*)\s*)$'
 
         unsorted_axis_rule = axises_coord * 6 + ijk_coord * 3
-        print('unsorted_axis_rule = ', unsorted_axis_rule)
-        unsorted_axis_rule = g_prefix + unsorted_axis_rule + r_postfix + f_postfix
-        self.unsorted_axis_rule = '^' + unsorted_axis_rule + '$'
 
+        unsorted_axis_rule = NumberN + Corrector + g_prefix + unsorted_axis_rule + r_postfix + f_postfix
+        self.unsorted_axis_rule = '^' + unsorted_axis_rule + '$'
+        print('unsorted_axis_rule = ', self.unsorted_axis_rule)
 
 
 

@@ -60,9 +60,9 @@ class NumpyBox():
 
         self.frame_address_in_visible_pool[min_L:] = self.frame_address_in_visible_pool[min_L:] - right_b + left_b #delta_min_max
 
-        self.redactor.highlight.previous_block_g = self.main_g_cod_pool[min_L-1][1] if min_L > 0 else 0
+        self.redactor.highlight.previous_block_g = self.main_g_cod_pool[min_L-1][3] if min_L > 0 else 0
         self.main_g_cod_pool = np.delete(self.main_g_cod_pool, np.s_[min_L:max_L + 1], axis=0)
-        self.main_g_cod_pool[min_L:, 13] = self.main_g_cod_pool[min_L:, 13] - delta_min_max
+        self.main_g_cod_pool[min_L:, 15] = self.main_g_cod_pool[min_L:, 15] - delta_min_max
         #todo уменьшить в self.main_g_cod_pool и self.visible_np значения номеров строк
 
         self.redactor.g_modal.del_all_modal_commands_in_range(min_L, max_L, self.redactor.reading_lines_number, delta_min_max-1)
@@ -70,7 +70,7 @@ class NumpyBox():
         print('we will delete from {} to {} in visible_np'.format(left_b, right_b))
         self.visible_np = np.delete(self.visible_np, np.s_[left_b: right_b], axis=0)
         #print('left_b = ', left_b)
-        self.visible_np[left_b:, 13] = self.visible_np[left_b:, 13] - delta_min_max
+        self.visible_np[left_b:, 15] = self.visible_np[left_b:, 15] - delta_min_max
         print('DELETE: self.visible_np = ', self.visible_np)
         #self.visible_np = np.delete(self.visible_np, np.s_[min_L:max_L + 1], axis=0)
 
@@ -88,7 +88,7 @@ class NumpyBox():
         self.frame_address_in_visible_pool[1, :] = 1
         self.visible_np = np.append(self.visible_np, self.visible_np, axis=0)
         self.visible_np[1, :] = np.nan
-        self.visible_np[1, 13] = 1
+        self.visible_np[1, 15] = 1
         print('main_g_cod_pool = {}, \n frame_address_in_visible_pool = {}, \n visible_np = {}'.
               format(self.main_g_cod_pool, self.frame_address_in_visible_pool, self.visible_np))
         self.redactor.tab_.center_widget.left.update_visible_np_left()
@@ -96,7 +96,7 @@ class NumpyBox():
     def start_point(self):
         self.start_pointXYZ = [self.redactor.highlight.reversal_post_processor.start_pointXYZ[i] * self.redactor.highlight.reversal_post_processor.k_XYZABC_list[i] for i in range(6)]
         print('ending11')
-        self.new_np_line = [0, 0, *self.start_pointXYZ, None, None, None, None, None, 0, None]#G1_G1_X_Y_Z_A_B_C_cX_cY_cZ_R_F_np_line_n_type
+        self.new_np_line = [None, None, 0, 0, *self.start_pointXYZ, None, None, None, None, None, 0, None]#N100_G40 _G1_G1_X_Y_Z_A_B_C_cX_cY_cZ_R_F_np_line_n_type
         self.visible_np[0] = self.new_np_line[:]
         self.main_g_cod_pool[0] = self.new_np_line[:]
 
@@ -112,8 +112,8 @@ class NumpyBox():
         self.current_visible_np = self.current_g_cod_pool.copy()
         self.special_options_applying(min_line)#todo переделать
         adding_number = self.redactor.reading_lines_number - 1
-        self.main_g_cod_pool[min_line:, 13] = self.main_g_cod_pool[min_line:, 13] + adding_number
-        self.visible_np[min_visual:, 13] = self.visible_np[min_visual:, 13] + adding_number
+        self.main_g_cod_pool[min_line:, 15] = self.main_g_cod_pool[min_line:, 15] + adding_number
+        self.visible_np[min_visual:, 15] = self.visible_np[min_visual:, 15] + adding_number
         self.main_g_cod_pool = np.insert(self.main_g_cod_pool, min_line, self.current_g_cod_pool, axis=0)
         print('min_line = ', min_line)
         print('first one self.visible_np  = ', self.visible_np)
@@ -149,7 +149,7 @@ class NumpyBox():
         #todo нужно верную строку копировать
         last_significant_line = self.visible_np[min_cod_line-1]
         h, w = v.shape
-        v[:, 13] = np.arange(min_line, min_line+h)#todo Наверняка это можно как то ускорить
+        v[:, 15] = np.arange(min_line, min_line+h)#todo Наверняка это можно как то ускорить
         #plane = 18
         #plane = self.redactor.g_modal.current_g_modal['plane']
 
@@ -164,13 +164,13 @@ class NumpyBox():
             if self.redactor.g_modal.current_g_modal['absolute_or_incremental'] == '91':
                 v[i] = self.relative_coord_option(last_significant_line, v[i])
 
-            if np.isnan(v[i, 14]):
-                for c in range(2, 8):
+            if np.isnan(v[i, 16]):
+                for c in range(4, 10):
                     if np.isnan(v[i, c]):
                         v[i, c] = last_significant_line[c]
                 if v[i, modal_ark] == 2 or v[i, modal_ark] == 3:#todo если хотим наследовать, то v[i, 1]
                     #print('ark start')
-                    if np.isnan(v[i, 11]):
+                    if np.isnan(v[i, 13]):
                         n_h, n_v, n_p = self.number_hor_vert_perp_from_plane(self.redactor.g_modal.current_g_modal['plane'])
                         #print('v[i, n_h] = {}, v[i, n_v] = {}'.format(v[i, n_h+6], v[i, n_v+6]))
                         if np.isnan(v[i, n_h+6]) or np.isnan(v[i, n_v+6]):
@@ -179,14 +179,14 @@ class NumpyBox():
                             i = i + 1
                             i_str = i_str + 1
                             continue
-                        v[i, 11] = centre_ijk_ARK(v[i], n_h, n_v, n_p)
+                        v[i, 13] = centre_ijk_ARK(v[i], n_h, n_v, n_p)
                     else:
-                        if not np.isnan(v[i, 8:11]).any():
+                        if not np.isnan(v[i, 10:13]).any():
                             print('Too mach data in line {}. Recommend to choose either R either IJK format'.format(i))
                         print('zdes')
                         print('self.redactor.g_modal.current_g_modal[plane] = ', self.redactor.g_modal.current_g_modal['plane'])
                         n_h, n_v, n_p = self.number_hor_vert_perp_from_plane(self.redactor.g_modal.current_g_modal['plane'])
-                        v[i, 8:11] = centre_R_ARK(v[i, modal_ark], self.redactor.g_modal.current_g_modal['plane'], last_significant_line, v[i], n_h, n_v, n_p)
+                        v[i, 10:13] = centre_R_ARK(v[i, modal_ark], self.redactor.g_modal.current_g_modal['plane'], last_significant_line, v[i], n_h, n_v, n_p)
                     #print('G23 заполнен {} вот этим {}'.format(i, v[i]))
                     #считаем длину вектора
                     len_ark = math.sqrt((v[i, n_h] - last_significant_line[n_h])**2 + (v[i, n_v] - last_significant_line[n_v])**2)
@@ -209,13 +209,13 @@ class NumpyBox():
                     self.current_visible_np = v
                     i = i + n
                 last_significant_line = v[i]
-            elif v[i, 14] == 0:  # direct move type
+            elif v[i, 16] == 0:  # direct move type
                 print('G28 or something')
-                for k in range(2, 8):
+                for k in range(4, 10):
                     if np.isnan(v[i, k]):
                         v[i, k] = last_significant_line[k]
                 last_significant_line = v[i]
-            elif v[i, 14] == 1:#g modal type
+            elif v[i, 16] == 1:#g modal type
                 print('g modal type detected')
                 #текущая супер строка = н
                 #i_str + min_visual_line
@@ -229,7 +229,7 @@ class NumpyBox():
             i_str = i_str + 1
 
     def relative_coord_option(self, last_significant_line, new_line):
-        for k in range(2, 8):
+        for k in range(4, 10):
             if not np.isnan(new_line[k]):
                 new_line[k] = new_line[k] + last_significant_line[k]
         return new_line
@@ -237,18 +237,19 @@ class NumpyBox():
 
     def number_hor_vert_perp_from_plane(self, plane):
         print('plane = {}, type = {}'.format(plane, type(plane)))
+        d = 2# added two clomns.
         if plane == '17':
-            n_h = 2
-            n_v = 3
-            n_p = 4
+            n_h = 2 + d
+            n_v = 3 + d
+            n_p = 4 + d
         elif plane == '18':
-            n_h = 4
-            n_v = 2
-            n_p = 3
+            n_h = 4 + d
+            n_v = 2 + d
+            n_p = 3 + d
         else:  # plane 19
-            n_h = 3
-            n_v = 4
-            n_p = 2
+            n_h = 3 + d
+            n_v = 4 + d
+            n_p = 2 + d
         print('n_h = {}, n_v = {}, n_p = {}'.format(n_h, n_v, n_p))
         return n_h, n_v, n_p
 
@@ -261,7 +262,7 @@ class NumpyBox():
         ch = n_h + 6
         cv = n_v + 6
         #cp = n_p + 6
-        R = np_line[11]
+        R = np_line[13]
 
         # 1 vectors
         OAx = ph - np_line[ch]
@@ -274,10 +275,10 @@ class NumpyBox():
         # AB = [ABx, ABy]
 
         # 2 g2 g3
-        if np_line[1] == 2:
+        if np_line[3] == 2:
             AAx = OAy
             AAy = - OAx
-        elif np_line[1] == 3:
+        elif np_line[3] == 3:
             AAx = - OAy
             AAy = OAx
         else:
@@ -317,7 +318,7 @@ class NumpyBox():
         pv = OAy
 
         #print('Угол = {}, n = {}'.format(alpha, n))
-        if np_line[1] == 2:
+        if np_line[3] == 2:
             for k in range(n):
                 new_hor_0 = ph * cos_alpha_segmenta + pv * sin_alpha_segmenta
                 new_vert_0 = - ph * sin_alpha_segmenta + pv * cos_alpha_segmenta
@@ -326,7 +327,7 @@ class NumpyBox():
                 ph = new_hor_0
                 pv = new_vert_0
                 ark_np_array[k, n_p] = pp + (k - 1) * perp_step
-        elif np_line[1] == 3:
+        elif np_line[3] == 3:
             for k in range(n):
                 new_hor_0 = ph * cos_alpha_segmenta - pv * sin_alpha_segmenta
                 new_vert_0 = ph * sin_alpha_segmenta + pv * cos_alpha_segmenta

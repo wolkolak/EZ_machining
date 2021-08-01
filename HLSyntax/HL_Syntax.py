@@ -17,7 +17,9 @@ class GMHighlighter(QSyntaxHighlighter):
 
     def __init__(self, document, base):
         QSyntaxHighlighter.__init__(self, document)
-        self.list_number_captured_1 = [i * 2 for i in range(1, 13)]#todo добавь ijk
+        self.list_number_captured_1 = [i * 2 for i in range(1, 15)]#todo добавь ijk
+        self.list_number_captured_1.insert(3, 6)
+        print('self.list_number_captured_1 = ', self.list_number_captured_1)
         self.previous_block_g = 0
         self.base = base
         self.count = 0
@@ -68,8 +70,8 @@ class GMHighlighter(QSyntaxHighlighter):
                     print('ERROR LINE')
 
     def recount_empty_line(self):
-        self.current_g_cod_pool[self.count][0] = self.previous_block_g
-        self.current_g_cod_pool[self.count][14] = 9999#type
+        self.current_g_cod_pool[self.count][2] = self.previous_block_g
+        self.current_g_cod_pool[self.count][16] = 9999#type
         self.count_in_step += 1
         self.count += 1
         if self.count_in_step == self.standart_step:
@@ -77,7 +79,7 @@ class GMHighlighter(QSyntaxHighlighter):
         return
 
     def recount_special_rules(self, text):
-        self.current_g_cod_pool[self.count][1] = self.previous_block_g
+        self.current_g_cod_pool[self.count][3] = self.previous_block_g
         result = self.special_rare_case(text, self.count)
         self.count_in_step += 1
         self.count += 1
@@ -98,15 +100,17 @@ class GMHighlighter(QSyntaxHighlighter):
 
 
     def recount(self, nya, STYLES_list_G0, STYLES_list_G1):
-        self.current_g_cod_pool[self.count, np.r_[1:13]] = [nya.captured(i) or None for i in self.list_number_captured_1]
+
+        self.current_g_cod_pool[self.count, np.r_[0:15]] = [nya.captured(i) or None for i in self.list_number_captured_1]
+        print('uuuu nya.captured(6) = ',nya.captured(6))
         #Заполнения здесь не происходит, так как оно только между numpy массивами
         #print('current_g_cod_pool == ', self.base.current_g_cod_pool[self.count])
         #G0-G3
-        if np.isnan(self.current_g_cod_pool[self.count][1]):
-            self.current_g_cod_pool[self.count][1] = self.previous_block_g
+        if np.isnan(self.current_g_cod_pool[self.count][3]):
+            self.current_g_cod_pool[self.count][3] = self.previous_block_g
         else:
-            self.previous_block_g = self.current_g_cod_pool[self.count][1]
-            self.current_g_cod_pool[self.count, 0] = self.previous_block_g
+            self.previous_block_g = self.current_g_cod_pool[self.count][3]
+            self.current_g_cod_pool[self.count, 2] = self.previous_block_g
         stile = STYLES_list_G0 if self.previous_block_g == 0 else STYLES_list_G1
         #colors
         # простая подсветка одним цветом
@@ -115,7 +119,15 @@ class GMHighlighter(QSyntaxHighlighter):
         i = 0
         ax = len(nya.captured(i * 2 + 1))
         start = 0
-        while i < 13:
+        #if ax != 0:
+        #    self.setFormat(start, ax, stile[i])
+        #start = start + ax
+        #i = i + 1
+        print('i equal ', i)
+        #for k in range(40):
+        #    print('recount: ||||nya.captured({}) = {}'.format(k, nya.captured(k)))
+
+        while i < 14:#todo надо подумать. По идее надо добавлять +1 строку в style, но работало, вроде...
             if ax != 0:
                 self.setFormat(start, ax, stile[i])
                 #print('i = ', i)
@@ -135,34 +147,70 @@ class GMHighlighter(QSyntaxHighlighter):
         return
 
     def unsorted_recount(self, nya, STYLES_list_G0, STYLES_list_G1):
+        print('unsorted_recount start')
 
         #for i in range(35):
         #    print('nya.captured({}) = {}'.format(i, nya.captured(i)))
         # G0-G3
-        self.current_g_cod_pool[self.count][1] = nya.captured(2) or None
-        if np.isnan(self.current_g_cod_pool[self.count][1]):
-            self.current_g_cod_pool[self.count][1] = self.previous_block_g
+        self.current_g_cod_pool[self.count][0] = nya.captured(2) or None
+        self.current_g_cod_pool[self.count][1] = nya.captured(4) or None
+        self.current_g_cod_pool[self.count][2] = nya.captured(6) or None
+        if np.isnan(self.current_g_cod_pool[self.count][2]):
+            self.current_g_cod_pool[self.count][3] = self.previous_block_g
         else:
-            self.previous_block_g = self.current_g_cod_pool[self.count][1]
-            self.current_g_cod_pool[self.count][0] = self.previous_block_g
+            self.previous_block_g = self.current_g_cod_pool[self.count][2]
+            self.current_g_cod_pool[self.count][3] = self.previous_block_g
 
         stile = STYLES_list_G0 if self.previous_block_g == 0 else STYLES_list_G1
         start = 0
-        ax = len(nya.captured(1))
+        n = 1#N
+        ax = len(nya.captured(n))
+
+        #print('n === ', n)
+        #print('nya.captured(n) = ', nya.captured(n))
+        #print(' ax  == ', ax )
+        #print('start === ', start)
+
+
         if ax != 0:
-            self.setFormat(start, ax, stile[0])
+            self.setFormat(start, ax, stile[0])#N
             start = start + ax
-        ax = len(nya.captured(3))
-        #Альтернативно
-        n = 4
-        while nya.captured(n) != '' and n < 22 :#вероятно, избыточное условие
+        n = n + 2
+        ax = len(nya.captured(n))
+
+
+
+        if ax != 0:
+            self.setFormat(start, ax, stile[1])#G40
+            start = start + ax
+        n = n + 2
+        ax = len(nya.captured(n))
+        if ax != 0:
+            self.setFormat(start, ax, stile[2])#G1
+            start = start + ax
+        n = n + 2
+        ax = len(nya.captured(n))
+
+        #if ax != 0:
+        #    self.setFormat(start, ax, stile[n-1])
+        #    start = start + ax
+        #n = n + 2
+        #ax = len(nya.captured(n))
+        n = n + 1
+        print('n === ', n)
+        for k in range(40):
+            print('||||nya.captured({}) = {}'.format(k, nya.captured(k)))
+
+        #n = 4
+        while nya.captured(n) != '' and n < 26 :#вероятно, избыточное условие
             self.nesting(n, nya, start, ax, stile)
             start = start + ax
             n = n + 3
             ax = len(nya.captured(n-1))
-        n = 22
-        ax = len(nya.captured(21))
-        while nya.captured(n) != '' and n < 29 :#вероятно, избыточное условие
+        #n = 26
+        #ax = len(nya.captured(n))#todo нужно будет разделить координаты точки и IJK или уже?
+
+        while nya.captured(n) != '' and n < 33 :#ijk
             self.nestingIJK(n, nya, start, ax, stile)
             start = start + ax
             n = n + 3
@@ -172,19 +220,22 @@ class GMHighlighter(QSyntaxHighlighter):
 
         #for i in range (33):
         #    print('nya.captured({}) = {}'.format(i, nya.captured(i)))
-
-        ax = len(nya.captured(30))
+        n = 35
+        ax = len(nya.captured(n - 1))
+        print('n 2=== ', n)
+        #ax = len(nya.captured(34))
         if ax != 0:
-            self.setFormat(start, ax, stile[10])
+            self.setFormat(start, ax, stile[12])
             start = start + ax
-        self.current_g_cod_pool[self.count][11] = nya.captured(31) or None#R - nya.captured(22)
+        self.current_g_cod_pool[self.count][13] = nya.captured(35) or None#R
         #ax = len(nya.captured(29))
 
-        ax = len(nya.captured(32))
+        n = 37
+        ax = len(nya.captured(n - 1))
         if ax != 0:
-            self.setFormat(start, ax, stile[11])
+            self.setFormat(start, ax, stile[13])
             #start = start + ax
-        self.current_g_cod_pool[self.count][11] = nya.captured(31) or None#F
+        self.current_g_cod_pool[self.count][14] = nya.captured(37) or None#F
         print('unsorted recount current_g_cod_pool again == ', self.current_g_cod_pool[self.count])
         self.count_in_step += 1
         self.count += 1
@@ -195,34 +246,37 @@ class GMHighlighter(QSyntaxHighlighter):
 
     def nestingIJK(self, n, nya, start, ax, stile):
         print('nestingIJK')
+        add = 2
         symbol = nya.captured(n)
         if symbol == 'I':
-            i = 7
+            i = 7 + add
         elif symbol == 'J':
-            i = 8
+            i = 8 + add
         elif symbol == 'K':
-            i = 9
+            i = 9 + add
         else:
-            print('Ты не должен сюда попасть, но вдруг')
+            print('Ты не должен сюда попасть, но вдруг 1')
             return
         self.setFormat(start, ax, stile[i])
         self.current_g_cod_pool[self.count][i+1] = nya.captured(n+1)
 
 
     def nesting(self, n, nya, start, ax, stile):
+        print('nesting s')
+        add = 2
         symbol = nya.captured(n)
         if symbol == 'X':
-            i = 1
+            i = 1 + add
         elif symbol == 'Y':
-            i = 2
+            i = 2 + add
         elif symbol == 'Z':
-            i = 3
+            i = 3 + add
         elif symbol == 'C':
-            i = 6
+            i = 6 + add
         elif symbol == 'A':
-            i = 4
+            i = 4 + add
         elif symbol == 'B':
-            i = 5
+            i = 5 + add
 
         else:
             print('Ты не должен сюда попасть, но вдруг')

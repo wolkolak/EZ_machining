@@ -337,12 +337,12 @@ class Window3D(QGLWidget):
         glColor3f(0.3, 0.3, 0.3)
         glBegin(GL_POINTS)
         for i in np_list:
-            if np.isnan(i[14]):
-                glVertex3f(i[2], i[3], i[4])
-                if i[0] == 2 or i[0] == 3:
-                    glVertex3f(i[8], i[9], i[10])
+            if np.isnan(i[16]):
+                glVertex3f(i[4], i[5], i[6])
+                if i[2] == 2 or i[2] == 3:
+                    glVertex3f(i[10], i[11], i[12])
             else:
-                special_pont_options(i[14], i[2], i[3], i[4])
+                special_pont_options(i[16], i[4], i[5], i[6])
         glEnd()
         glPopMatrix()
 
@@ -363,11 +363,11 @@ class Window3D(QGLWidget):
             # glRotate(i[6] or new_np_line[6], 0., 1., 0.)
             # glRotate(i[4] or new_np_line[4], 0., 0., 1.)
             #print('zero')
-            if np.isnan(i[14]):
+            if np.isnan(i[16]):
                 #print('np.isnan(i[14])')
-                glVertex3f(i[2], i[3], i[4])
+                glVertex3f(i[4], i[5], i[6])
             else:
-                special_pont_options(i[14], i[2], i[3], i[4])
+                special_pont_options(i[16], i[4], i[5], i[6])
                 #x, y, z = i[1], i[2], i[3]
                 #if np.isnan(x):
                 #    x = previous_list[1]
