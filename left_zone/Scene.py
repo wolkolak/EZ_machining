@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QTabWidget, QFrame, QPlainTextEdit,  QWidget, QGridLayout, QPushButton
 from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtWidgets import QOpenGLWidget
 from PyQt5.QtOpenGL import QGLWidget
 from OpenGL.GL import *
 from PyQt5 import QtGui
@@ -11,7 +12,7 @@ from HLSyntax.PostProcessors_revers.Fanuc_NT import Fanuc_NT
 import copy
 
 
-class Window3D(QGLWidget):
+class Window3D(QGLWidget):#todo заменить на QOpenGLWidget
     """Визуализацию ты можешь разместить где то тут.
     Класс QGLWidget это 3д класс для работы с OpenGL графонием.
     Необходим ли он нам и насколько он похож на то, про что ты читал, я пока не знаю.
@@ -34,6 +35,8 @@ class Window3D(QGLWidget):
         self.animation_flag = False
         self.frame_frequency = 100
         self.my_timer.start(self.frame_frequency)
+        #My_image = QtGui.QImage('dddd.png')
+        #self.bindTexture(My_image, target=, format = GL_RGBA)
         #self.my_timer.stop()
     #def choosing_backplotter(self):
     #    self.processor = self.frame.left_tab.parent.central_widget.note.currentWidget()
@@ -178,7 +181,7 @@ class Window3D(QGLWidget):
 
         aspect = w / h
         #glOrtho() определяет координатную систему .
-        glOrtho(-2.0 * aspect, 2.0 * aspect, -2.0, 2.0,  -2.0 * aspect, 2.0 * aspect)
+        glOrtho(-2.0 * aspect, 2.0 * aspect, -2.0, 2.0,  -2000.0 * aspect, 2000.0 * aspect)
         #self.k_rapprochement = self.k_rapprochement + self.k_rapprochement * aspect
         #glOrtho(-self.h/2, self.h, -self.w/2, self.w/2, -1.0, 1.0)
         glMatrixMode(GL_MODELVIEW)
@@ -326,13 +329,18 @@ class Window3D(QGLWidget):
         glEnable(GL_DEPTH_TEST)
         glShadeModel(GL_SMOOTH)
         glMatrixMode(GL_PROJECTION)
+        #glfwWindowHint(GLFW_SAMPLES, 4)
+        #glWindow
+        #glEnable(GL_MULTISAMPLE)
+
         glLoadIdentity()
 
         #self.view_zone(700, 600)
         #
 
     def part_turn_points(self, np_list):
-        glPointSize(5)
+        glPointSize(7)
+        glEnable(GL_VERTEX_PROGRAM_POINT_SIZE)
         glPushMatrix()
         glColor3f(0.3, 0.3, 0.3)
         glBegin(GL_POINTS)
@@ -342,49 +350,53 @@ class Window3D(QGLWidget):
                 if i[2] == 2 or i[2] == 3:
                     glVertex3f(i[10], i[11], i[12])
             else:
-                special_pont_options(i[16], i[4], i[5], i[6])
+                pass
+                #special_pont_options(i[16], i[4], i[5], i[6])
         glEnd()
         glPopMatrix()
 
     def part_turn_lines(self, np_list):
         #glPointSize(5)
+
         glPushMatrix()
         glLineWidth(3)
-        glColor3f(0.3, 0.3, 0.3)
+        glColor3f(*OpenGL_color_G0_line)
         glBegin(GL_LINE_STRIP)
         #new_np_line = [0, *self.processor.start_pointXYZ, 0, 0, 0, 0]
         #previous_list = copy.deepcopy(new_np_line)
         # print('self.processor.start_pointXYZ[:] = ', *self.processor.start_pointXYZ)
         # print('new_np_line = ', new_np_line)
         #glVertex3f(new_np_line[1], new_np_line[2], new_np_line[3])
+        g0_g1 = 0
         for i in np_list:
             # print('x = {}, y = {}, z = {}'.format(i[1], i[2], i[3]))
             # glRotate(i[5] or new_np_line[5], 1., 0., 0.)
             # glRotate(i[6] or new_np_line[6], 0., 1., 0.)
             # glRotate(i[4] or new_np_line[4], 0., 0., 1.)
             #print('zero')
+            if g0_g1 != i[3]:
+                if i[3] == 0:
+                    glColor3f(*OpenGL_color_G0_line)
+                    #print('check2222')
+                else:
+                    glColor3f(*OpenGL_color_G1_line)
+                    #print('check3333')
+                g0_g1 = i[3]
             if np.isnan(i[16]):
                 #print('np.isnan(i[14])')
                 glVertex3f(i[4], i[5], i[6])
             else:
                 special_pont_options(i[16], i[4], i[5], i[6])
-                #x, y, z = i[1], i[2], i[3]
-                #if np.isnan(x):
-                #    x = previous_list[1]
-                #if np.isnan(y):
-                #    y = previous_list[2]
-                #if np.isnan(z):
-                #    z = previous_list[3]
-                #glVertex3f(x, y, z)
-                #previous_list[1:4] = x, y, z
-            #else:
-            #    pass
-            #    #print('special paint')
+
         glEnd()
         glPopMatrix()
 
 def special_pont_options(i, i1, i2, i3):
     if i == 0:
+        glVertex3f(i1, i2, i3)
+    elif i == 5:
+        #glColor3f(*OpenGL_color_extra1_point)
+        #glPointSize(4)без шейдера работать не будет
         glVertex3f(i1, i2, i3)
         #r = 20
         # move camera a distance r away from the center

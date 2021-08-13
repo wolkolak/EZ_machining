@@ -21,7 +21,7 @@ class Progress(QProgressBar):
         if current_value == self.maximum():
             #print('finish_current_batch->inserting_in_main_g_cod')
             self.base.np_box.current_g_cod_pool = self.base.highlight.current_g_cod_pool
-            self.base.np_box.inserting_current_in_main(self.base.editor.min_line_np)
+            self.base.np_box.inserting_current_in_main_shell(self.base.editor.min_line_np)
             self.base.tab_.center_widget.left.update_visible_np_left()
             print('Load 100%')
             self.base.highlight.to_the_start()
@@ -31,6 +31,7 @@ class Progress(QProgressBar):
             #    'Делаем шаг поменьше: number_of_lines={}, self.base.highlight.count={}, self.base.highlight.standart_step={}'
             #    .format(self.base.reading_lines_number, self.base.highlight.count, self.base.highlight.standart_step))
             self.base.highlight.standart_step = self.base.reading_lines_number - self.base.highlight.count  # - 1?
+        #print('hhhhh: ', self.base.np_box.main)
 
 
     #def inserting_in_main_g_cod(self):

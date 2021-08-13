@@ -12,7 +12,8 @@ def centre_ijk_ARK(v_i, n_h, n_v, n_p):
         v_i[c_const_i] = v_i[c_const_i - 6]
     else:
         if v_i[c_const_i] != v_i[c_const_from_main_point_i]:
-            print('ARK problem with G{}X{}Y{}Z{}I{}J{}K{}'.format(*v_i[3:7], *v_i[10:13]))
+            pass
+            #print('ARK problem with G{}X{}Y{}Z{}I{}J{}K{}'.format(*v_i[3:7], *v_i[10:13]))
     R = math.sqrt((h2 - c_h)**2 + (v2 - c_v)**2)
     #v_i[11] = R
     return R
@@ -51,13 +52,13 @@ def centre_R_ARK(turn_direction, plane, v_iA, v_iC, n_h, n_v, n_p):
     else:
         var1 = H2
         var2 = V2
-    print('plane in ark solving', type(plane))
+    #print('plane in ark solving', type(plane))
     if plane == '18':
-        print('plan 18')
+        #print('plan 18')
         return var2, v_iA[n_p], var1
     elif plane == '17':
-        print('plan 17')
+        #print('plan 17')
         return var1, var2, v_iA[n_p]
     else:#19
-        print('plan 19')
+        #print('plan 19')
         return v_iA[n_p], var1, var2

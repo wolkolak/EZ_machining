@@ -279,7 +279,7 @@ class MyEdit(QPlainTextEdit):
     def universal_replace_new(self):
         self.base.highlight.standart_step = 1#todo ЗАЧЕЕМ?!
         self.creating_np_pool()
-        self.base.np_box.delete_lines_from_np_box()#todo тут что то не так
+        self.base.np_box.delete_lines_from_np_box()
         #self.delete_lines_from_main_np_g_pool()
 
     def creating_np_pool(self):
@@ -363,7 +363,7 @@ class MyEdit(QPlainTextEdit):
 
 
     def rehighlightNextBlocks(self):
-        return
+        #return
         print('rehighlight start')
         i = self.second_place + 1
         #g_old = self.LastGCod

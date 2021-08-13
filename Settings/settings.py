@@ -2,7 +2,7 @@ from PyQt5.QtGui import QFont
 
 #interface
 default_interface_settings = {'main_width': 1450, 'main_height': 900, 'txt_width': 600}
-interface_settings = {'main_width': 1357, 'main_height':849 }
+interface_settings = {'main_width': 1357, 'main_height': 849}
 axises = 17
 font1 = QFont("Helvetica [Cronyx]", 12)
 font2 = QFont("Helvetica [Cronyx]", 12)#QFont.Bold
@@ -12,6 +12,13 @@ color1 = 'rgb(145,191,204)'
 color2 = 'rgb(72,128,143)'
 color3 = 'rgb(47, 69, 82)'
 color4 = 'rgb(195,221,234)' #бледный
+
+OpenGL_color_G1_line = 0.4, 0.8, 0
+OpenGL_color_G0_line = 0.9, 1, 0.
+OpenGL_color_main_point = 'rgb(145,191,204)'
+OpenGL_color_extra1_point = 145, 191, 204
+OpenGL_color_extra2_point = 'rgb(145,191,204)'
+
 splitter_parameters = {'lefty': 481, 'righty': 777, 'flag': 1 }
 #self.splitter_flag
 min_ark_step = 0.5

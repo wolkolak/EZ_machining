@@ -1,6 +1,7 @@
 import numpy as np
 from Settings.settings import axises, min_ark_step
 from left_zone.ARK_solving import *
+import copy
 
 class NumpyBox():
     """
@@ -15,19 +16,23 @@ class NumpyBox():
         self.current_g_cod_pool = np.zeros((reading_lines_number, axises), float)
         self.visible_np = np.zeros((1, axises), float)
         self.main_g_cod_pool = np.zeros((1, axises), float)
-        self.current_visible_np = np.zeros((reading_lines_number, axises), float)
+        #self.current_visible_np = np.zeros((reading_lines_number, axises), float)
 
-        self.current_frame_address_in_visible_pool = np.zeros((reading_lines_number, 2), int)
-        h, w = self.current_frame_address_in_visible_pool.shape
-        self.current_frame_address_in_visible_pool[:, 0] = np.arange(1, 1+h)
-        self.current_frame_address_in_visible_pool[:, 1] = np.arange(1, 1+h)
+        self.frame_address_in_visible_pool = np.zeros((reading_lines_number+1, 2), int)
+        h, w = self.frame_address_in_visible_pool.shape
+        self.frame_address_in_visible_pool[:, 0] = np.arange(1, 1+h)
+        self.frame_address_in_visible_pool[:, 1] = np.arange(1, 1+h)
 
-        self.current_visible_np[:] = np.nan
+        #self.current_visible_np[:] = np.nan
         self.current_g_cod_pool[:] = np.nan
         self.visible_np[:] = np.nan
         self.main_g_cod_pool[:] = np.nan
-        self.frame_address_in_visible_pool = np.zeros((1, 2), int)
+        #self.frame_address_in_visible_pool = np.zeros((1, 2), int)
         #self.frame_address_in_visible_pool = np.nan
+
+
+
+
 
 
 
@@ -35,62 +40,30 @@ class NumpyBox():
     def create_new_currents_in_np_box(self, axis):
         print('self.redactor.reading_lines_number = ', self.redactor.reading_lines_number)
         self.current_g_cod_pool = np.zeros((self.redactor.reading_lines_number, axis), float)
-        self.current_visible_np = np.zeros((self.redactor.reading_lines_number, axis), float)
-        self.current_frame_address_in_visible_pool = np.zeros((self.redactor.reading_lines_number, 2), int)
         self.current_g_cod_pool[:] = np.nan
-        self.current_visible_np[:] = np.nan
-        h, w = self.current_frame_address_in_visible_pool.shape
-        print('create_new_currents_np(', h)
-        #n = self.redactor.editor.min_line_np-1
-        n = self.frame_address_in_visible_pool[self.redactor.editor.min_line_np-1, 1] + 1
-
-        self.current_frame_address_in_visible_pool[:, 0] = np.arange(n, n+h)
-        self.current_frame_address_in_visible_pool[:, 1] = np.arange(n, n+h)
 
     def delete_lines_from_np_box(self):
+        
         print('DELETE: self.frame_address_in_visible_pool = ', self.frame_address_in_visible_pool)
         min_L = self.redactor.editor.min_line_np
         max_L = self.redactor.editor.second_place
         delta_min_max = max_L - min_L# + 1
-        left_b = self.frame_address_in_visible_pool[min_L, 0]
-        right_b = self.frame_address_in_visible_pool[max_L, 1]+1
-        #del_number =self.frame_address_in_visible_pool[max_L, 1] - self.frame_address_in_visible_pool[min_L, 0]
-        self.frame_address_in_visible_pool = np.delete(self.frame_address_in_visible_pool, np.s_[min_L:max_L + 1],
-                                                       axis=0)
-
-        self.frame_address_in_visible_pool[min_L:] = self.frame_address_in_visible_pool[min_L:] - right_b + left_b #delta_min_max
-
         self.redactor.highlight.previous_block_g = self.main_g_cod_pool[min_L-1][3] if min_L > 0 else 0
         self.main_g_cod_pool = np.delete(self.main_g_cod_pool, np.s_[min_L:max_L + 1], axis=0)
         self.main_g_cod_pool[min_L:, 15] = self.main_g_cod_pool[min_L:, 15] - delta_min_max
-        #todo уменьшить в self.main_g_cod_pool и self.visible_np значения номеров строк
-
         self.redactor.g_modal.del_all_modal_commands_in_range(min_L, max_L, self.redactor.reading_lines_number, delta_min_max-1)
-        print('frame main in delete= ', self.frame_address_in_visible_pool)
-        print('we will delete from {} to {} in visible_np'.format(left_b, right_b))
-        self.visible_np = np.delete(self.visible_np, np.s_[left_b: right_b], axis=0)
-        #print('left_b = ', left_b)
-        self.visible_np[left_b:, 15] = self.visible_np[left_b:, 15] - delta_min_max
-        print('DELETE: self.visible_np = ', self.visible_np)
-        #self.visible_np = np.delete(self.visible_np, np.s_[min_L:max_L + 1], axis=0)
-
-
-
-        #self.frame_address_in_visible_pool = np.delete(self.frame_address_in_visible_pool, np.s_[min_L:max_L + 1], axis=0)
-
-        #todo удаляем из visual np self.current_frame_address_in_visible_pool
 
     def add_line_in_new_tab(self):
         print('add_line_in_new_tab')
         #self.main_g_cod_pool = np.append(self.main_g_cod_pool, self.main_g_cod_pool, axis=0)
         #self.main_g_cod_pool[1, :] = np.nan
-        self.frame_address_in_visible_pool = np.append(self.frame_address_in_visible_pool, self.frame_address_in_visible_pool, axis=0)
-        self.frame_address_in_visible_pool[1, :] = 1
+        #self.frame_address_in_visible_pool = np.append(self.frame_address_in_visible_pool, self.frame_address_in_visible_pool, axis=0)
+        #self.frame_address_in_visible_pool[1, :] = 1
         self.visible_np = np.append(self.visible_np, self.visible_np, axis=0)
         self.visible_np[1, :] = np.nan
         self.visible_np[1, 15] = 1
-        print('main_g_cod_pool = {}, \n frame_address_in_visible_pool = {}, \n visible_np = {}'.
-              format(self.main_g_cod_pool, self.frame_address_in_visible_pool, self.visible_np))
+        #print('main_g_cod_pool = {}, \n frame_address_in_visible_pool = {}, \n visible_np = {}'.
+        #      format(self.main_g_cod_pool, self.frame_address_in_visible_pool, self.visible_np))
         self.redactor.tab_.center_widget.left.update_visible_np_left()
 
     def start_point(self):
@@ -100,70 +73,51 @@ class NumpyBox():
         self.visible_np[0] = self.new_np_line[:]
         self.main_g_cod_pool[0] = self.new_np_line[:]
 
-    def new_current_g_cod_pool(self, reading_lines_number):
-        self.current_g_cod_pool = np.zeros((reading_lines_number, axises), float)
-        self.current_g_cod_pool[:] = np.nan
+    #def new_current_g_cod_pool(self, reading_lines_number):
+    #    self.current_g_cod_pool = np.zeros((reading_lines_number, axises), float)
+    #    self.current_g_cod_pool[:] = np.nan
+
+    def inserting_current_in_main_shell(self, min_line):
+        self.inserting_current_in_main(min_line)
+        #N_line_number = min_line + len(self.current_g_cod_pool) - 1
+        #self.resolving(N_line_number)
 
     def inserting_current_in_main(self, min_line):
-
         #n = 0
-        min_visual = self.frame_address_in_visible_pool[min_line - 1, 1] + 1
-        print('min_visual = ', min_visual)
-        self.current_visible_np = self.current_g_cod_pool.copy()
-        self.special_options_applying(min_line)#todo переделать
-        adding_number = self.redactor.reading_lines_number - 1
-        self.main_g_cod_pool[min_line:, 15] = self.main_g_cod_pool[min_line:, 15] + adding_number
-        self.visible_np[min_visual:, 15] = self.visible_np[min_visual:, 15] + adding_number
+        min_visual = self.frame_address_in_visible_pool[0, 1] + 1
+        #print('min_visual = ', min_visual)
+        #self.current_visible_np = self.current_g_cod_pool.copy()
         self.main_g_cod_pool = np.insert(self.main_g_cod_pool, min_line, self.current_g_cod_pool, axis=0)
-        print('min_line = ', min_line)
-        print('first one self.visible_np  = ', self.visible_np)
-        print('first one self.frame_address_in_visible_pool[min_lin] = ', self.frame_address_in_visible_pool)
-        self.visible_np = np.insert(self.visible_np, min_visual,
-                                    self.current_visible_np, axis=0)
-        # todo увеличить в self.main_g_cod_pool и self.visible_np значения номеров строк
+        m = len(self.main_g_cod_pool)
+        self.main_g_cod_pool[0:, 15] = np.arange(0, m)#self.main_g_cod_pool[min_line:, 15]# + adding_number
+        self.frame_address_in_visible_pool = np.zeros((m, 2), int)
+        self.frame_address_in_visible_pool[0:, 0] = np.arange(0, m)
+        self.frame_address_in_visible_pool[0:, 1] = np.arange(0, m)
+        self.visible_np = self.main_g_cod_pool.copy()
+        self.special_options_applying(min_line)#todo переделать
+        print('self.frame_address_in_visible_pool = = ', self.frame_address_in_visible_pool)
 
-        self.frame_address_in_visible_pool[min_line:] = self.frame_address_in_visible_pool[
-            min_line:] + len(self.current_visible_np)
-        self.frame_address_in_visible_pool = np.insert(self.frame_address_in_visible_pool, min_line,
-                                    self.current_frame_address_in_visible_pool, axis=0)
-        #todo g modal insert DATA in modal dict will happen from recount. we dont need it here
-        print('G_modal = ', self.redactor.g_modal)
-
-
-
-
-
-    def special_options_applying(self, min_line):
+    def special_options_applying(self, min_line=1):
         self.redactor.g_modal.current_g_modal = self.redactor.g_modal.create_current_from_g_modal(self.redactor.editor.min_line_np)
+
+
+        #todo here
         print('Вот здесь нужнен firstblock')
         #заполнить первую строку
         min_cod_line = self.redactor.editor.min_line_np
-        self.redactor.highlight.reversal_post_processor.k_appliying(self.current_visible_np)#visible_np
-        #print('self.highlight.reversal_post_processor.k_XYZABC_list[0] = ', self.highlight.reversal_post_processor.k_XYZABC_list[0])
-
-        #print('start_pointXYZ = ', start_pointXYZ)
-        #v = self.visible_np
-        v = self.current_visible_np
-        print('mmmm')
-        print('self.editor.min_line_np-1 = ', self.main_g_cod_pool[min_cod_line-1])
+        self.redactor.highlight.reversal_post_processor.k_appliying(self.visible_np)#visible_np
+        v = self.visible_np
         #todo нужно верную строку копировать
         last_significant_line = self.visible_np[min_cod_line-1]
-        h, w = v.shape
-        v[:, 15] = np.arange(min_line, min_line+h)#todo Наверняка это можно как то ускорить
-        #plane = 18
-        #plane = self.redactor.g_modal.current_g_modal['plane']
-
-        print('plane = ', self.redactor.g_modal.current_g_modal['plane'])
-        print('type of plane ', type(self.redactor.g_modal.current_g_modal['plane']))
+        #h, w = v.shape
+        #v[:, 15] = np.arange(0, min_line+h)#todo Наверняка это можно как то ускорить
         i = 0
         i_str = 0
         len_v = len(v)
         modal_ark = self.redactor.highlight.reversal_post_processor.ARK_modal
         while i < len_v:
-
             if self.redactor.g_modal.current_g_modal['absolute_or_incremental'] == '91':
                 v[i] = self.relative_coord_option(last_significant_line, v[i])
-
             if np.isnan(v[i, 16]):
                 for c in range(4, 10):
                     if np.isnan(v[i, c]):
@@ -182,9 +136,7 @@ class NumpyBox():
                         v[i, 13] = centre_ijk_ARK(v[i], n_h, n_v, n_p)
                     else:
                         if not np.isnan(v[i, 10:13]).any():
-                            print('Too mach data in line {}. Recommend to choose either R either IJK format'.format(i))
-                        print('zdes')
-                        print('self.redactor.g_modal.current_g_modal[plane] = ', self.redactor.g_modal.current_g_modal['plane'])
+                            print('self.redactor.g_modal.current_g_modal[plane] = ', self.redactor.g_modal.current_g_modal['plane'])
                         n_h, n_v, n_p = self.number_hor_vert_perp_from_plane(self.redactor.g_modal.current_g_modal['plane'])
                         v[i, 10:13] = centre_R_ARK(v[i, modal_ark], self.redactor.g_modal.current_g_modal['plane'], last_significant_line, v[i], n_h, n_v, n_p)
                     #print('G23 заполнен {} вот этим {}'.format(i, v[i]))
@@ -199,14 +151,12 @@ class NumpyBox():
                     v, n = self.add_ark_points(v, last_significant_line, i, n_h, n_v, n_p, min_ark_step)
                     #print('i почемуто равно ', i)
                     #print('n точек = ', n)
-                    print('self.current_frame_address_in_visible_pool2 = ', self.current_frame_address_in_visible_pool)
-                    self.current_frame_address_in_visible_pool[i_str:] = self.current_frame_address_in_visible_pool[i_str:] + n
 
-                    print('self.current_frame_address_in_visible_pool2 = ', self.current_frame_address_in_visible_pool)
-                    self.current_frame_address_in_visible_pool[i_str, 0] = self.current_frame_address_in_visible_pool[i_str, 0] - n
+                    self.frame_address_in_visible_pool[i_str:] = self.frame_address_in_visible_pool[i_str:] + n
+                    self.frame_address_in_visible_pool[i_str, 0] = self.frame_address_in_visible_pool[i_str, 0] - n
                     #print('current_frame_address_in_visible_pool[i, 0] = ', self.current_frame_address_in_visible_pool[i, 0])
                     len_v = len(v)#todo + n
-                    self.current_visible_np = v
+                    self.visible_np = v #current_
                     i = i + n
                 last_significant_line = v[i]
             elif v[i, 16] == 0:  # direct move type
@@ -217,26 +167,24 @@ class NumpyBox():
                 last_significant_line = v[i]
             elif v[i, 16] == 1:#g modal type
                 print('g modal type detected')
-                #текущая супер строка = н
-                #i_str + min_visual_line
-                #узнать для строки н набор модальных команд
-                #изменить self.redactor.g_modal.current_g_modal (['plane'])
-                print('self.redactor.g_modal', self.redactor.g_modal)
-                print('i_str + min_line = ', i_str + min_line)
+
                 self.redactor.g_modal.current_g_modal = self.redactor.g_modal.create_current_from_g_modal(i_str + min_line)
-                print('|| self.redactor.g_modal.current_g_modal = ', self.redactor.g_modal.current_g_modal)
+
             i = i + 1
             i_str = i_str + 1
 
     def relative_coord_option(self, last_significant_line, new_line):
+        #print('ONE_: ', new_line)
         for k in range(4, 10):
             if not np.isnan(new_line[k]):
                 new_line[k] = new_line[k] + last_significant_line[k]
+        #print('TWO_: ', last_significant_line)
+
         return new_line
 
 
     def number_hor_vert_perp_from_plane(self, plane):
-        print('plane = {}, type = {}'.format(plane, type(plane)))
+        #print('plane = {}, type = {}'.format(plane, type(plane)))
         d = 2# added two clomns.
         if plane == '17':
             n_h = 2 + d
@@ -250,7 +198,7 @@ class NumpyBox():
             n_h = 3 + d
             n_v = 4 + d
             n_p = 2 + d
-        print('n_h = {}, n_v = {}, n_p = {}'.format(n_h, n_v, n_p))
+        #print('n_h = {}, n_v = {}, n_p = {}'.format(n_h, n_v, n_p))
         return n_h, n_v, n_p
 
     def add_ark_points(self, v, last_significant_line, np_num, n_h, n_v, n_p, min_ark_step):
@@ -327,6 +275,7 @@ class NumpyBox():
                 ph = new_hor_0
                 pv = new_vert_0
                 ark_np_array[k, n_p] = pp + (k - 1) * perp_step
+                ark_np_array[k, 16] = 5.
         elif np_line[3] == 3:
             for k in range(n):
                 new_hor_0 = ph * cos_alpha_segmenta - pv * sin_alpha_segmenta
@@ -336,6 +285,7 @@ class NumpyBox():
                 ph = new_hor_0
                 pv = new_vert_0
                 ark_np_array[k, n_p] = pp + (k - 1) * perp_step
+                ark_np_array[k, 16] = 5.
         else:
             print('redactor add_ark_points failed')
             # прибавляе
@@ -344,3 +294,4 @@ class NumpyBox():
 
     def slide_next_address_cuz_new_points(self):
         self.current_frame_address_in_visible_pool = 0
+
