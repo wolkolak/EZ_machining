@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QOpenGLWidget
 from PyQt5.QtOpenGL import QGLWidget
 from OpenGL.GL import *
 from PyQt5 import QtGui
-from left_zone.D3_interface import d3_interface
+from left_zone.D3_interface import d3_interface, change_draft
 from PyQt5.QtGui import QResizeEvent
 from Settings.settings import *
 import numpy as np
@@ -12,7 +12,7 @@ from HLSyntax.PostProcessors_revers.Fanuc_NT import Fanuc_NT
 import copy
 
 
-class Window3D(QGLWidget):#todo заменить на QOpenGLWidget
+class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
     """Визуализацию ты можешь разместить где то тут.
     Класс QGLWidget это 3д класс для работы с OpenGL графонием.
     Необходим ли он нам и насколько он похож на то, про что ты читал, я пока не знаю.
@@ -20,6 +20,9 @@ class Window3D(QGLWidget):#todo заменить на QOpenGLWidget
     """
     def __init__(self, frame, gcod, gmodal, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        #draft1
+        self.substrate = 'fuck///373ун34.0402.128_14400696_2735.tiff'
+
         print('start opengl')
         self.frame = frame
         self.setMinimumSize(100, 100)
@@ -29,17 +32,52 @@ class Window3D(QGLWidget):#todo заменить на QOpenGLWidget
         self.my_timer = QTimer()
         self.my_timer.timeout.connect(self.showTime)
         d3_interface(self)
-        #self.processor = Fanuc_NT()#todo
-            #self.frame.left_tab.parent.central_widget.note.currentWidget().\
-            #highlight.reversal_post_processor
+        #change_draft(self, self.substrate)
         self.animation_flag = False
         self.frame_frequency = 100
         self.my_timer.start(self.frame_frequency)
-        #My_image = QtGui.QImage('dddd.png')
-        #self.bindTexture(My_image, target=, format = GL_RGBA)
-        #self.my_timer.stop()
-    #def choosing_backplotter(self):
-    #    self.processor = self.frame.left_tab.parent.central_widget.note.currentWidget()
+        self.setAcceptDrops(True)
+        self.flag_draft = True
+        self.draft_zero_vert = 0.0
+        self.draft_zero_horiz = 0.0
+
+
+
+    def dropEvent(self, e):
+        print(type(e.mimeData().text()))
+        print(e.mimeData().text())
+        change_draft(self, e.mimeData().text())
+
+    def dragEnterEvent(self, e):
+        #if e.mimeData().hasText():
+        e.accept()
+        #else:
+        #    e.ignore()
+
+    # draft1
+    def getImg(self, fname):#todo super new
+        im = QtGui.QImage(fname)
+        im = im.convertToFormat(QtGui.QImage.Format_RGB888)
+        ix = im.width()
+        iy = im.height()
+        ptr = im.bits()
+        ptr.setsize(im.byteCount())
+        return ptr.asstring(), ix, iy
+
+    # draft1
+    def changeTexture(self,image,ix,iy):
+        #iy = iy * 0.5
+        glBindTexture(GL_TEXTURE_2D, self.tex) # this is the texture we will manipulate
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        glTexImage2D(GL_TEXTURE_2D, 0, self.gl_format, ix, iy, 0, self.gl_format, GL_UNSIGNED_BYTE, image) # load bitmap to texture
+        self.picratio = self.iy / self.ix
+
+    # draft1
+    def resetTexture(self):
+        if self.flag_draft is True:
+            self.changeTexture(self.baseimage, self.ix, self.iy)
+        #glDisable(GL_TEXTURE_2D)
 
     def init_vars(self):
         self.old_horizo_mouse = 0
@@ -71,6 +109,7 @@ class Window3D(QGLWidget):#todo заменить на QOpenGLWidget
         self.turn_angleZ = 90.
 
     def mousePressEvent(self, a0: QtGui.QMouseEvent) -> None:
+
         self.my_timer.start(100)
         print('a0.button() = ', a0.button())
         b = a0.button()
@@ -100,8 +139,12 @@ class Window3D(QGLWidget):#todo заменить на QOpenGLWidget
         new_height = a0.y()
         if self.m_grabbing is True:
             #self.timer_start()
-            self.cam_horizontal = self.cam_horizontal + self.k_rapprochement * (new_horizo - self.old_horizo_mouse) / self.h
-            self.cam_height = self.cam_height + self.k_rapprochement * (self.old_height_mouse - new_height) / self.h
+            horiz_mov = 4*(new_horizo - self.old_horizo_mouse) / self.h
+            vert_mov = 4 * (self.old_height_mouse - new_height) / self.h
+            self.cam_horizontal = self.cam_horizontal + horiz_mov
+            self.cam_height = self.cam_height + vert_mov
+            self.draft_zero_horiz = self.draft_zero_horiz + horiz_mov
+            self.draft_zero_vert = self.draft_zero_vert + vert_mov
             #self.cam_height = new_height
         elif self.m_turning is True:
             #print('turn turn turn')
@@ -149,12 +192,14 @@ class Window3D(QGLWidget):#todo заменить на QOpenGLWidget
 
     def wheelEvent(self, a0: QtGui.QWheelEvent) -> None:
         if a0.angleDelta().y() > 0:
-            glScale(0.8, 0.8, 0.8)
+            #glScale(0.8, 0.8, 0.8)
             self.k_rapprochement = self.k_rapprochement / 0.8
+            self.draft_scale = self.draft_scale / 0.8
             #print('11111')
         else:
-            glScale(1.2, 1.2, 1.2)
+            #glScale(1.2, 1.2, 1.2)
             self.k_rapprochement = self.k_rapprochement / 1.2
+            self.draft_scale = self.draft_scale / 1.2
             #print('2222')
         #print('wheel k_rapprochement = ', self.k_rapprochement)
 
@@ -172,6 +217,8 @@ class Window3D(QGLWidget):#todo заменить на QOpenGLWidget
         #glTranslatef(0.01, 0.0, 0.0)
 
         self.update()
+
+
 
     def reshape(self, w, h):
 
@@ -193,7 +240,7 @@ class Window3D(QGLWidget):#todo заменить на QOpenGLWidget
 
     def resizeGL(self, w: int, h: int) -> None:
         #print('ggg')
-        glViewport(0, 0, w, h)
+        #glViewport(0, 0, w, h)
         self.w = w
         self.h = h
         #glLoadIdentity()
@@ -215,11 +262,14 @@ class Window3D(QGLWidget):#todo заменить на QOpenGLWidget
     def paintGL(self):
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        glClearColor(0.85, 0.85, 0.8, 1.)
-        glEnable(GL_POINT_SMOOTH)
 
+        glEnable(GL_POINT_SMOOTH)
+        self.draft()
+        #ddd
+        glClearColor(*OpenGL_color_map_RGBA)
         #self.paint_point()
         glPushMatrix()
+
         #Тут размещаются смещения СК для объектов (камера)
         glTranslatef(self.cam_horizontal, self.cam_height, 0.0)
         #glRotate(self.turn_angle, self.cam_turn_x, self.cam_turn_y, self.cam_turn_z)
@@ -230,6 +280,7 @@ class Window3D(QGLWidget):#todo заменить на QOpenGLWidget
         self.view_SC()
         glColor3f(1.5, 0.5, 0.5)
         #glPolygonMode(GL_FRONT, GL_FILL)
+        glScale(self.k_rapprochement, self.k_rapprochement, self.k_rapprochement)
         self.cub(0.5)
 
         self.part_turn_points(self.gcod)
@@ -244,6 +295,46 @@ class Window3D(QGLWidget):#todo заменить на QOpenGLWidget
 
         glPopMatrix()
 
+    # draft1
+    def draft(self):
+        if self.flag_draft is False:
+            return
+
+        a = 'white'
+        a = 'nope'
+        if a == 'white':
+            glColor3f(1,1,1)
+        else:
+            glColor4f(*OpenGL_color_map_RGBA)
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)  # Clear The Screen And The Depth Buffer
+        #glLoadIdentity() # Reset The View
+        glBindTexture(GL_TEXTURE_2D, self.tex)# this is the texture we will manipulate
+        glEnable(GL_TEXTURE_2D)
+        glBegin(GL_QUADS)
+
+        dz = -1427
+        r = self.ratio / self.picratio# screen h/w  // picture h/w
+        #print('self.draft_scale ==== ', self.draft_scale)
+        k = self.draft_scale#*2
+        hor = self.draft_zero_horiz
+        vert = self.draft_zero_vert
+        if (r < 1):   # screen wider than image
+            dy = 1
+            dx = r
+        elif (r > 1): # screen taller than image
+            dx = 1
+            dy = 1 / r
+        else:
+            dx = 1
+            dy = 1
+        glTexCoord2f(0.0, 0.0); glVertex3f(-k*dx+hor, k*dy+vert, dz)
+        glTexCoord2f(1.0, 0.0); glVertex3f(k*dx+hor, k*dy+vert, dz)
+        glTexCoord2f(1.0, 1.0); glVertex3f(k*dx+hor, -k*dy+vert, dz)
+        glTexCoord2f(0.0, 1.0); glVertex3f(-k*dx+hor, -k*dy+vert, dz)
+        glEnd()
+        glDisable(GL_TEXTURE_2D)
+
     def view_SC(self):
         glPointSize(20)
         glBegin(GL_POINTS)
@@ -254,19 +345,22 @@ class Window3D(QGLWidget):#todo заменить на QOpenGLWidget
         glColor3f(1.5, 0.5, 0.5)
         glBegin(GL_LINES)#X
         glVertex3f(0., 0., 0.)
-        glVertex3f(0.2 * self.k_rapprochement, 0., 0.)
+        #glVertex3f(0.2 * self.k_rapprochement, 0., 0.)
+        glVertex3f(0.6, 0., 0.)
         glEnd()
 
         glColor3f(0.5, 1.5, 0.5)
         glBegin(GL_LINES)#Y
         glVertex3f(0., 0., 0.)
-        glVertex3f(0., 0.2 * self.k_rapprochement,  0.)
+        #glVertex3f(0., 0.2 * self.k_rapprochement,  0.)
+        glVertex3f(0., 0.6, 0.)
         glEnd()
 
         glColor3f(0.5, 0.5, 1.5)
         glBegin(GL_LINES)#Z
         glVertex3f(0., 0., 0.)
-        glVertex3f(0., 0., 0.2 * self.k_rapprochement)
+        #glVertex3f(0., 0., 0.2 * self.k_rapprochement)
+        glVertex3f(0., 0., 0.6)
         glEnd()
 
 
@@ -324,6 +418,10 @@ class Window3D(QGLWidget):#todo заменить на QOpenGLWidget
         glPopMatrix()
 
     def initializeGL(self):
+        # draft1
+
+        self.tex = glGenTextures(1)
+
         glClearDepth(1.0)
         glDepthFunc(GL_LESS)
         glEnable(GL_DEPTH_TEST)
@@ -334,6 +432,7 @@ class Window3D(QGLWidget):#todo заменить на QOpenGLWidget
         #glEnable(GL_MULTISAMPLE)
 
         glLoadIdentity()
+        self.resetTexture()
 
         #self.view_zone(700, 600)
         #

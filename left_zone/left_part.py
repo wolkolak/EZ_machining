@@ -1,6 +1,7 @@
-from PyQt5.QtWidgets import QTabWidget, QFrame, QPlainTextEdit,  QWidget, QGridLayout, QPushButton
+from PyQt5.QtWidgets import QTabWidget, QFrame, QPlainTextEdit,  QWidget, QGridLayout, QPushButton, QLabel
 from PyQt5.QtCore import Qt
 from PyQt5.QtOpenGL import QGLWidget
+from PyQt5.QtGui import QPixmap
 
 from Settings.settings import *
 import numpy as np
@@ -30,6 +31,10 @@ class SomeInTab(QFrame):
         grid.addWidget(self.openGL, 0, 0)
         self.frame = MyFrame()
         grid.addWidget(self.frame, 1, 0)
+
+        #imagem = QPixmap('373ун34.0402.128_14400696_2735.tif')#todo
+        #img_tiff_map = imagem.scaled(500, 500)
+        #self.setPixmap(img_tiff_map)
 
 
 
