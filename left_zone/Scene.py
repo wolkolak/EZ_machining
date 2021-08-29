@@ -4,12 +4,14 @@ from PyQt5.QtWidgets import QOpenGLWidget
 from PyQt5.QtOpenGL import QGLWidget
 from OpenGL.GL import *
 from PyQt5 import QtGui
-from left_zone.D3_interface import d3_interface, change_draft
+from left_zone.D3_interface import d3_interface, change_draft, resize_texture
 from PyQt5.QtGui import QResizeEvent
 from Settings.settings import *
 import numpy as np
+from PIL import Image
 from HLSyntax.PostProcessors_revers.Fanuc_NT import Fanuc_NT
 import copy
+from ctypes import byref
 
 
 class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
@@ -21,8 +23,14 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
     def __init__(self, frame, gcod, gmodal, *args, **kwargs):
         super().__init__(*args, **kwargs)
         #draft1
-        self.substrate = 'fuck///373ун34.0402.128_14400696_2735.tiff'
+        #self.substrate = 'fuck///40В6М-Р.0402-13_5327425_2735.TIF'
+        self.substrate = 'fuck///373ун34.0402.128_14400696_2735.tif'
+        #self.max_texture_video_card = 1024#16384
+        #self.max_texture_video_card = 1
 
+
+
+        self.flag_draft = True
         print('start opengl')
         self.frame = frame
         self.setMinimumSize(100, 100)
@@ -37,7 +45,7 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
         self.frame_frequency = 100
         self.my_timer.start(self.frame_frequency)
         self.setAcceptDrops(True)
-        self.flag_draft = True
+
         self.draft_zero_vert = 0.0
         self.draft_zero_horiz = 0.0
 
@@ -55,27 +63,22 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
         #    e.ignore()
 
     # draft1
-    def getImg(self, fname):#todo super new
-        im = QtGui.QImage(fname)
-        im = im.convertToFormat(QtGui.QImage.Format_RGB888)
-        ix = im.width()
-        iy = im.height()
-        ptr = im.bits()
-        ptr.setsize(im.byteCount())
-        return ptr.asstring(), ix, iy
-
-    # draft1
     def changeTexture(self,image,ix,iy):
+
+
         #iy = iy * 0.5
+        #print('image.width() = ', image.width())
         glBindTexture(GL_TEXTURE_2D, self.tex) # this is the texture we will manipulate
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
         glTexImage2D(GL_TEXTURE_2D, 0, self.gl_format, ix, iy, 0, self.gl_format, GL_UNSIGNED_BYTE, image) # load bitmap to texture
         self.picratio = self.iy / self.ix
 
+
     # draft1
     def resetTexture(self):
         if self.flag_draft is True:
+            print('type(self.baseimage) = ', type(self.baseimage))
             self.changeTexture(self.baseimage, self.ix, self.iy)
         #glDisable(GL_TEXTURE_2D)
 
@@ -194,12 +197,14 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
         if a0.angleDelta().y() > 0:
             #glScale(0.8, 0.8, 0.8)
             self.k_rapprochement = self.k_rapprochement / 0.8
-            self.draft_scale = self.draft_scale / 0.8
+            if self.flag_draft is True:
+                self.draft_scale = self.draft_scale / 0.8
             #print('11111')
         else:
             #glScale(1.2, 1.2, 1.2)
             self.k_rapprochement = self.k_rapprochement / 1.2
-            self.draft_scale = self.draft_scale / 1.2
+            if self.flag_draft is True:
+                self.draft_scale = self.draft_scale / 1.2
             #print('2222')
         #print('wheel k_rapprochement = ', self.k_rapprochement)
 
@@ -332,6 +337,11 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
         glTexCoord2f(1.0, 0.0); glVertex3f(k*dx+hor, k*dy+vert, dz)
         glTexCoord2f(1.0, 1.0); glVertex3f(k*dx+hor, -k*dy+vert, dz)
         glTexCoord2f(0.0, 1.0); glVertex3f(-k*dx+hor, -k*dy+vert, dz)
+
+        #glTexCoord2f(0.0, 0.0); glVertex3f(-k*dx+hor, k*dy+vert, dz)
+        #glTexCoord2f(0.5, 0.0); glVertex3f(k*dx+hor, k*dy+vert, dz)
+        #glTexCoord2f(0.5, 0.5); glVertex3f(k*dx+hor, -k*dy+vert, dz)
+        #glTexCoord2f(0.0, 0.5); glVertex3f(-k*dx+hor, -k*dy+vert, dz)
         glEnd()
         glDisable(GL_TEXTURE_2D)
 
@@ -418,9 +428,15 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
         glPopMatrix()
 
     def initializeGL(self):
+        #glfwWindowHint(GLFW_SAMPLES, 4)
+        #glEnable(GL_MULTISAMPLE)
         # draft1
-
+        buf = GLint()
+        glGetIntegerv(GL_MAX_TEXTURE_SIZE, byref(buf))
+        self.max_texture_video_card = buf.value
+        resize_texture(self, self.substrate)
         self.tex = glGenTextures(1)
+        print('self.tex = ', self.tex)
 
         glClearDepth(1.0)
         glDepthFunc(GL_LESS)
