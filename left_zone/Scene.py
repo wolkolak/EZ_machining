@@ -1,10 +1,10 @@
-from PyQt5.QtWidgets import QTabWidget, QFrame, QPlainTextEdit,  QWidget, QGridLayout, QPushButton
+from PyQt5.QtWidgets import QTabWidget, QFrame, QPlainTextEdit,  QWidget, QGridLayout, QPushButton, QDialog
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import QOpenGLWidget
 from PyQt5.QtOpenGL import QGLWidget
 from OpenGL.GL import *
 from PyQt5 import QtGui
-from left_zone.D3_interface import d3_interface, change_draft, resize_texture
+from left_zone.D3_interface import d3_interface, change_draft, resize_texture, ChooseDistanceDialog
 from PyQt5.QtGui import QResizeEvent
 from Settings.settings import *
 import numpy as np
@@ -12,6 +12,8 @@ from PIL import Image
 from HLSyntax.PostProcessors_revers.Fanuc_NT import Fanuc_NT
 import copy
 from ctypes import byref
+from OpenGL.GLU import *
+import math
 
 
 class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
@@ -20,17 +22,22 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
     Необходим ли он нам и насколько он похож на то, про что ты читал, я пока не знаю.
     https://doc.qt.io/qt-5/qglwidget.html
     """
+    height_settings = 2.
+    scaling_draft_prime = scaling_draft_prime
+
     def __init__(self, frame, gcod, gmodal, *args, **kwargs):
         super().__init__(*args, **kwargs)
         #draft1
         #self.substrate = 'fuck///40В6М-Р.0402-13_5327425_2735.TIF'
-        self.substrate = 'fuck///373ун34.0402.128_14400696_2735.tif'
+        self.substrate = 'fuck///examples/89.01.112.32.00.00.02_14273099_2735.tif'
+        self.alpha = 0.
         #self.max_texture_video_card = 1024#16384
         #self.max_texture_video_card = 1
 
 
 
         self.flag_draft = True
+
         print('start opengl')
         self.frame = frame
         self.setMinimumSize(100, 100)
@@ -48,7 +55,7 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
 
         self.draft_zero_vert = 0.0
         self.draft_zero_horiz = 0.0
-
+        self.behavior_mode = ''
 
 
     def dropEvent(self, e):
@@ -96,7 +103,7 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
         self.turn_angle = 0
         self.k_rapprochement = 1.0
         self.cam_depth = 1
-        self.w = self.width()#maybe it will work faster
+        self.w = self.width()-2#maybe it will work faster
         self.h = self.height()
         self.old_h = self.height()
         self.where_clicked_x = 0
@@ -104,12 +111,40 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
         self.turn_angleX = 0
         self.turn_angleY = 0
         self.turn_angleZ = 0
+        self.draft_scale = self.scaling_draft_prime * self.k_rapprochement
+        self.new_dot1 = None
+        self.new_dot2 = None
 
-    def turn_to_turn_vew(self):
+
+
+    def turn_to_turn_view(self):
         print('turn_to_turn_vew')
         self.turn_angleX = 0.
         self.turn_angleY = 90.
         self.turn_angleZ = 90.
+
+    def YX_view(self):
+        print('YX_vew')
+        self.turn_angleX = 0.
+        self.turn_angleY = 0.
+        self.turn_angleZ = 90.
+
+    def ZY_view(self):
+        print('ZY_vew')
+        self.turn_angleX = 0.
+        self.turn_angleY = 90.
+        self.turn_angleZ = 180.
+
+    def Centre_view(self):
+        print('Centre_vew')
+        self.draft_zero_horiz = self.draft_zero_horiz - self.cam_horizontal
+        self.draft_zero_vert = self.draft_zero_vert - self.cam_height
+        self.cam_horizontal = 0.
+        self.cam_height = 0.
+
+
+
+
 
     def mousePressEvent(self, a0: QtGui.QMouseEvent) -> None:
 
@@ -119,14 +154,61 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
         self.where_clicked_x = a0.x()
         self.where_clicked_y = a0.y()
         print('self.where_clicked_x = ', self.where_clicked_x)
+        print('self.where_clicked_y = ', self.where_clicked_y)
 
+        print('self.x = ', self.w)
+        print('self.y = ', self.h)
+        print('mouse button = ', b)
         if b == 1:
-            self.m_grabbing = True
+            self.m_grabbing = True  # OpenGL has MouseGrabber, but im am not sure if i should rewrite it
         elif b == 4:#wheel button
             self.m_turning = True
-    #    self.horizontal = self.horizontal - 0.01
+        if b == 2:  #rightClick?
+            if self.behavior_mode == 'draft_point':
+                print('look up')
+                L_half_display = self.cam_horizontal/self.w + 2.*(self.w/self.h)
+                from_right_border = (1 - self.where_clicked_x/self.w)
+                where_clicked_x_in_GL_coord = 2*L_half_display*from_right_border - L_half_display
+                where_clicked_y_in_GL_coord = 4*(self.where_clicked_y / self.h)-2
+                angle = - (self.alpha * 2 * math.pi / 360)
+                super_vert = self.cam_height + where_clicked_y_in_GL_coord
+                super_hor = self.cam_horizontal + where_clicked_x_in_GL_coord
+                horiz_draft = super_hor * math.cos(angle) - super_vert * math.sin(angle)
+                vert_draft = super_vert * math.cos(angle) + super_hor * math.sin(angle)
+                self.draft_zero_vert = self.draft_zero_vert + vert_draft
+                self.draft_zero_horiz = self.draft_zero_horiz + horiz_draft
+                self.behavior_mode = ''
+            elif self.behavior_mode == 'choose distance':
+                if self.new_dot1 is None:
+                    print('yyyyyyyyyyyyyyyy')
+                    print('self.k_rapprochement1 = ', self.k_rapprochement)
+                    right_border = self.cam_horizontal / self.w + 2. * (self.w / self.h)
+
+                    x_display_coord = 2*right_border * (self.where_clicked_x-self.w/2)/self.w
+                    y_display_coord = -2*self.height_settings * (self.where_clicked_y-self.h/2)/self.h
+                    self.new_dot1 = [(self.cam_horizontal - x_display_coord)/self.k_rapprochement, (self.cam_height - y_display_coord)/self.k_rapprochement]
+                elif self.new_dot2 is None:
+                    print('self.k_rapprochement2 = ', self.k_rapprochement)
+                    right_border = self.cam_horizontal / self.w + 2. * (self.w / self.h)
+
+                    x_display_coord = 2*right_border * (self.where_clicked_x-self.w/2)/self.w
+                    y_display_coord = -2*self.height_settings * (self.where_clicked_y-self.h/2)/self.h
+                    self.new_dot2 = [(self.cam_horizontal - x_display_coord)/self.k_rapprochement, (self.cam_height - y_display_coord)/self.k_rapprochement]
+                    print('scaling to mm')
+                    dlg = ChooseDistanceDialog(self)
+
+
+                    dlg.exec()
+                    #self.behavior_mode = ''
+                    #self.new_dot1 = None
+                    #self.new_dot2 = None
+#
+
+
+
+                #self.behavior_mode = ''
     def mouseReleaseEvent(self, a0: QtGui.QMouseEvent) -> None:
-        print('release a0.button() = ', a0.button())
+        #print('release a0.button() = ', a0.button())
         b = a0.button()
         if b == 1:
             self.m_grabbing = False
@@ -135,24 +217,35 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
         #self.timer_stop()
 
     def mouseMoveEvent(self, a0: QtGui.QMouseEvent) -> None:
-
-        #работает только на грабе?
         new_horizo = a0.x()
-        #print('self.m_grabbing = ', self.m_grabbing)
         new_height = a0.y()
         if self.m_grabbing is True:
             #self.timer_start()
             horiz_mov = 4*(new_horizo - self.old_horizo_mouse) / self.h
-            vert_mov = 4 * (self.old_height_mouse - new_height) / self.h
+            vert_mov = 4*(self.old_height_mouse - new_height) / self.h
             self.cam_horizontal = self.cam_horizontal + horiz_mov
             self.cam_height = self.cam_height + vert_mov
-            self.draft_zero_horiz = self.draft_zero_horiz + horiz_mov
-            self.draft_zero_vert = self.draft_zero_vert + vert_mov
-            #self.cam_height = new_height
+            #problem here
+            angle = - (self.alpha * 2 * math.pi / 360)
+            #horiz_mov = (horiz_mov + vert_mov * math.tan(angle)) * math.cos(angle)
+            #vert_mov = (vert_mov - horiz_mov * math.sin(angle)) / math.cos(angle)
+
+            horiz_draft = horiz_mov * math.cos(angle) - vert_mov * math.sin(angle)
+            vert_draft = vert_mov * math.cos(angle) + horiz_mov * math.sin(angle)
+
+            #horiz_draft = horiz_mov * math.cos(angle)
+            #vert_draft =  horiz_mov * math.sin(angle)
+
+            #horiz_draft = - vert_mov * math.sin(angle*0.2)
+            #vert_draft = vert_mov * math.cos(angle)
+            #print('angle = ', angle)
+            #print('math.cos(angle) = ', math.cos(angle))
+
+            self.draft_zero_horiz = self.draft_zero_horiz + horiz_draft
+
+            self.draft_zero_vert = self.draft_zero_vert + vert_draft
+
         elif self.m_turning is True:
-            #print('turn turn turn')
-            #self.timer_start()
-            #if 0.2 * self.w < self.where_clicked_x < 0.8 * self.w and 0.2 * self.h < self.where_clicked_y < 0.8 * self.h:
             if (self.where_clicked_x - self.w/2) ** 2 + (self.where_clicked_y - self.h/2) ** 2 < 0.1 * self.h * self.h:
                 #print('внутри')
                 angle_h = 360 * (new_horizo - self.old_horizo_mouse) / self.h
@@ -194,19 +287,39 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
     #def eventFilter(self, a0: 'QObject', a1: 'QEvent') -> bool:
 
     def wheelEvent(self, a0: QtGui.QWheelEvent) -> None:
+        new_horizo = a0.x()
+        new_height = a0.y()
+        #print('new_horizo = ', new_horizo)
+        #print('self.cam_horizontal ', self.cam_horizontal)
+        #print('new_height = ', new_height)
+        #print('self.cam_height ', self.cam_height)
+        #horiz_mov = 4 * (new_horizo - self.old_horizo_mouse) / self.h
+
         if a0.angleDelta().y() > 0:
             #glScale(0.8, 0.8, 0.8)
             self.k_rapprochement = self.k_rapprochement / 0.8
+            #что на середине экрана
+            print('++++ self.k_rapprochement = ', self.k_rapprochement)
+            self.cam_height = self.cam_height / 0.8
+            self.cam_horizontal = self.cam_horizontal / 0.8
+
+            #сместить
             if self.flag_draft is True:
                 self.draft_scale = self.draft_scale / 0.8
+                self.draft_zero_horiz = self.draft_zero_horiz / 0.8
+                self.draft_zero_vert = self.draft_zero_vert / 0.8
             #print('11111')
         else:
             #glScale(1.2, 1.2, 1.2)
             self.k_rapprochement = self.k_rapprochement / 1.2
+            self.cam_height = self.cam_height / 1.2
+            self.cam_horizontal = self.cam_horizontal / 1.2
             if self.flag_draft is True:
                 self.draft_scale = self.draft_scale / 1.2
+                self.draft_zero_horiz = self.draft_zero_horiz / 1.2
+                self.draft_zero_vert = self.draft_zero_vert / 1.2
             #print('2222')
-        #print('wheel k_rapprochement = ', self.k_rapprochement)
+
 
     def timer_start(self):
         if self.animation_flag is False:
@@ -245,23 +358,38 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
 
     def resizeGL(self, w: int, h: int) -> None:
         #print('ggg')
-        #glViewport(0, 0, w, h)
+        glViewport(0, 0, w, h)
+        k = self.k_rapprochement
+        dzv = (self.cam_height - self.draft_zero_vert)/self.draft_scale
+        dzhor = (self.cam_horizontal - self.draft_zero_horiz) / self.draft_scale
+        self.draft_zero_vert = self.cam_height
+        self.draft_zero_horiz = self.cam_horizontal
+        #dzh = self.draft_zero_horiz/k
+        #self.draft_scale =
+        #вот тут всё поменять. а то чертёж не подстраивается
         self.w = w
         self.h = h
         #glLoadIdentity()
         #glScale(1,1,1)
         #Тут размещаются смещения СК глобальные
         #glTranslatef(0.5, 0.0, 0.0)
+
         self.reshape(w, h)
+        self.draft_scale = self.draft_scale * self.k_rapprochement/k
+        self.draft_zero_vert = self.draft_zero_vert - dzv * self.draft_scale
+        self.draft_zero_horiz = self.draft_zero_horiz - dzhor * self.draft_scale
 
+        #self.draft_zero_horiz = self.draft_zero_horiz - dzh * self.k_rapprochement
 
-    #def view_zone(self, Width, Height):
+        #def view_zone(self, Width, Height):
     #    glViewport(0, 0, Width, Height)
     #    glMatrixMode(GL_PROJECTION)
     #    glLoadIdentity()
     #    aspect = Width/Height
     #    glOrtho(-5, 5, -2, 2, -1.0, 1.0)
     #    #glOrtho(-self.h / 2, self.h/2, -self.w/2, self.w/2, -1.0, 1.0)
+
+
 
 
     def paintGL(self):
@@ -286,6 +414,9 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
         glColor3f(1.5, 0.5, 0.5)
         #glPolygonMode(GL_FRONT, GL_FILL)
         glScale(self.k_rapprochement, self.k_rapprochement, self.k_rapprochement)
+
+
+
         self.cub(0.5)
 
         self.part_turn_points(self.gcod)
@@ -316,14 +447,19 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
         #glLoadIdentity() # Reset The View
         glBindTexture(GL_TEXTURE_2D, self.tex)# this is the texture we will manipulate
         glEnable(GL_TEXTURE_2D)
-        glBegin(GL_QUADS)
+
+        glRotate(self.alpha, 0., 0., 1.)
+
 
         dz = -1427
+
         r = self.ratio / self.picratio# screen h/w  // picture h/w
         #print('self.draft_scale ==== ', self.draft_scale)
         k = self.draft_scale#*2
         hor = self.draft_zero_horiz
         vert = self.draft_zero_vert
+
+
         if (r < 1):   # screen wider than image
             dy = 1
             dx = r
@@ -333,16 +469,22 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
         else:
             dx = 1
             dy = 1
+
+        glBegin(GL_QUADS)
         glTexCoord2f(0.0, 0.0); glVertex3f(-k*dx+hor, k*dy+vert, dz)
         glTexCoord2f(1.0, 0.0); glVertex3f(k*dx+hor, k*dy+vert, dz)
         glTexCoord2f(1.0, 1.0); glVertex3f(k*dx+hor, -k*dy+vert, dz)
         glTexCoord2f(0.0, 1.0); glVertex3f(-k*dx+hor, -k*dy+vert, dz)
-
-        #glTexCoord2f(0.0, 0.0); glVertex3f(-k*dx+hor, k*dy+vert, dz)
-        #glTexCoord2f(0.5, 0.0); glVertex3f(k*dx+hor, k*dy+vert, dz)
-        #glTexCoord2f(0.5, 0.5); glVertex3f(k*dx+hor, -k*dy+vert, dz)
-        #glTexCoord2f(0.0, 0.5); glVertex3f(-k*dx+hor, -k*dy+vert, dz)
         glEnd()
+
+        glPointSize(30)
+        glBegin(GL_POINTS)
+        glColor3f(0.5, 0.5, 0.5)
+        glVertex3f(hor, vert, 0.0)
+        glColor3f(0.2, 0.5, 0.5)
+        glEnd()
+
+        glRotate(-self.alpha, 0., 0., 1.)
         glDisable(GL_TEXTURE_2D)
 
     def view_SC(self):
@@ -438,11 +580,13 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
         self.tex = glGenTextures(1)
         print('self.tex = ', self.tex)
 
+
         glClearDepth(1.0)
         glDepthFunc(GL_LESS)
         glEnable(GL_DEPTH_TEST)
         glShadeModel(GL_SMOOTH)
         glMatrixMode(GL_PROJECTION)
+
         #glfwWindowHint(GLFW_SAMPLES, 4)
         #glWindow
         #glEnable(GL_MULTISAMPLE)
@@ -505,6 +649,9 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
 
         glEnd()
         glPopMatrix()
+
+
+
 
 def special_pont_options(i, i1, i2, i3):
     if i == 0:

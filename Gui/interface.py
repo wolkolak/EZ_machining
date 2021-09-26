@@ -4,7 +4,7 @@ from Gui import gui_classes, MyViewToolBar, MyTxtToolBar, test_button
 #MyTxtToolBar, MyViewToolBar,gui_classes
 import shutil
 import sys
-from Menus import EditMenu, FileMenu, ViewMenu, OptionsMenu, ToolsMenu
+from Menus import EditMenu, FileMenu, ViewMenu, OptionsMenu, ToolsMenu, ImportMenu
 from Settings import bigCustomizer, change_setting, settings
 #from Gui import test_button
 
@@ -36,7 +36,8 @@ class MyMainWindow(QMainWindow):
         ToolsMenu.tools_menu_opt(self)
         #self.toolsMenu = self.menubar.addMenu('&Tools')
 
-        self.inportMenu = self.menubar.addMenu('&Import')
+        #self.inportMenu = self.menubar.addMenu('&Import')
+        ImportMenu.import_menu_opt(self)
 
         #options
         OptionsMenu.options(self)

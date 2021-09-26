@@ -14,13 +14,7 @@ class SomeInTab(QFrame):
         self.left_tab = left_tab
         self.np_arr = np_arr
         """Используй пока что этот numpy(xyzcbar) и словарь с модальными ключами"""
-        #self.g_cod_pool2 = np.array([[200, 0, 3, 0, 0, 0, 0],
-        #                           [160, 0, -5, 0, 0, 0, 0],
-        #                           [163, 0, 3, 0, 0, 0, 0],
-        #                           [155, 0, -5, 0, 0, 0, 0],
-        #                           [166, 0, 0, 0, 0, 0, 0],
-        #                           [100, 0, 200, 0, 0, 0, 0]],
-        #                           float)
+
         #modal coomnds
         self.g_modal2 = {'G0': [0, 5, 8], 'G1': [3, 6], 'G2': [], 'G3': []}
 
