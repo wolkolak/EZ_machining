@@ -28,11 +28,8 @@ class Machine(ABC):
             i = + 1
 
     def open_machine_settings(self):
-        print('FFFFF')
-        #__location__ = os.path.realpath(
-        #    os.path.join(os.getcwd(), os.path.dirname(__file__)))
         __location__ = sys.modules[self.__module__].__file__
-        print('__location = ', __location__)
+        __location__ = '\\'.join(__location__.split('\\')[:-1])
         a = __location__ + r'\machine_settings.py'
         try:
             with open(a) as f:
@@ -43,6 +40,7 @@ class Machine(ABC):
             print('self.g54_g59_AXIS = ', self.g54_g59_AXIS)
         except:
             print('Except in open_machine_settings')
+            print('a = ', a)
             with open(a, 'w') as f:
                 f.write("g54_59 = {  #ATTENTION: do not change format of the lines by hands. if ypu actually done it, check wenether rewrighting from programm still work\n")
                 for n in range(4,10):
