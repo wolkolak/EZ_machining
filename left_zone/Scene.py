@@ -1,19 +1,32 @@
-from PyQt5.QtWidgets import QTabWidget, QFrame, QPlainTextEdit,  QWidget, QGridLayout, QPushButton, QDialog
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import QOpenGLWidget
-from PyQt5.QtOpenGL import QGLWidget
 from OpenGL.GL import *
 from PyQt5 import QtGui
 from left_zone.D3_interface import d3_interface, change_draft, resize_texture, ChooseDistanceDialog
-from PyQt5.QtGui import QResizeEvent
 from Settings.settings import *
 import numpy as np
 from PIL import Image
-from HLSyntax.PostProcessors_revers.Fanuc_NT import Fanuc_NT
-import copy
 from ctypes import byref
 from OpenGL.GLU import *
 import math
+from left_zone.D3_interface import restore_zero_position_shell, make_label
+import os
+
+#from OpenGL.GLUT import *
+
+
+def new_position_object_shell(func):
+    def wrapper(self, ax1, ax2, ax3, angle1, angle2, angle3, *args):
+        glTranslatef(ax1, ax2, ax3)
+        glRotate(angle1, 1., 0., 0.)
+        glRotate(angle2, 0., 1., 0.)
+        glRotate(angle3, 0., 0., 1.)
+        func(self, ax1, ax2, ax3, angle1, angle2, angle3, *args)
+        glRotate(-angle3, 0., 0., 1.)
+        glRotate(-angle2, 0., 1., 0.)
+        glRotate(-angle1, 1., 0., 0.)
+        glTranslatef(-ax1, -ax2, -ax3)
+    return wrapper
 
 
 class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
@@ -31,11 +44,6 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
         #self.substrate = 'fuck///40В6М-Р.0402-13_5327425_2735.TIF'
         self.substrate = 'fuck///examples/89.01.112.32.00.00.02_14273099_2735.tif'
         self.alpha = 0.
-        #self.max_texture_video_card = 1024#16384
-        #self.max_texture_video_card = 1
-
-
-
         self.flag_draft = True
 
         print('start opengl')
@@ -46,6 +54,7 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
         self.init_vars()
         self.my_timer = QTimer()
         self.my_timer.timeout.connect(self.showTime)
+        #self.my_timer_variable = QTimer()
         d3_interface(self)
         #change_draft(self, self.substrate)
         self.animation_flag = False
@@ -55,8 +64,32 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
 
         self.draft_zero_vert = 0.0
         self.draft_zero_horiz = 0.0
-        self.behavior_mode = ''
 
+        #self.visible_rot = np.zeros((1, 3), float)
+        #self.visible_rot[0, :] = np.nan
+
+    def init_vars(self):
+        self.old_horizo_mouse = 0
+        self.old_height_mouse = 0
+        self.old_depth = 1
+        self.m_grabbing = False
+        self.m_turning = False
+        self.cam_horizontal = 0
+        self.cam_height = 0
+        self.turn_angle = 0
+        self.k_rapprochement = 1.0
+        self.cam_depth = 1
+        self.w = self.width()-2#maybe it will work faster
+        self.h = self.height()
+        self.old_h = self.height()
+        self.where_clicked_x = 0
+        self.where_clicked_y = 0
+        self.turn_angleX = 0
+        self.turn_angleY = 0
+        self.turn_angleZ = 0
+        self.draft_scale = self.scaling_draft_prime * self.k_rapprochement
+        self.refresh()
+        self.typing_height = 0.8
 
     def dropEvent(self, e):
         print(type(e.mimeData().text()))
@@ -72,14 +105,40 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
     # draft1
     def changeTexture(self,image,ix,iy):
 
-
-        #iy = iy * 0.5
-        #print('image.width() = ', image.width())
         glBindTexture(GL_TEXTURE_2D, self.tex) # this is the texture we will manipulate
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)#тут какая то херня, вероятно todo
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        print('ix = ', ix)
         glTexImage2D(GL_TEXTURE_2D, 0, self.gl_format, ix, iy, 0, self.gl_format, GL_UNSIGNED_BYTE, image) # load bitmap to texture
+        print('image is ', type(image))
         self.picratio = self.iy / self.ix
+
+    def draw_special_dot(self):
+        if self.new_dot1 is None:
+            return
+        #print('draw_special_dot 1')
+        glLineWidth(3)
+        glColor3f(0., 0.0, 0.0)
+        glBegin(GL_LINES)
+        center1 = self.new_dot1
+        z = 1000
+        l = 0.3 / self.k_rapprochement
+        glVertex3f(-center1[0]+l, -center1[1]+l, z)
+        glVertex3f(-center1[0]-l, -center1[1]-l, z)
+        glVertex3f(-center1[0]-l, -center1[1]+l, z)
+        glVertex3f(-center1[0]+l, -center1[1]-l, z)
+        glEnd()
+        if self.new_dot2 is None:
+            return
+        #print('draw_special_dot 2')
+        center2 = self.new_dot2
+        glBegin(GL_LINES)
+        glVertex3f(-center2[0]+l, -center2[1]+l, z)
+        glVertex3f(-center2[0]-l, -center2[1]-l, z)
+        glVertex3f(-center2[0]-l, -center2[1]+l, z)
+        glVertex3f(-center2[0]+l, -center2[1]-l, z)
+
+        glEnd()
 
 
     # draft1
@@ -89,31 +148,6 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
             self.changeTexture(self.baseimage, self.ix, self.iy)
         #glDisable(GL_TEXTURE_2D)
 
-    def init_vars(self):
-        self.old_horizo_mouse = 0
-        self.old_height_mouse = 0
-        self.old_depth = 1
-        self.m_grabbing = False
-        self.m_turning = False
-        self.cam_horizontal = 0
-        self.cam_height = 0
-        #self.cam_turn_x = 0
-        #self.cam_turn_y = 0
-        #self.cam_turn_z = 0
-        self.turn_angle = 0
-        self.k_rapprochement = 1.0
-        self.cam_depth = 1
-        self.w = self.width()-2#maybe it will work faster
-        self.h = self.height()
-        self.old_h = self.height()
-        self.where_clicked_x = 0
-        self.where_clicked_y = 0
-        self.turn_angleX = 0
-        self.turn_angleY = 0
-        self.turn_angleZ = 0
-        self.draft_scale = self.scaling_draft_prime * self.k_rapprochement
-        self.new_dot1 = None
-        self.new_dot2 = None
 
 
 
@@ -142,23 +176,12 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
         self.cam_horizontal = 0.
         self.cam_height = 0.
 
-
-
-
-
     def mousePressEvent(self, a0: QtGui.QMouseEvent) -> None:
 
         self.my_timer.start(100)
-        print('a0.button() = ', a0.button())
         b = a0.button()
         self.where_clicked_x = a0.x()
         self.where_clicked_y = a0.y()
-        print('self.where_clicked_x = ', self.where_clicked_x)
-        print('self.where_clicked_y = ', self.where_clicked_y)
-
-        print('self.x = ', self.w)
-        print('self.y = ', self.h)
-        print('mouse button = ', b)
         if b == 1:
             self.m_grabbing = True  # OpenGL has MouseGrabber, but im am not sure if i should rewrite it
         elif b == 4:#wheel button
@@ -177,36 +200,33 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
                 vert_draft = super_vert * math.cos(angle) + super_hor * math.sin(angle)
                 self.draft_zero_vert = self.draft_zero_vert + vert_draft
                 self.draft_zero_horiz = self.draft_zero_horiz + horiz_draft
-                self.behavior_mode = ''
+                #self.behavior_mode = ''
+                self.refresh()
             elif self.behavior_mode == 'choose distance':
                 if self.new_dot1 is None:
-                    print('yyyyyyyyyyyyyyyy')
-                    print('self.k_rapprochement1 = ', self.k_rapprochement)
                     right_border = self.cam_horizontal / self.w + 2. * (self.w / self.h)
-
                     x_display_coord = 2*right_border * (self.where_clicked_x-self.w/2)/self.w
                     y_display_coord = -2*self.height_settings * (self.where_clicked_y-self.h/2)/self.h
-                    self.new_dot1 = [(self.cam_horizontal - x_display_coord)/self.k_rapprochement, (self.cam_height - y_display_coord)/self.k_rapprochement]
-                elif self.new_dot2 is None:
-                    print('self.k_rapprochement2 = ', self.k_rapprochement)
-                    right_border = self.cam_horizontal / self.w + 2. * (self.w / self.h)
 
+                    self.setCursor(QtGui.QCursor(Qt.CrossCursor))
+
+                    self.new_dot1 = [(self.cam_horizontal - x_display_coord)/self.k_rapprochement, (self.cam_height - y_display_coord)/self.k_rapprochement]
+                    self.render_text_preparation("RClick to choose \n last coordinat dot ", text_size=200, name_png='2st draft dot', k=0.35)
+                elif self.new_dot2 is None:
+                    self.setCursor(QtGui.QCursor(Qt.ArrowCursor))
+                    right_border = self.cam_horizontal / self.w + 2. * (self.w / self.h)
                     x_display_coord = 2*right_border * (self.where_clicked_x-self.w/2)/self.w
                     y_display_coord = -2*self.height_settings * (self.where_clicked_y-self.h/2)/self.h
                     self.new_dot2 = [(self.cam_horizontal - x_display_coord)/self.k_rapprochement, (self.cam_height - y_display_coord)/self.k_rapprochement]
-                    print('scaling to mm')
                     dlg = ChooseDistanceDialog(self)
-
-
                     dlg.exec()
-                    #self.behavior_mode = ''
-                    #self.new_dot1 = None
-                    #self.new_dot2 = None
-#
 
+    def refresh(self):
+        self.behavior_mode = ''
+        self.new_dot1 = None
+        self.new_dot2 = None
+        self.setCursor(QtGui.QCursor(Qt.ArrowCursor))
 
-
-                #self.behavior_mode = ''
     def mouseReleaseEvent(self, a0: QtGui.QMouseEvent) -> None:
         #print('release a0.button() = ', a0.button())
         b = a0.button()
@@ -220,26 +240,15 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
         new_horizo = a0.x()
         new_height = a0.y()
         if self.m_grabbing is True:
-            #self.timer_start()
             horiz_mov = 4*(new_horizo - self.old_horizo_mouse) / self.h
             vert_mov = 4*(self.old_height_mouse - new_height) / self.h
             self.cam_horizontal = self.cam_horizontal + horiz_mov
             self.cam_height = self.cam_height + vert_mov
             #problem here
             angle = - (self.alpha * 2 * math.pi / 360)
-            #horiz_mov = (horiz_mov + vert_mov * math.tan(angle)) * math.cos(angle)
-            #vert_mov = (vert_mov - horiz_mov * math.sin(angle)) / math.cos(angle)
 
             horiz_draft = horiz_mov * math.cos(angle) - vert_mov * math.sin(angle)
             vert_draft = vert_mov * math.cos(angle) + horiz_mov * math.sin(angle)
-
-            #horiz_draft = horiz_mov * math.cos(angle)
-            #vert_draft =  horiz_mov * math.sin(angle)
-
-            #horiz_draft = - vert_mov * math.sin(angle*0.2)
-            #vert_draft = vert_mov * math.cos(angle)
-            #print('angle = ', angle)
-            #print('math.cos(angle) = ', math.cos(angle))
 
             self.draft_zero_horiz = self.draft_zero_horiz + horiz_draft
 
@@ -258,11 +267,6 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
                 if self.turn_angleY > 360. or self.turn_angleY < 360:
                     self.turn_angleY = self.turn_angleY % 360.
 
-                #self.cam_turn_x = self.cam_turn_x + -(self.old_height_mouse - new_height) / self.h
-                #self.cam_turn_y = self.cam_turn_y + -(new_horizo - self.old_horizo_mouse) / self.h
-                    #self.cam_turn_z = self.cam_turn_z
-
-                #print('turn_angle ', self.turn_angle)
             else:
                 #print('снаружи')
                 angle_h = - 360 * (new_horizo - self.old_horizo_mouse) / self.h
@@ -287,14 +291,6 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
     #def eventFilter(self, a0: 'QObject', a1: 'QEvent') -> bool:
 
     def wheelEvent(self, a0: QtGui.QWheelEvent) -> None:
-        new_horizo = a0.x()
-        new_height = a0.y()
-        #print('new_horizo = ', new_horizo)
-        #print('self.cam_horizontal ', self.cam_horizontal)
-        #print('new_height = ', new_height)
-        #print('self.cam_height ', self.cam_height)
-        #horiz_mov = 4 * (new_horizo - self.old_horizo_mouse) / self.h
-
         if a0.angleDelta().y() > 0:
             #glScale(0.8, 0.8, 0.8)
             self.k_rapprochement = self.k_rapprochement / 0.8
@@ -318,8 +314,6 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
                 self.draft_scale = self.draft_scale / 1.2
                 self.draft_zero_horiz = self.draft_zero_horiz / 1.2
                 self.draft_zero_vert = self.draft_zero_vert / 1.2
-            #print('2222')
-
 
     def timer_start(self):
         if self.animation_flag is False:
@@ -347,8 +341,6 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
         aspect = w / h
         #glOrtho() определяет координатную систему .
         glOrtho(-2.0 * aspect, 2.0 * aspect, -2.0, 2.0,  -2000.0 * aspect, 2000.0 * aspect)
-        #self.k_rapprochement = self.k_rapprochement + self.k_rapprochement * aspect
-        #glOrtho(-self.h/2, self.h, -self.w/2, self.w/2, -1.0, 1.0)
         glMatrixMode(GL_MODELVIEW)
         #glLoadIdentity()
         self.k_rapprochement = self.k_rapprochement * self.h / self.old_h
@@ -357,39 +349,118 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
 
 
     def resizeGL(self, w: int, h: int) -> None:
-        #print('ggg')
         glViewport(0, 0, w, h)
         k = self.k_rapprochement
-        dzv = (self.cam_height - self.draft_zero_vert)/self.draft_scale
-        dzhor = (self.cam_horizontal - self.draft_zero_horiz) / self.draft_scale
-        self.draft_zero_vert = self.cam_height
-        self.draft_zero_horiz = self.cam_horizontal
-        #dzh = self.draft_zero_horiz/k
-        #self.draft_scale =
-        #вот тут всё поменять. а то чертёж не подстраивается
         self.w = w
         self.h = h
-        #glLoadIdentity()
-        #glScale(1,1,1)
-        #Тут размещаются смещения СК глобальные
-        #glTranslatef(0.5, 0.0, 0.0)
 
         self.reshape(w, h)
-        self.draft_scale = self.draft_scale * self.k_rapprochement/k
-        self.draft_zero_vert = self.draft_zero_vert - dzv * self.draft_scale
-        self.draft_zero_horiz = self.draft_zero_horiz - dzhor * self.draft_scale
-
-        #self.draft_zero_horiz = self.draft_zero_horiz - dzh * self.k_rapprochement
-
-        #def view_zone(self, Width, Height):
-    #    glViewport(0, 0, Width, Height)
-    #    glMatrixMode(GL_PROJECTION)
-    #    glLoadIdentity()
-    #    aspect = Width/Height
-    #    glOrtho(-5, 5, -2, 2, -1.0, 1.0)
-    #    #glOrtho(-self.h / 2, self.h/2, -self.w/2, self.w/2, -1.0, 1.0)
+        self.change_scale_in_resizeGL(self, k)
 
 
+    @restore_zero_position_shell
+    def change_scale_in_resizeGL(self, self_DRY, k):
+        self.draft_scale = self.draft_scale * self.k_rapprochement / k
+
+    def render_text_preparation(self, text, text_size, name_png, k=1.):
+        if not os.path.exists(r'Settings\textTextures\{}.png'.format(name_png)):
+            if not os.path.exists(r'Settings\textTextures'):
+                os.makedirs(r'Settings\textTextures')
+            lines_of_text = text.splitlines()
+            N_lines = lines_of_text.__len__()
+            h_of_one_line = int(text_size / N_lines)
+            self.typing_height = 0.4 * N_lines
+            len_l = 0
+            for l in lines_of_text:
+                a = l.__len__()
+                if a > len_l:
+                    len_l = a
+
+            H, W = text_size, int(len_l * text_size * k)#* 0.35
+            I = np.zeros((H, W, 4), dtype=np.ubyte)
+            angle = 0
+            array_L = [np.flip(make_label(textN, './Brave New Era G98.ttf', h_of_one_line, angle=angle), 0) for textN in lines_of_text]
+            x0 = W // 2
+            #y0 = H // 2
+            x = int(x0)
+            #y = int(y0)
+
+            def color_text(a, b, c, d):
+
+                def transparentcy(i, j):
+                    I[i, j, 3] = 255 if I[i, j, 2] != 0 or I[i, j, 1] != 0 or I[i, j, 0] != 0 else 0
+
+                I[a:b, c:d, 0] |= (L).astype('ubyte') #R
+                #I[a:b, c:d, 1] |= (L).astype('ubyte') #G
+                #I[a:b, c:d, 2] |= (L).astype('ubyte') #B
+                [transparentcy(i, j) for i in range(a, b) for j in range(c, d)]
+
+            start = 0
+            line_gap = 5
+            for L in array_L:
+                h, w = L.shape
+                # раскрашиваем
+                color_text(start,
+                           start + h,
+                           x - w // 2,
+                           x - w // 2 + w)
+
+                start = start + h + line_gap
+                nya = Image.fromarray(I[::1, ::1, ::1], mode='RGBA')
+                nya.save(r'Settings\textTextures\{}.png'.format(name_png))
+            print('I.shape = ', I.shape)
+        else:
+            im_frame = Image.open(r'Settings\textTextures\{}.png'.format(name_png))
+            I = np.array(im_frame.getdata())
+
+            print('I.shape = ', I.shape)
+            #W, H, _ = big_array.shape
+            W, H = im_frame.size
+
+        self.glyph_tex = glGenTextures(1)
+        print('self.glyph_tex = glGenTextures(1): ', self.glyph_tex)
+
+        #OpenGL
+        glBindTexture(GL_TEXTURE_2D, self.glyph_tex)  # this is the texture we will manipulate
+        # texture options
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, W, H, 0, GL_RGBA,
+                     GL_UNSIGNED_BYTE, I)  # bitmap.buffer I
+
+
+    def render_text(self):
+        #initializGL
+        if self.behavior_mode == '':
+            return
+
+        #dz = -1427
+        # typing
+        h = self.typing_height
+        dz = 1000
+        glColor3f(1., 1.0, 1.0)
+        glBindTexture(GL_TEXTURE_2D, self.glyph_tex)  # this is the texture we will manipulate
+
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glEnable(GL_TEXTURE_2D)
+        glBegin(GL_QUADS)
+        glTexCoord2f(0.0, 0.0)
+        glVertex3f(-1.5, 1.6, dz)
+        glTexCoord2f(1.0, 0.0)
+        glVertex3f(1.8, 1.6, dz)
+        glTexCoord2f(1.0, 1.0)
+        glVertex3f(1.8, 1.6 - h, dz)
+        #glVertex3f(1.8, -2., dz)#
+        glTexCoord2f(0.0, 1.0)
+        glVertex3f(-1.5, 1.6 - h, dz)
+        #glVertex3f(-1.5, -2., dz)
+        glEnd()
+        glDisable(GL_TEXTURE_2D)
+        glDisable(GL_BLEND)
 
 
     def paintGL(self):
@@ -397,39 +468,183 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
         glEnable(GL_POINT_SMOOTH)
+        glPushMatrix()
+
         self.draft()
+
         #ddd
         glClearColor(*OpenGL_color_map_RGBA)
         #self.paint_point()
-        glPushMatrix()
 
         #Тут размещаются смещения СК для объектов (камера)
         glTranslatef(self.cam_horizontal, self.cam_height, 0.0)
-        #glRotate(self.turn_angle, self.cam_turn_x, self.cam_turn_y, self.cam_turn_z)
         glRotate(self.turn_angleX, 1., 0., 0.)
         glRotate(self.turn_angleY, 0., 1., 0.)
         glRotate(self.turn_angleZ, 0., 0., 1.)
 
         self.view_SC()
+
         glColor3f(1.5, 0.5, 0.5)
         #glPolygonMode(GL_FRONT, GL_FILL)
         glScale(self.k_rapprochement, self.k_rapprochement, self.k_rapprochement)
 
-
-
         self.cub(0.5)
 
+
+        self.draw_machine()
+
         self.part_turn_points(self.gcod)
+        #self.frame.left_tab.parent.central_widget.note.currentWidget().np_box.visible_np_rot
         self.part_turn_lines(self.gcod)
-        #print('upd self.gcod size = ', self.gcod.shape)
-        #angley = 45.
-        #glRotate(angley, 0.5, 1, 0.3)
+        self.draw_special_dot()
+
 
         glFlush()
-        #print('screen updated')
-        # print(glGetString(GL_VERSION))
 
         glPopMatrix()
+
+        self.render_text()
+       #cylinder  = glutSolidCylinder(30, 15, 20, 20)
+
+
+
+
+
+    def draw_machine(self):
+        #g54_59['']
+
+        glTranslatef(0, 0, -100)
+        glCallList(self.aaa)
+
+        #glCallList(self.bbb)
+
+        glTranslatef(0, 0, 100)
+
+
+
+    def machine_model_parts(self):
+        from Modelling_clay.machines.Machine_CBA_Table_Example.machine_CBA_Table_example import CBA_Table
+        self.current_machine = CBA_Table()
+        glColor4f(1., 1.0, 1.0, 255)
+        im = QtGui.QImage(r'Settings\machineTextures\machine_green.png')
+        ix = im.width()
+        iy = im.height()
+        im = im.smoothScaled(ix, iy)
+        im = im.convertToFormat(QtGui.QImage.Format_RGB888)
+        ptr = im.scanLine(0)
+        ptr.setsize(im.sizeInBytes())
+        image_array = ptr.asstring()
+
+        #self.currentG54_G59 = g54_59['G54'] todo
+        #make lists
+        self.mysphereID = glGenLists(10)
+
+        #make textures
+        self.machine_tex_green = glGenTextures(1)
+
+
+        self.aaa = self.make_romb(200., 100, 10, image_array, ix, iy)   # h, r1, r2, n_angles
+
+
+
+
+
+
+
+    def bind_Texture(self, image_arr, ix, iy):
+
+        glBindTexture(GL_TEXTURE_2D, self.machine_tex_green) # this is the texture we will manipulate
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ix, iy, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_arr) # load bitmap to texture
+
+
+
+
+    #@new_position_object_shell
+    def make_romb(self, h, w, s, image_array, ix, iy):
+
+        #circle = gluNewQuadric()
+        #gluQuadricDrawStyle(circle, GLU_FILL)
+        #gluQuadricTexture(circle, GL_TRUE)
+        #gluQuadricNormals(circle, GLU_SMOOTH)
+#
+        #cylinder = gluNewQuadric()
+        #gluQuadricDrawStyle(cylinder, GLU_FILL)
+        #gluQuadricTexture(cylinder, GL_TRUE)
+        #gluQuadricNormals(cylinder, GLU_SMOOTH)
+
+
+        self.bind_Texture(image_array, ix, iy)
+
+        nn = glGenLists(1)
+        print('nn = ', nn)
+
+        glNewList(nn, GL_COMPILE)
+
+        glBindTexture(GL_TEXTURE_2D, self.machine_tex_green)  # this is the texture we will manipulate
+
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+        glEnable(GL_TEXTURE_2D)
+        #self.bind_Texture(image_array)
+
+
+        glBegin(GL_QUAD_STRIP)
+        #glTexCoord2f(0.0, 0.0)
+        glVertex3f(0, 0, s)
+        glVertex3f(0, 0, 0)
+        #glTexCoord2f(1.0, 0.0)
+        glVertex3f(w/2, h/4, s)
+        glVertex3f(w / 2, h / 4, 0)
+        #glTexCoord2f(1.0, 1.0)
+        glVertex3f(w / 2, 3 * h / 4, s)
+        glVertex3f(w/2, 3*h/4, 0)
+        #glTexCoord2f(0.0, 1.0)
+        glVertex3f(0, h, s)
+        glVertex3f(0, h, 0)
+        #glTexCoord2f(0.0, 1.0)
+        glVertex3f(-w / 2, 3 * h / 4, s)
+        glVertex3f(-w/2, 3*h/4, 0)
+        #glTexCoord2f(0.0, 1.0)
+        glVertex3f(-w / 2, h / 4, s)
+        glVertex3f(-w/2, h/4, 0)
+
+        glVertex3f(0, 0, s)
+        glVertex3f(0, 0, 0)
+        glEnd()
+
+        glBegin(GL_TRIANGLE_FAN)
+        glTexCoord2f(0.0, 0.0); glVertex3f(0, 0, 0)
+        glTexCoord2f(1.0, 0.0); glVertex3f(w / 2, h / 4, 0)
+        glTexCoord2f(0.0, 0.0); glVertex3f(w / 2, 3 * h / 4, 0)
+        glTexCoord2f(1.0, 0.0); glVertex3f(0, h, 0)
+        glTexCoord2f(0.0, 0.0); glVertex3f(-w / 2, 3 * h / 4, 0)
+        glTexCoord2f(1.0, 0.0); glVertex3f(-w / 2, h / 4, 0)
+        glEnd()
+
+        glBegin(GL_TRIANGLE_FAN)
+        glVertex3f(0, 0, s)
+        glVertex3f(w / 2, h / 4, s)
+        glVertex3f(w / 2, 3 * h / 4, s)
+        glVertex3f(0, h, s)
+        glVertex3f(-w / 2, 3 * h / 4, s)
+        glVertex3f(-w / 2, h / 4, s)
+        glEnd()
+
+        glDisable(GL_TEXTURE_2D)
+        glDisable(GL_BLEND)
+
+
+        glEndList()
+        #gluDeleteQuadric(circle)
+
+
+        return nn
+
 
     # draft1
     def draft(self):
@@ -442,23 +657,18 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
             glColor3f(1,1,1)
         else:
             glColor4f(*OpenGL_color_map_RGBA)
-
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)  # Clear The Screen And The Depth Buffer
-        #glLoadIdentity() # Reset The View
+        glLoadIdentity()    # Reset The View
         glBindTexture(GL_TEXTURE_2D, self.tex)# this is the texture we will manipulate
         glEnable(GL_TEXTURE_2D)
 
         glRotate(self.alpha, 0., 0., 1.)
-
-
         dz = -1427
-
         r = self.ratio / self.picratio# screen h/w  // picture h/w
         #print('self.draft_scale ==== ', self.draft_scale)
         k = self.draft_scale#*2
         hor = self.draft_zero_horiz
         vert = self.draft_zero_vert
-
 
         if (r < 1):   # screen wider than image
             dy = 1
@@ -486,6 +696,8 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
 
         glRotate(-self.alpha, 0., 0., 1.)
         glDisable(GL_TEXTURE_2D)
+
+
 
     def view_SC(self):
         glPointSize(20)
@@ -570,15 +782,23 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
         glPopMatrix()
 
     def initializeGL(self):
+        #self.
         #glfwWindowHint(GLFW_SAMPLES, 4)
         #glEnable(GL_MULTISAMPLE)
+
+        #self.test_list()
+
         # draft1
         buf = GLint()
         glGetIntegerv(GL_MAX_TEXTURE_SIZE, byref(buf))
         self.max_texture_video_card = buf.value
         resize_texture(self, self.substrate)
         self.tex = glGenTextures(1)
-        print('self.tex = ', self.tex)
+        self.machine_tex_green = glGenTextures(1)
+        self.machine_model_parts()
+        print('glGenTextures(2) = ', self.machine_tex_green)
+        #self.glyph_tex = glGenTextures(1)
+        #print('self.tex = ', self.tex)
 
 
         glClearDepth(1.0)

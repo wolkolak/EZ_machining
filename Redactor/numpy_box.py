@@ -15,6 +15,7 @@ class NumpyBox():
         print('jj22')
         self.current_g_cod_pool = np.zeros((reading_lines_number, axises), float)
         self.visible_np = np.zeros((1, axises), float)
+        #self.visible_np_rot = np.zeros((1, 3), float)
         self.main_g_cod_pool = np.zeros((1, axises), float)
         #self.current_visible_np = np.zeros((reading_lines_number, axises), float)
 
@@ -26,16 +27,10 @@ class NumpyBox():
         #self.current_visible_np[:] = np.nan
         self.current_g_cod_pool[:] = np.nan
         self.visible_np[:] = np.nan
+        #self.visible_np_rot[:] = np.nan
         self.main_g_cod_pool[:] = np.nan
         #self.frame_address_in_visible_pool = np.zeros((1, 2), int)
         #self.frame_address_in_visible_pool = np.nan
-
-
-
-
-
-
-
 
     def create_new_currents_in_np_box(self, axis):
         print('self.redactor.reading_lines_number = ', self.redactor.reading_lines_number)
@@ -62,6 +57,8 @@ class NumpyBox():
         self.visible_np = np.append(self.visible_np, self.visible_np, axis=0)
         self.visible_np[1, :] = np.nan
         self.visible_np[1, 15] = 1
+
+
         #print('main_g_cod_pool = {}, \n frame_address_in_visible_pool = {}, \n visible_np = {}'.
         #      format(self.main_g_cod_pool, self.frame_address_in_visible_pool, self.visible_np))
         self.redactor.tab_.center_widget.left.update_visible_np_left()
@@ -69,7 +66,7 @@ class NumpyBox():
     def start_point(self):
         self.start_pointXYZ = [self.redactor.highlight.reversal_post_processor.start_pointXYZ[i] * self.redactor.highlight.reversal_post_processor.k_XYZABC_list[i] for i in range(6)]
         print('ending11')
-        self.new_np_line = [None, None, 0, 0, *self.start_pointXYZ, None, None, None, None, None, 0, None]#N100_G40 _G1_G1_X_Y_Z_A_B_C_cX_cY_cZ_R_F_np_line_n_type
+        self.new_np_line = [None, None, 0, 0, *self.start_pointXYZ, None, None, None, None, None, 0, None]#N100_G40 _G1_G1_X_Y_Z_A_B_C_cX_cY_cZ_R_F_np_line_n_type_   может ещё RealX_RealY_RealZ
         self.visible_np[0] = self.new_np_line[:]
         self.main_g_cod_pool[0] = self.new_np_line[:]
 
@@ -94,10 +91,17 @@ class NumpyBox():
         self.frame_address_in_visible_pool[0:, 0] = np.arange(0, m)
         self.frame_address_in_visible_pool[0:, 1] = np.arange(0, m)
         self.visible_np = self.main_g_cod_pool.copy()
+        #self.visible_np_rot = self.main_g_cod_pool[:, 4:7].copy()
+
         self.special_options_applying(min_line)#todo переделать
+
         print('self.frame_address_in_visible_pool = = ', self.frame_address_in_visible_pool)
 
     def special_options_applying(self, min_line=1):
+        """
+        when i need it?
+
+        """
         self.redactor.g_modal.current_g_modal = self.redactor.g_modal.create_current_from_g_modal(self.redactor.editor.min_line_np)
 
 
@@ -114,7 +118,7 @@ class NumpyBox():
         i = 0
         i_str = 0
         len_v = len(v)
-        modal_ark = self.redactor.highlight.reversal_post_processor.ARK_modal
+        modal_ark = self.redactor.highlight.reversal_post_processor.ARK_modal#todo точно чинить
         while i < len_v:
             if self.redactor.g_modal.current_g_modal['absolute_or_incremental'] == '91':
                 v[i] = self.relative_coord_option(last_significant_line, v[i])
@@ -170,10 +174,12 @@ class NumpyBox():
 
                 self.redactor.g_modal.current_g_modal = self.redactor.g_modal.create_current_from_g_modal(i_str + min_line)
 
+
+            #self.visible_np_rot[i] = v[i, 4:7]
             i = i + 1
             i_str = i_str + 1
 
-    def relative_coord_option(self, last_significant_line, new_line):
+    def relative_coord_option(self, last_significant_line, new_line):#подходит для C
         #print('ONE_: ', new_line)
         for k in range(4, 10):
             if not np.isnan(new_line[k]):
@@ -290,6 +296,7 @@ class NumpyBox():
             print('redactor add_ark_points failed')
             # прибавляе
         #print('n in add_ark_points = ', n)
+        #self.visible_np_rot = np.insert(self.visible_np_rot, np_num, ark_np_array[:, 4:8], axis=0)
         return np.insert(v, np_num, ark_np_array, axis=0), n
 
     def slide_next_address_cuz_new_points(self):

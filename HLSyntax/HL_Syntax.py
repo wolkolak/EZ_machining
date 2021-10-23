@@ -1,13 +1,11 @@
-import sys
-import time
-
 import numpy as np
-from PyQt5.QtGui import QColor, QTextCharFormat, QFont, QSyntaxHighlighter
-from PyQt5.QtCore import QRegExp, QRegularExpression, pyqtSignal, QEventLoop
+from PyQt5.QtGui import QSyntaxHighlighter
+from PyQt5.QtCore import QRegularExpression
 #from PyQt5.QtWidgets import *
 #from HLSyntax.PostProcessors_revers import *
 #from HLSyntax.ReversPostProcessor_0 import
-from HLSyntax.PostProcessors_revers.Fanuc_NT import Fanuc_NT, STYLES, STYLES_list_G0, STYLES_list_G1
+from Modelling_clay.PostProcessors_revers.Fanuc_NT import Fanuc_NT
+from Modelling_clay.ReversPostProcessor_0 import STYLES, STYLES_list_G0, STYLES_list_G1
 #HLSyntax.PostProcessors_revers.
 
 

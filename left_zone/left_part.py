@@ -59,6 +59,8 @@ class leftTab(QTabWidget):
         self.addTab(self.a, 'whole array')
         self.b = SomeInTab(left_tab=self, np_arr=self.parent.visible_np_left)
         self.addTab(self.b, 'visual')
+        self.visual_rot = NumpyPrint(self)
+        self.addTab(self.visual_rot, 'ax rotated array')
         self.setCurrentIndex(1)
 
 class NumpyPrint(QPlainTextEdit):
@@ -84,7 +86,9 @@ class left1(QWidget):
         self.setStyleSheet("background-color: {}".format(color1))
         #axis
         self.visible_np_empty = np.zeros((1, axises), float)
-        self.visible_np_left = self.visible_np_empty
+        self.visible_np_left = self.visible_np_empty#todo переключение при смене вкладки сделать
+        #self.visible_rot_np_empty = np.zeros((1, 3), float)
+        #self.visible_rot = self.visible_rot_np_empty
         #self.visible_np[1][:] = 1.
         grid = QGridLayout()
         self.setLayout(grid)
@@ -109,11 +113,15 @@ class left1(QWidget):
         self.reset_np_array_in_left_field(self.visible_np_left)
 
     def reset_np_array_in_left_field(self, v):
+        """
+        here we explain how to display numpy arrays
+        """
         mapper = lambda x: np.format_float_positional(x, precision=2)
         np.set_printoptions(
              linewidth=350, floatmode='fixed', threshold=sys.maxsize,
             suppress=False, formatter={'float': mapper}
         )
         self.left_tab.a.setPlainText(np.array2string(v))
+        #self.left_tab.visual_rot.setPlainText(np.array2string(self.central_widget.note.currentWidget().np_box.visible_np_rot))
         self.left_tab.b.openGL.gcod = v
         print('self.left_tab.b.openGL.gcod.shape = ', self.left_tab.b.openGL.gcod.shape)

@@ -11,7 +11,7 @@ import cv2
 from Settings.settings import scaling_draft_prime
 import math
 import re
-
+from freetype import *
 
 
 def restore_zero_position_shell(func):
@@ -39,7 +39,7 @@ def d3_interface(self):
     # grid.setRowStretch(0, 20)
     # grid.setColumnStretch(0, 30)
     self.setLayout(self.grid)
-    self.scene_ZX = QPushButton('Turn View')#scene_XZ
+    self.scene_ZX = QPushButton('Turn (XZ)')#scene_XZ
     add_widget_to_scene(self, self.scene_ZX, self.turn_to_turn_view, 60, 30, 0, 0)
     self.scene_YX = QPushButton('YX')#scene_XY
     add_widget_to_scene(self, self.scene_YX, self.YX_view, 60, 30, 0, 1)
@@ -78,7 +78,7 @@ def resize_texture(self,  new_image_address, scaling_draft_prime=scaling_draft_p
             f = new_image_address
         else:
             f = garbage
-        self.substrate = new_image_address
+        self.substrate = f#new_image_address
         im = QtGui.QImage(f)
         self.ix = im.width()
         self.iy = im.height()
@@ -160,9 +160,86 @@ class ChooseDistanceDialog(QDialog):
 
         print('distance')
         print('y_px2 = self.father.new_dot2[1] = ', y_px2)
-        scene.behavior_mode = ''
-        scene.new_dot1 = None
-        scene.new_dot2 = None
+        #scene.behavior_mode = ''
+        #scene.new_dot1 = None
+        #scene.new_dot2 = None
         self.close()
 
+    def done(self, a0: int) -> None:
+        print('choose distance done')
+        self.father.refresh()
+        #self.father.behavior_mode = ''
+        #self.father.new_dot1 = None
+        #self.father.new_dot2 = None
+        QDialog.done(self, a0)
 
+def make_label(text, filename, size=12, angle=0):
+    '''
+    Parameters:
+    -----------
+    text : string
+        Text to be displayed
+    filename : string
+        Path to a font
+    size : int
+        Font size in 1/64th points
+    angle : float
+        Text angle in degrees
+    '''
+    face = Face(filename)
+    face.set_char_size( size*64 )
+    angle = (angle/180.0)*math.pi
+    matrix  = FT_Matrix( (int)( math.cos( angle ) * 0x10000 ),
+                         (int)(-math.sin( angle ) * 0x10000 ),
+                         (int)( math.sin( angle ) * 0x10000 ),
+                         (int)( math.cos( angle ) * 0x10000 ))
+    flags = FT_LOAD_RENDER
+    pen = FT_Vector(0,0)
+    FT_Set_Transform( face._FT_Face, byref(matrix), byref(pen) )
+    previous = 0
+    xmin, xmax = 0, 0
+    ymin, ymax = 0, 0
+    for c in text:
+        face.load_char(c, flags)
+        kerning = face.get_kerning(previous, c)
+        previous = c
+        width = face.glyph.bitmap.width
+        rows = face.glyph.bitmap.rows
+        top = face.glyph.bitmap_top
+        left = face.glyph.bitmap_left
+        pen.x += kerning.x
+        x0 = (pen.x >> 6) + left
+        x1 = x0 + width
+        y0 = (pen.y >> 6) - (rows - top)
+        y1 = y0 + rows
+        xmin, xmax = min(xmin, x0),  max(xmax, x1)
+        ymin, ymax = min(ymin, y0), max(ymax, y1)
+        pen.x += face.glyph.advance.x
+        pen.y += face.glyph.advance.y
+
+    L = np.zeros((ymax-ymin, xmax-xmin), dtype=np.ubyte)
+    previous = 0
+    pen.x, pen.y = 0, 0
+    for c in text:
+        face.load_char(c, flags)
+        kerning = face.get_kerning(previous, c)
+        previous = c
+        bitmap = face.glyph.bitmap
+        pitch  = face.glyph.bitmap.pitch
+        width  = face.glyph.bitmap.width
+        rows   = face.glyph.bitmap.rows
+        top    = face.glyph.bitmap_top
+        left   = face.glyph.bitmap_left
+        pen.x += kerning.x
+        x = (pen.x >> 6) - xmin + left
+        y = (pen.y >> 6) - ymin - (rows - top)
+        data = []
+        for j in range(rows):
+            data.extend(bitmap.buffer[j*pitch:j*pitch+width])
+        if len(data):
+            Z = np.array(data, dtype=np.ubyte).reshape(rows, width)
+            L[y:y+rows, x:x+width] |= Z[::-1, ::1]
+        pen.x += face.glyph.advance.x
+        pen.y += face.glyph.advance.y
+
+    return L

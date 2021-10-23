@@ -10,6 +10,7 @@ class Fanuc_NT(ReversalPostProcessor0):#ReversalPostProcessor0
         Note, that pattern will be checked one after another, so if u have patternA thant includes patternB as a part, order matters
         """
         self.k_XYZABC['X'] = 0.5
+        self.ABC_HEAD[2] = False#ax Z belong to table or spindle
         print('self.k_XYZABC = ', self.k_XYZABC)
         self.update_options_postprocessor()
         print('k_XYZABC_list = ', self.k_XYZABC_list)

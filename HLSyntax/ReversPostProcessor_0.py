@@ -95,6 +95,7 @@ class ReversalPostProcessor0(ABC):#metaclass=ABCMeta
                          'A': 1.,
                          'B': 1.,
                          }
+        self.ABC_HEAD = [True, True, True]
         self.stright_G2_G3 = True
         self.ARK_modal = 3#or 0 if not
         self.k_XYZABC_list = []

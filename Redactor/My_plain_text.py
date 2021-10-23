@@ -363,7 +363,10 @@ class MyEdit(QPlainTextEdit):
 
 
     def rehighlightNextBlocks(self):
-        #return
+        """
+        refresh how to render syntax text, after changing
+        :return:
+        """
         print('rehighlight start')
         i = self.second_place + 1
         #g_old = self.LastGCod
