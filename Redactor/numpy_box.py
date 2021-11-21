@@ -14,23 +14,27 @@ class NumpyBox():
         reading_lines_number = redactor.reading_lines_number
         print('jj22')
         self.current_g_cod_pool = np.zeros((reading_lines_number, axises), float)
-        self.visible_np = np.zeros((1, axises), float)
-        #self.visible_np_rot = np.zeros((1, 3), float)
-        self.main_g_cod_pool = np.zeros((1, axises), float)
+
         #self.current_visible_np = np.zeros((reading_lines_number, axises), float)
+        self.create_main_and_visual_in_NP(reading_lines_number)
 
-        self.frame_address_in_visible_pool = np.zeros((reading_lines_number+1, 2), int)
+
+        self.enable_NP_BOX_in_current_HL_Syntax()
+
+    def create_main_and_visual_in_NP(self, reading_lines_number):
+        self.visible_np = np.zeros((1, axises), float)
+        self.main_g_cod_pool = np.zeros((1, axises), float)
+        self.frame_address_in_visible_pool = np.zeros((reading_lines_number + 1, 2), int)
         h, w = self.frame_address_in_visible_pool.shape
-        self.frame_address_in_visible_pool[:, 0] = np.arange(1, 1+h)
-        self.frame_address_in_visible_pool[:, 1] = np.arange(1, 1+h)
-
-        #self.current_visible_np[:] = np.nan
+        self.frame_address_in_visible_pool[:, 0] = np.arange(1, 1 + h)
+        self.frame_address_in_visible_pool[:, 1] = np.arange(1, 1 + h)
         self.current_g_cod_pool[:] = np.nan
         self.visible_np[:] = np.nan
-        #self.visible_np_rot[:] = np.nan
         self.main_g_cod_pool[:] = np.nan
-        #self.frame_address_in_visible_pool = np.zeros((1, 2), int)
-        #self.frame_address_in_visible_pool = np.nan
+
+    def enable_NP_BOX_in_current_HL_Syntax(self):
+        print('ENABLE')
+        self.redactor.highlight.remember_np_box_parts(self.current_g_cod_pool)
 
     def create_new_currents_in_np_box(self, axis):
         print('self.redactor.reading_lines_number = ', self.redactor.reading_lines_number)
@@ -64,7 +68,9 @@ class NumpyBox():
         self.redactor.tab_.center_widget.left.update_visible_np_left()
 
     def start_point(self):
-        self.start_pointXYZ = [self.redactor.highlight.reversal_post_processor.start_pointXYZ[i] * self.redactor.highlight.reversal_post_processor.k_XYZABC_list[i] for i in range(6)]
+        #self.start_pointXYZ = [self.redactor.highlight.reversal_post_processor.start_pointXYZ[i] * self.redactor.highlight.reversal_post_processor.k_XYZABC_list[i] for i in range(6)]
+        self.start_pointXYZ = [self.redactor.current_machine.start_pointXYZ[i] *
+                               self.redactor.current_machine.k_XYZABC_list[n] for i, n in zip(range(6), 'XYZABC')]
         print('ending11')
         self.new_np_line = [None, None, 0, 0, *self.start_pointXYZ, None, None, None, None, None, 0, None]#N100_G40 _G1_G1_X_Y_Z_A_B_C_cX_cY_cZ_R_F_np_line_n_type_   может ещё RealX_RealY_RealZ
         self.visible_np[0] = self.new_np_line[:]
@@ -74,16 +80,19 @@ class NumpyBox():
     #    self.current_g_cod_pool = np.zeros((reading_lines_number, axises), float)
     #    self.current_g_cod_pool[:] = np.nan
 
-    def inserting_current_in_main_shell(self, min_line):
-        self.inserting_current_in_main(min_line)
+    #def inserting_current_in_main_shell(self, min_line):
+    #    self.inserting_current_in_main(min_line)
         #N_line_number = min_line + len(self.current_g_cod_pool) - 1
         #self.resolving(N_line_number)
 
     def inserting_current_in_main(self, min_line):
         #n = 0
-        min_visual = self.frame_address_in_visible_pool[0, 1] + 1
+        #min_visual = self.frame_address_in_visible_pool[0, 1] + 1
         #print('min_visual = ', min_visual)
         #self.current_visible_np = self.current_g_cod_pool.copy()
+        print('self.main_g_cod_pool = ', self.main_g_cod_pool)
+        print('min_line = ', min_line)
+        print('self.current_g_cod_pool = ', self.current_g_cod_pool)
         self.main_g_cod_pool = np.insert(self.main_g_cod_pool, min_line, self.current_g_cod_pool, axis=0)
         m = len(self.main_g_cod_pool)
         self.main_g_cod_pool[0:, 15] = np.arange(0, m)#self.main_g_cod_pool[min_line:, 15]# + adding_number
@@ -95,7 +104,7 @@ class NumpyBox():
 
         self.special_options_applying(min_line)#todo переделать
 
-        print('self.frame_address_in_visible_pool = = ', self.frame_address_in_visible_pool)
+        #print('self.frame_address_in_visible_pool = = ', self.frame_address_in_visible_pool)
 
     def special_options_applying(self, min_line=1):
         """
@@ -178,6 +187,8 @@ class NumpyBox():
             #self.visible_np_rot[i] = v[i, 4:7]
             i = i + 1
             i_str = i_str + 1
+
+        #print('ТАААК: ', self.visible_np)
 
     def relative_coord_option(self, last_significant_line, new_line):#подходит для C
         #print('ONE_: ', new_line)

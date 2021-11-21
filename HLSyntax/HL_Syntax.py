@@ -1,40 +1,37 @@
 import numpy as np
 from PyQt5.QtGui import QSyntaxHighlighter
 from PyQt5.QtCore import QRegularExpression
-#from PyQt5.QtWidgets import *
-#from HLSyntax.PostProcessors_revers import *
-#from HLSyntax.ReversPostProcessor_0 import
-from Modelling_clay.PostProcessors_revers.Fanuc_NT import Fanuc_NT
 from Modelling_clay.ReversPostProcessor_0 import STYLES, STYLES_list_G0, STYLES_list_G1
-#HLSyntax.PostProcessors_revers.
-
-
 
 
 class GMHighlighter(QSyntaxHighlighter):
 
-    def __init__(self, document, base):
+    def __init__(self, document, base, proc_class):
         QSyntaxHighlighter.__init__(self, document)
+        self.reversal_post_processor = proc_class(base)
         self.list_number_captured_1 = [i * 2 for i in range(1, 15)]#todo добавь ijk
         self.list_number_captured_1.insert(3, 6)
-        print('self.list_number_captured_1 = ', self.list_number_captured_1)
         self.previous_block_g = 0
         self.base = base
         self.count = 0
         self.count_in_step = 0
         self.const_step = 1000
         self.standart_step = self.const_step
-        self.reversal_post_processor = Fanuc_NT(base)
-        self.remember_np_box_parts()  # todo Нужна ли отдельная функция вообще? потребуется ли она
-
         self.main_rule_regular_expression = QRegularExpression(self.reversal_post_processor.sorted_axis_rule)
         self.simple_format = STYLES['axis']#self.first_rule[2]
         self.second_rule_regular_expression = QRegularExpression(self.reversal_post_processor.unsorted_axis_rule)#self.rules[0][0]
         self.too_little_number_check()
+        print(self.main_rule_regular_expression)
 
 
-    def remember_np_box_parts(self):
-        self.current_g_cod_pool = self.base.np_box.current_g_cod_pool
+    def remember_np_box_parts(self, current_pool):
+
+
+        self.current_g_cod_pool = current_pool
+
+        #print('1 self.current_g_cod_pool = ')
+        #print(self.current_g_cod_pool)
+        #print('2 self.current_g_cod_pool = ')
 
 
     def too_little_number_check(self):
@@ -45,7 +42,7 @@ class GMHighlighter(QSyntaxHighlighter):
 
     def highlightBlock(self, text):
         """Применить выделение синтаксиса к данному блоку текста. """
-
+        #print('highloght text = [{}]'.format(text) )
         nya = self.main_rule_regular_expression.match(text, 0)
         #print('nya0 = ', nya.captured(0))
         start = nya.capturedStart()
@@ -65,7 +62,7 @@ class GMHighlighter(QSyntaxHighlighter):
                 self.unsorted_recount(nya, STYLES_list_G0, STYLES_list_G1)
             else:
                 if not self.recount_special_rules(text):
-                    print('ERROR LINE')
+                    print('ERROR LINE: ', text)
 
     def recount_empty_line(self):
         self.current_g_cod_pool[self.count][2] = self.previous_block_g
@@ -99,8 +96,9 @@ class GMHighlighter(QSyntaxHighlighter):
 
     def recount(self, nya, STYLES_list_G0, STYLES_list_G1):
 
+        #print('recount self.current_g_cod_pool = ', self.current_g_cod_pool)
         self.current_g_cod_pool[self.count, np.r_[0:15]] = [nya.captured(i) or None for i in self.list_number_captured_1]
-        print('uuuu nya.captured(6) = ',nya.captured(6))
+        #print('uuuu nya.captured(6) = ', nya.captured(6))
         #Заполнения здесь не происходит, так как оно только между numpy массивами
         #print('current_g_cod_pool == ', self.base.current_g_cod_pool[self.count])
         #G0-G3
@@ -121,7 +119,7 @@ class GMHighlighter(QSyntaxHighlighter):
         #    self.setFormat(start, ax, stile[i])
         #start = start + ax
         #i = i + 1
-        print('i equal ', i)
+        #print('i equal ', i)
         #for k in range(40):
         #    print('recount: ||||nya.captured({}) = {}'.format(k, nya.captured(k)))
 
@@ -195,9 +193,9 @@ class GMHighlighter(QSyntaxHighlighter):
         #n = n + 2
         #ax = len(nya.captured(n))
         n = n + 1
-        print('n === ', n)
-        for k in range(40):
-            print('||||nya.captured({}) = {}'.format(k, nya.captured(k)))
+        #print('n === ', n)
+        #for k in range(40):
+        #    print('||||nya.captured({}) = {}'.format(k, nya.captured(k)))
 
         #n = 4
         while nya.captured(n) != '' and n < 26 :#вероятно, избыточное условие

@@ -222,7 +222,7 @@ class MyEdit(QPlainTextEdit):
         """
                 Тут необходимо добавить n_deleted_lines, n_highlighted_lines
                 и pos1_del pos1_insert
-                 в self.undoStack.command(self.undoStack.index()-1)
+                 в self.undoStack.command(self.undoStack.index()-1) уже?
                 """
         self.base.progress_bar.rehighlight = True
         if self.undoStack.edit_type == 'undo':  # only for undo redo зщщы2

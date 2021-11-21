@@ -3,7 +3,7 @@ from OpenGL.GL import *
 import freetype
 import numpy as np
 
-
+#сейчас не исполььзуется
 
 class CharacterSlot:
     def __init__(self, texture, glyph):

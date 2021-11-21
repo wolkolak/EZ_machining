@@ -73,9 +73,9 @@ class toolsFrameDisplace(QFrame):
     def choose_draft_zero_point(self):
         print('zero point')
         self.father.scene0.behavior_mode = 'draft_point'
-        print('main_inteface = ', self.father.main_inteface.width())
-        self.father.move(self.father.main_inteface.width() + self.father.main_inteface.pos().x() - self.father.width(),
-                         self.father.main_inteface.height() + self.father.main_inteface.pos().y() - self.father.height())
+        print('main_inteface = ', self.father.main_interface.width())
+        self.father.move(self.father.main_interface.width() + self.father.main_interface.pos().x() - self.father.width(),
+                         self.father.main_interface.height() + self.father.main_interface.pos().y() - self.father.height())
         self.father.scene0.render_text_preparation('Choose new ZERO \n point on the draft ', text_size=200, name_png='ZERO draft dot', k=0.35)
         self.father.scene0.setCursor(QtGui.QCursor(Qt.CrossCursor))
 
@@ -209,8 +209,8 @@ class ToolsFrameAutoLineMeasure(QFrame):
     def draft_size_from_distance(self):
         print('draft_size_from_distance')
         self.father.scene0.behavior_mode = 'choose distance'
-        self.father.move(self.father.main_inteface.width() + self.father.main_inteface.pos().x() - self.father.width(),
-                         self.father.main_inteface.height() + self.father.main_inteface.pos().y() - self.father.height())
+        self.father.move(self.father.main_interface.width() + self.father.main_interface.pos().x() - self.father.width(),
+                         self.father.main_interface.height() + self.father.main_interface.pos().y() - self.father.height())
         self.father.scene0.setCursor(QtGui.QCursor(Qt.CrossCursor))
         self.father.scene0.render_text_preparation("RClick to choose \n 1'st coordinat dot ", text_size=200, name_png='1st draft dot', k=0.35)
 

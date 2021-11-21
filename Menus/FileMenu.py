@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import QMainWindow, QAction, qApp,  QToolBar
 from PyQt5.QtGui import QIcon
 
 def file_open(self):
+
     self.openAction = QAction(QIcon('icons/open.png'), 'Open', self)
     self.openAction.setStatusTip('Open GM File')
     self.openAction.triggered.connect(self.centre.note.open_file)

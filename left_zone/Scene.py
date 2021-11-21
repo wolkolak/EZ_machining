@@ -494,6 +494,7 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
         self.draw_machine()
 
         self.part_turn_points(self.gcod)
+
         #self.frame.left_tab.parent.central_widget.note.currentWidget().np_box.visible_np_rot
         self.part_turn_lines(self.gcod)
         self.draw_special_dot()
@@ -523,8 +524,9 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
 
 
     def machine_model_parts(self):
-        from Modelling_clay.machines.Machine_CBA_Table_Example.machine_CBA_Table_example import CBA_Table
-        self.current_machine = CBA_Table()
+        #from Modelling_clay.machines.Machine_CBA_Table_Example.machine_CBA_Table_example import CBA_Table
+        #self.current_machine = CBA_Table(self)
+
         glColor4f(1., 1.0, 1.0, 255)
         im = QtGui.QImage(r'Settings\machineTextures\machine_green.png')
         ix = im.width()
@@ -818,12 +820,16 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget
         #
 
     def part_turn_points(self, np_list):
+        #print('!!!!!!!!!!!!!!!!!!!!')
+        #print('list = ', np_list)
+
         glPointSize(7)
         glEnable(GL_VERTEX_PROGRAM_POINT_SIZE)
         glPushMatrix()
         glColor3f(0.3, 0.3, 0.3)
         glBegin(GL_POINTS)
         for i in np_list:
+            #glVertex3f(i[4], i[5], i[6])#todo УБРАТЬ
             if np.isnan(i[16]):
                 glVertex3f(i[4], i[5], i[6])
                 if i[2] == 2 or i[2] == 3:

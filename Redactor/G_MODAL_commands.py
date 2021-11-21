@@ -8,6 +8,7 @@ class G_MODAL_DICT(dict):#dict of lists of lists.
         super().__init__()
         self['plane'] = [[0, '18'], ]
         self['absolute_or_incremental'] = [[0, '90'], ]
+        self['SC'] = [[0, '54'], ]
         self.base_g_modal = self.create_base_g_modal()
         self.current_g_modal = self.create_current_from_g_modal(0)
         print('1base_dict = ', self.base_g_modal)
@@ -63,8 +64,8 @@ class G_MODAL_DICT(dict):#dict of lists of lists.
         print('list1 = ', list1)
         print('line_number = ',line_number)
         for j in range(len(list1)):#-1 ? nope
-            print('j=',j)
-            print('list1[j][0] = ', list1[j][0])
+            #print('j=',j)
+            #print('list1[j][0] = ', list1[j][0])
             if line_number < list1[j][0]:#todo А если закончатся значения, куда добавлять?
                 position = j
                 break

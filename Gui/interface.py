@@ -7,6 +7,7 @@ import shutil
 import sys
 from Menus import EditMenu, FileMenu, ViewMenu, OptionsMenu, ToolsMenu, ImportMenu
 from Settings import bigCustomizer, change_setting, settings
+from Gui.Default_machine_syntax import DefaultReference
 #from Gui import test_button
 
 class MyMainWindow(QMainWindow):
@@ -18,6 +19,7 @@ class MyMainWindow(QMainWindow):
 
     def initUI(self):
         print('main window started')
+
         self.splitter_flag = settings.splitter_parameters['flag']
 
         self.setWindowTitle('EZ machining')
@@ -26,7 +28,7 @@ class MyMainWindow(QMainWindow):
         self.setCentralWidget(self.centre)
         self.statusBar()
         self.menubar = self.menuBar()
-
+        self.default_reference = DefaultReference()
         #file
         FileMenu.file_open(self)
         #Edit
@@ -43,13 +45,10 @@ class MyMainWindow(QMainWindow):
         #options
         OptionsMenu.options(self)
 
-        toolbar1 = QToolBar(self)
-        self.addToolBar(Qt.LeftToolBarArea, toolbar1)
-        toolbar1.setStyleSheet("background-color: {}".format(gui_classes.color3))
-        toolbar1.addAction(self.exitAction)
-
-        self.view_f = MyViewToolBar.MyViewToolBar(self)
         self.txt_tools = MyTxtToolBar.MyTextToolBar(self)
+        #self.txt_tools.setStyleSheet("QToolTip { color: #ffffff; background-color: #000000; border: 0px; }")
+        self.view_f = MyViewToolBar.MyViewToolBar(self)
+
 
         self.centre.note.currentChanged.connect(self.change_tab)
         self.custom = bigCustomizer.BigCustomizer(self)

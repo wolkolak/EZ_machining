@@ -5,8 +5,9 @@ from left_zone import left_part
 from Redactor import redactor
 from Settings import change_setting
 from Settings.settings import *
+from Gui.little_gui_classes import simple_warning
 import numpy as np
-import time
+
 
 class My_Button(QPushButton):
     def __init__(self, *args, **kwargs):
@@ -30,7 +31,7 @@ class MyOpenDialog(QWidget):
         #self.setMaximumSize(1111,1111)
         grid = QGridLayout()
         self.setLayout(grid)
-        
+
         #self.self.layout().addWidget(self.remember_directory)
         #print('niheraaaaaaaaaaa', self.layout)
         #grid = QGridLayout()
@@ -52,6 +53,12 @@ class Tabs(QTabWidget):
 
     def __init__(self, center_widget, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+
+        #self.default_processor = default_processor
+        print('self.default_processor in tabs: ', self.default_processor)
+
+
         self.colored_tabbar = coloredTabBar()
         self.setTabBar(self.colored_tabbar)
         self.setTabsClosable(True)
@@ -83,7 +90,15 @@ class Tabs(QTabWidget):
 
         self.setStyleSheet(stylesheet)
 
+    @property
+    def default_processor(self):
+        from Settings.settings import default_processor
+        return default_processor
 
+    @property
+    def default_machine(self):
+        from Settings.settings import default_machine
+        return default_machine
 
     def delete_tab(self, n):
         name = self.widget(n).editor.existing
@@ -151,7 +166,7 @@ class Tabs(QTabWidget):
 
         #options |= QFileDialog.DontUseNativeDialog
         print('QFileDialog.DontUseNativeDialog')
-        path, _ = QFileDialog.getOpenFileName(None, "Open файлик", g_programs_folder, self.filter_files)
+        path, _ = QFileDialog.getOpenFileName(None, "Open file", g_programs_folder, self.filter_files)
         print(path)
         if path:
             self.make_open_DRY(path)
@@ -223,13 +238,14 @@ class Tabs(QTabWidget):
             except ValueError:
                 name_open_file = path
 
-            self.insertTab(self.currentIndex() + 1, redactor.ParentOfMyEdit(text, existing=path, tab_=self), name_open_file)
+            self.insertTab(self.currentIndex() + 1, redactor.ParentOfMyEdit(text, tab_=self, existing=path), name_open_file)
             #self.currentWidget().editor.set_syntax()
             self.setCurrentIndex(self.currentIndex()+1)
             self.currentWidget().editor.existing = path
             add_new_name(path)
         except BaseException:
             simple_warning('warning', "У файла формат не тот \n ¯\_(ツ)_/¯ ")
+
 
 
 
@@ -304,11 +320,7 @@ def my_font_diag():
     pass
 
 
-def simple_warning(title, text):
-    warning = QMessageBox()
-    warning.setWindowTitle(title)
-    warning.setText(text)
-    warning.exec()
+
 
 def simple_2_dialog(func1, func2, title):
    save_or_throw = QMessageBox()
