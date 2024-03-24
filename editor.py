@@ -1,4 +1,4 @@
-
+#Это баловство
 from PyQt5 import Qt
 import sys
 import HL_Syntax1, HLSyntax.HL_Syntax
@@ -32,7 +32,8 @@ class MyW(QWidget):
         self.highlight = HL_Syntax1.PythonHighlighter(self.editor.document())
         self.resize(700, 400)
         # Загрузите что-нибудь (например, editor_2.py) в редактор для демонстрации.
-        infile = open('D:\Py_try\EZ_machining\examples\doc1.txt', 'r')
+        #infile = open('D:\Py_try\EZ_machining\examples\doc1.txt', 'r')#
+        infile = open(r'D:\Users\72014\Desktop\EZ_machining-master\examples\doc122.txt', 'r')
         self.editor.setPlainText(infile.read())
 
 if __name__ == '__main__':

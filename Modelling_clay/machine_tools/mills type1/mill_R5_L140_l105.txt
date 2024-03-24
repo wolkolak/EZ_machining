@@ -1,0 +1,14 @@
+TYPE=mills type1
+fastener=0.0
+OVERALL_L=145.0
+SORTIE=100.0
+R tail=8.0
+H tail=35.0
+Cylinder1 R1=20.0
+Cylinder1 R2=20.0
+H1=50.0
+Cylinder2 R1=20.0
+Cylinder2 R2=10.0
+H2=50.0
+Sphere R=10.0
+PIC=Mill1 tool.png

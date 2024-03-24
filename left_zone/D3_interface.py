@@ -39,7 +39,7 @@ def d3_interface(self):
     # grid.setRowStretch(0, 20)
     # grid.setColumnStretch(0, 30)
     self.setLayout(self.grid)
-    self.scene_ZX = QPushButton('Turn (XZ)')#scene_XZ
+    self.scene_ZX = QPushButton('XZ')#scene_XZ
     add_widget_to_scene(self, self.scene_ZX, self.turn_to_turn_view, 60, 30, 0, 0)
     self.scene_YX = QPushButton('YX')#scene_XY
     add_widget_to_scene(self, self.scene_YX, self.YX_view, 60, 30, 0, 1)
@@ -106,7 +106,9 @@ def resize_texture(self,  new_image_address, scaling_draft_prime=scaling_draft_p
         self.gl_format = GL_RGB
         self.ratio = 1
         self.picratio = 1
-        self.draft_scale = scaling_draft_prime * self.k_rapprochement#число должно зависеть от
+        self.draft_scale = scaling_draft_prime * self.k_rapprochement# todo обнуляю приближение.
+        self.scaling_draft_prime = scaling_draft_prime#todo prime тоже обновляю
+
         self.flag_draft = True
         print('next222')
 
@@ -187,12 +189,12 @@ def make_label(text, filename, size=12, angle=0):
         Text angle in degrees
     '''
     face = Face(filename)
-    face.set_char_size( size*64 )
+    face.set_char_size(size*64 )
     angle = (angle/180.0)*math.pi
-    matrix  = FT_Matrix( (int)( math.cos( angle ) * 0x10000 ),
-                         (int)(-math.sin( angle ) * 0x10000 ),
-                         (int)( math.sin( angle ) * 0x10000 ),
-                         (int)( math.cos( angle ) * 0x10000 ))
+    matrix  = FT_Matrix( (int)( math.cos(angle) * 0x10000 ),
+                         (int)(-math.sin(angle) * 0x10000 ),
+                         (int)( math.sin(angle) * 0x10000 ),
+                         (int)( math.cos(angle) * 0x10000 ))
     flags = FT_LOAD_RENDER
     pen = FT_Vector(0,0)
     FT_Set_Transform( face._FT_Face, byref(matrix), byref(pen) )

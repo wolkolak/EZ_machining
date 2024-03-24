@@ -40,7 +40,7 @@ class PythonHighlighter (QSyntaxHighlighter):
         'and', 'assert', 'break', 'class', 'continue', 'def',
         'del', 'elif', 'else', 'except', 'exec', 'finally',
         'for', 'from', 'global', 'if', 'import', 'in',
-        'is', 'lambda', 'not', 'or', 'pass', 'print',
+        'is', 'lambda', 'not', 'or', 'pass', '#print',
         'raise', 'return', 'try', 'while', 'yield',
         'None', 'True', 'False',
     ]
@@ -113,7 +113,7 @@ class PythonHighlighter (QSyntaxHighlighter):
                 index = nya.capturedEnd()
 
         self.setCurrentBlockState(0)
-        print('111')
+        #print('111')
         # Многострочные строки
         #in_multiline = self.match_multiline(text, *self.tri_single)
         #if not in_multiline:

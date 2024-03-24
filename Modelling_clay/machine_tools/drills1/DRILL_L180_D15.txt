@@ -1,0 +1,12 @@
+TYPE=drills1
+fastener=0.0
+OVERALL_L=180.00013
+SORTIE=130.0
+R tail=12.0
+H tail=50.0
+Cylinder1 R1=15.0
+Cylinder1 R2=15.0
+H=125.67
+Cylinder2 R1=15.0
+Cylinder2 ANGLE=120.0
+PIC=Drill1 tool.png

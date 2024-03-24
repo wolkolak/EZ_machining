@@ -24,3 +24,7 @@ def view_opt(self):
     self.unPlaceStartAction .setShortcut('Ctrl+E')
     self.unPlaceStartAction.triggered.connect(self.drop_point)
     self.BackplotView.addAction(self.unPlaceStartAction)
+
+    self.calculations_stop = QAction(QIcon('icons/ON.png'), 'Calculations', self)
+    self.calculations_stop.triggered.connect(lambda:gui_classes.stop_calculations(self))
+    self.BackplotView.addAction(self.calculations_stop)

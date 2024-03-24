@@ -1,0 +1,14 @@
+We are using Regular Expressions at the left choosing tools in center. Checking it by "Check mask" and "Checked tool". 
+One RegExp - one tool.
+
+.    :	ANY ONE character except newline. Same as [^\n]
+\d,\D: 	ANY ONE digit/non-digit character. Digits are [0-9]
+\w,\W:	ANY ONE word/non-word character. For ASCII, word characters are [a-zA-Z0-9_]
+\s,\S:	ANY ONE space/non-space character. For ASCII, whitespace characters are [ \n\r\t\f]
+^, $:	start-of-line and end-of-line respectively. E.g., ^[0-9]$ matches a numeric string.
+\b: 	boundary of word, i.e., start-of-word or end-of-word. E.g., \bcat\b matches the word "cat" in the input string.
+\B: 	Inverse of \b, i.e., non-start-of-word or non-end-of-word.
+\<, \>: start-of-word and end-of-word respectively, similar to \b. E.g., \<cat\> matches the word "cat" in the input string.
+\A, \Z: start-of-input and end-of-input respectively.
+
+Find more about Regular Expressions in google.

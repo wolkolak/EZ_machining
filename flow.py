@@ -1,10 +1,10 @@
 from PyQt5.QtCore import Qt, QRect, QSize, QThread, pyqtSignal, QTimer
 
 def foo():
-    print('foo')
+    #print('foo')
     n = 1
     while True:
-        print('n = ', n)
+        #print('n = ', n)
         n += 1
 
 class ThreadClass(QThread):
@@ -17,10 +17,10 @@ class ThreadClass(QThread):
 
 
     def run(self):
-        print('start running')
+        #print('start running')
         value = 1000
-        print(self.func)
+        #print(self.func)
         self.stastSignal.emit(value)
         self.func()
-        print('vse')
+        #print('vse')
         #self.finishSignal.emit("Готово!")

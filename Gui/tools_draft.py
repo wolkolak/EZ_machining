@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QDialog, QGridLayout, QFrame, QLabel, QLineEdit, QPushButton
-from PyQt5.QtGui import QIcon, QPixmap, QDoubleValidator
+from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5 import QtCore, QtGui
+from Gui.little_gui_classes import validate_text_digit
 from PyQt5.QtCore import Qt
 import re
 from left_zone.D3_interface import restore_zero_position_shell
@@ -11,8 +12,8 @@ class draft_dialog(QDialog):
     def __init__(self, main_inteface, *args, **kwargs):
         super().__init__(main_inteface, *args, **kwargs)
         self.setAttribute(Qt.WA_DeleteOnClose)
-        self.main_inteface = main_inteface
-        self.scene0 = self.main_inteface.centre.left.left_tab.b.openGL
+        self.main_interface = main_inteface
+        self.scene0 = self.main_interface.centre.left.left_tab.parent_of_3d_widget.openGL
         grid = QGridLayout()
         self.setLayout(grid)
         self.setFixedSize(518, 318)
@@ -77,6 +78,7 @@ class toolsFrameDisplace(QFrame):
         self.father.move(self.father.main_interface.width() + self.father.main_interface.pos().x() - self.father.width(),
                          self.father.main_interface.height() + self.father.main_interface.pos().y() - self.father.height())
         self.father.scene0.render_text_preparation('Choose new ZERO \n point on the draft ', text_size=200, name_png='ZERO draft dot', k=0.35)
+
         self.father.scene0.setCursor(QtGui.QCursor(Qt.CrossCursor))
 
 
@@ -87,7 +89,7 @@ class toolsFrameDisplace(QFrame):
             delta_horiz = '0'
         if delta_vert == '':
             delta_vert = '0'
-        k = self.father.scene0.draft_scale
+        k = self.father.scene0.k_rapprochement
         #angle = -(self.father.scene0.alpha * 2 * math.pi / 360)
         delta_horiz = float(delta_horiz)
         delta_vert = float(delta_vert)
@@ -95,15 +97,16 @@ class toolsFrameDisplace(QFrame):
         _horiz = delta_horiz #* math.cos(angle) - delta_vert * math.sin(angle)
         _vert = delta_vert #* math.cos(angle) + delta_horiz * math.sin(angle)
         #display_h_mm
-        self.father.scene0.draft_zero_horiz = self.father.scene0.draft_zero_horiz + _horiz * k/787#/self.father.scene0.h
-        self.father.scene0.draft_zero_vert = self.father.scene0.draft_zero_vert + _vert * k/787#/self.father.scene0.h
+        #todo вот тут нужно что то сделать
+        self.father.scene0.draft_zero_horiz = self.father.scene0.draft_zero_horiz + _horiz * k
+        self.father.scene0.draft_zero_vert = self.father.scene0.draft_zero_vert + _vert * k
         print('self.father.scene0.h === ', self.father.scene0.h)
 
     def addQlabel(self, label, text, backgroud_style, w, h, pos1, pos2, width=1, height=1):
         label.setText(text)
         label.setStyleSheet(backgroud_style)
         label.setFixedSize(w, h)
-        self.grid.addWidget(label, pos1, pos2, width, height, alignment=QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
+        self.grid.addWidget(label, pos1, pos2, width, height, alignment=QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
         #label.setAlignment(Qt.AlignLeft)
 
 class toolsFrameRotate(QFrame):
@@ -284,7 +287,4 @@ class toolsFrameScale(QFrame):
         label.setFixedSize(w, h)
         self.grid.addWidget(label, pos1, pos2, width, height, alignment=QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
 
-def validate_text_digit(self):
-    self.onlyInt = QDoubleValidator()
-    local_field = QtCore.QLocale(QtCore.QLocale.English)
-    self.onlyInt.setLocale(local_field)
+

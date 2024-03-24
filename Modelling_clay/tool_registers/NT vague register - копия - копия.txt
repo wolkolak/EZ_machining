@@ -1,0 +1,4 @@
+^(\s*)(N(\d+)\s*)?(\w*:\s*)?(M98\s*)(O\d+\s*)(L(\d+)\s*)?(\(.*\))?\s*$===Modelling_clay\machine_tools\mills type1\mill_R5_L140_l105.txt
+mask12===Modelling_clay\machine_tools\mills type1\mill_L120_l80.txt
+\(REZ ?0\.8\)===Modelling_clay\machine_tools\turn_cut\55R0.8.txt
+\(REZ ?0\.4\)===Modelling_clay\machine_tools\turn_cut\55R0.4.txt

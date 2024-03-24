@@ -1,13 +1,11 @@
-import freetype
+import math
+import operator
+from Core.Data_solving.VARs_SHIFTs_CONDITIONs.math_logic_expressions.add_math_logic_operators import *
 
-import pathlib
-# определение пути
-#currentDirectory = pathlib.Path('.')
-#for currentFile in currentDirectory.iterdir():
-#    print(currentFile)
 
-face = freetype.Face("Brave New Era G98.ttf")
-face.set_char_size( 0*64 )
-face.load_char('S')
-bitmap = face.glyph.bitmap
-print (bitmap.buffer)
+g = math.atan(3/4)
+print(math.degrees(g))
+
+g2 = atan(3/4)
+print(g2)
+#print(f'to degree = {math.degrees(0.01308922182318072)}')

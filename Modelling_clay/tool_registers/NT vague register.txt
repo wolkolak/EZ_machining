@@ -1,0 +1,1 @@
+*.(*.REZ*.\Q(R0.8))===Modelling_clay\machine_tools\turn_cut\55R0.8.txt*.(*.REZ*.\Q(R0.4))===Modelling_clay\machine_tools\turn_cut\55R0.4.txt

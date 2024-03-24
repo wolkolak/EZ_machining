@@ -1,74 +1,46 @@
-from OpenGL.GLU import *
-from OpenGL.GL import *
-import freetype
+import math
 import numpy as np
-
-#сейчас не исполььзуется
-
-class CharacterSlot:
-    def __init__(self, texture, glyph):
-        self.texture = texture
-        self.textureSize = (glyph.bitmap.width, glyph.bitmap.rows)
-
-        if isinstance(glyph, freetype.GlyphSlot):
-            self.bearing = (glyph.bitmap_left, glyph.bitmap_top)
-            self.advance = glyph.advance.x
-        elif isinstance(glyph, freetype.BitmapGlyph):
-            self.bearing = (glyph.left, glyph.top)
-            self.advance = None
-        else:
-            raise RuntimeError('unknown glyph type')
-
-def _get_rendering_buffer(xpos, ypos, w, h, zfix=0.0):
-    return np.asarray([
-        xpos,     ypos - h, 0, 0,
-        xpos,     ypos,     0, 1,
-        xpos + w, ypos,     1, 1,
-        xpos,     ypos - h, 0, 0,
-        xpos + w, ypos,     1, 1,
-        xpos + w, ypos - h, 1, 0
-    ], np.float32)
+import importlib
+from Modelling_clay.machine_tools.__init__ import *
+from OpenGL.GL import *
 
 
 
-def render_text_exact(window, text, x, y, scale, color):
-        global shaderProgram
-        global Characters
-        global VBO
-        global VAO
+def read_tool_file(address):
+    """
+    can take any tool file. working only for vars with '='
+    :return:
+    """
+    with open(address) as f:
+        lines = f.readlines()
+    properties_dict = {}
+    for line in lines:
+        n = line.find('=')
+        if n != -1:
+            key = line[:n]
+            value = line[n+1:]
+            if value != None:
+                try:
+                    value = float(value)
+                except:
+                    if value.endswith('\n'):
+                        value = value[:-1]
+            properties_dict[key] = value
+    return properties_dict
 
-        face = freetype.Face(fontfile)
-        face.set_char_size(48 * 64)
-        glUniform3f(glGetUniformLocation(shaderProgram, "textColor"),
-                    color[0] / 255, color[1] / 255, color[2] / 255)
 
-        glActiveTexture(GL_TEXTURE0)
+def choose_tool_function(self, p_dict):
 
-        glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+    print('TYPE of tool: ', p_dict['TYPE'])
+    str1 = "Modelling_clay.machine_tools." + p_dict['TYPE'] + ".__init__"
+    module_real = importlib.import_module(str1)
+    self.tool_function = module_real.init__tool
+    self.tip_way_func = module_real.tip_tool_way
 
-        glBindVertexArray(VAO)
-        for c in text:
-            ch = Characters[c]
-            w, h = ch.textureSize
-            w = w * scale
-            h = h * scale
-            vertices = _get_rendering_buffer(x, y, w, h)
 
-            # render glyph texture over quad
-            glBindTexture(GL_TEXTURE_2D, ch.texture)
-            # update content of VBO memory
-            glBindBuffer(GL_ARRAY_BUFFER, VBO)
-            glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.nbytes, vertices)
 
-            glBindBuffer(GL_ARRAY_BUFFER, 0)
-            # render quad
-            glDrawArrays(GL_TRIANGLES, 0, 6)
-            # now advance cursors for next glyph (note that advance is number of 1/64 pixels)
-            x += (ch.advance >> 6) * scale
 
-        glBindVertexArray(0)
-        glBindTexture(GL_TEXTURE_2D, 0)
 
-        glfw.swap_buffers(window)
-        glfw.poll_events()
+
+
+

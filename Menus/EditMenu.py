@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QAction, QApplication
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QFont
 
 
 def edit_opt(self):
@@ -23,14 +23,12 @@ def edit_opt(self):
     #undoAction = self.centre.note.currentWidget().editor.undoStack.createUndoAction(self.centre.note.currentWidget().editor, self.tr("&Undo"))
     #undoAction.setShortcuts(QKeySequence.Undo)
     self.redoAction = QAction("Redo", self)
-    #redoAction = self.centre.note.currentWidget().editor.undoStack.createRedoAction(self.centre.note.currentWidget().editor, self.tr("&Redo"))
-    #redoAction.setShortcuts(QKeySequence.Redo)
-#
     self.cutAction = QAction('Cut', self)
     self.copyAction = QAction('Copy', self)
     self.select_allAction = QAction('Select all', self)
     self.delAction = QAction('Delete', self)
     self.pasteAction = QAction('Paste', self)
+    self.change_iteration = QAction('Iter = ?', self)
 
     self.editMenu.addSeparator()
     add_action(self.editMenu, self.undoAction, 'Cancel previous change', self.undo_obertka, 'Ctrl+Z')
@@ -42,7 +40,12 @@ def edit_opt(self):
     add_action(self.editMenu, self.delAction, 'Delete text', self.del_obertka, 'Delete')
     self.editMenu.addSeparator()
     add_action(self.editMenu, self.select_allAction, 'Select all text', self.select_all_obertka, 'Ctrl+A')
+    self.editMenu.addSeparator()
+    add_action(self.editMenu, self.change_iteration, 'Specify time of the used line(for cycles)', self.myIter_obertka, 'Ctrl+3')
+    self.change_iteration.setFont (QFont("Times", 8, QFont.Bold))
+
     self.menubar.hovered.connect(lambda: update_edit_menu(self, self.centre.note.currentIndex()))
+
 
 def add_action(menu, nameaction, tip, my_slot, short_cut):
     nameaction.setStatusTip(tip)
@@ -74,7 +77,10 @@ def update_edit_menu(self, current_index):
         a = True if QApplication.clipboard().text() else False
         self.editMenu.actions()[8].setEnabled(a)
 
-        print('Update_edit_menu')
+        a = True #if edit.textCursor(). else False
+        self.editMenu.actions()[13].setEnabled(a)
+        #print(f'self.editMenu.actions()[14] = {self.editMenu.actions()[13]}')
+        #print('Update_edit_menu')
 
         #self.editMenu.actions() =
         #self.centre.note.currentWidget().editor

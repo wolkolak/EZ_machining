@@ -7,6 +7,10 @@ g54_59 = {  #ATTENTION: do not change format of the lines by hands. if ypu actua
 'G59': {'X': 0.0, 'Y': 0.0, 'Z': 0.0, 'A': 0.0, 'B': 0.0, 'C': 0.0}, 
 }
 
-start_pointXYZ = [500., 0., 50., 0., 0., 0]
+offset_pointXYZ = [-200., 0., 100.]
 current_g54_g59 = 'G54'
-k_XYZABC = {'X': 1., 'Y': 1., 'Z': 1., 'A': 1., 'B': 1., 'C': 1.}
+#machine_zero_variant = [-200., 0., 100.]
+change_TOOL_point1 = [0., 0., 1000., 0., 0., 0.]
+change_TOOL_point2 = [0., 0., 1500., 0., 0., 0.]
+axles_DICT = {'X': True, 'Y': True, 'Z': True, 'A': True, 'B': True, 'C': True}
+bound_register='NT vague register.txt'

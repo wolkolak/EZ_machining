@@ -1,0 +1,17 @@
+TYPE=turn_cutoff
+fastener=0.
+OVERALL_L=206
+SORTIE=170
+H=200
+h=150
+L=45
+S=25
+l=30
+insert_angle=0.
+insert_b=5.
+insert_s=1.
+insert_l=6.
+insert_r=2.5
+bind_left_h=0.
+bind_left_v=0.
+PIC=Turn CUToff tool
