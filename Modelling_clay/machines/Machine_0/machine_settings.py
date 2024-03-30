@@ -7,7 +7,7 @@ g54_59 = {  #ATTENTION: do not change format of the lines by hands. if ypu actua
 'G59': {'X': 0., 'Y': 0., 'Z': 0., 'A': 0., 'B': 0., 'C': 0.}, 
 }
 
-offset_pointXYZ = [0., 0., 100.]
+offset_pointXYZ = [0., 0., 100.]#this is a distanse to head point from machine zero
 current_g54_g59 = 'G54'
 
 #machine_zero_variant = [0., 0., 100.]

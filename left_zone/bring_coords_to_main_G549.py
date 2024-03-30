@@ -19,26 +19,12 @@ from Core.Machine_behavior.machine_transmigrations_forward import TR_ABC, R_ABC,
 
 def move_to_main_G549_new(v_i, G549shift):#TODO работаю здесь для перемещения координаты точки
     print('move_to_main_G549new')
-    #pass
-    print('G549shift2 = ', G549shift)
-    #G549shift
-    print('2 v_i = ', v_i)
-    #from Core.Machine_behavior.machine_transmigrations_return import return_RT_CBA, return_RT_inverse_CBA, return_R_inverse_CBA, return_TR_inverse_CBA
-
-    import math
-    k = 1
-    param_list = [k*G549shift[0], k*G549shift[1], k*G549shift[2], None, None, None, k*G549shift[3], k*G549shift[4], k*G549shift[5]]
+    #k = 1
+    #param_list = [k*G549shift[0], k*G549shift[1], k*G549shift[2], None, None, None, k*G549shift[3], k*G549shift[4],
+    # k*G549shift[5]]
+    param_list = [G549shift[0], G549shift[1], G549shift[2], None, None, None, G549shift[3], G549shift[4], G549shift[5]]
     #param_list = [k * G549shift[0], k * G549shift[1], k * G549shift[2], None, None, None, 0, 0, -90]
-    if True:#v_i[6] != 10:
-        v_i[4], v_i[5], v_i[6] = RT_ABC(param_list=param_list, X=v_i[4], Y=v_i[5], Z=v_i[6])
-    #else:
-    #    k = -1
-    #    param_list = [k * G549shift[0], k * G549shift[1], k * G549shift[2], None, None, None, 0, 0, -math.pi]
-    #    v_i[4], v_i[5], v_i[6] = TR_ABC(param_list=param_list, X=v_i[4], Y=v_i[5], Z=v_i[6])
-    # todo сменить в паре
-    #v_i[4], v_i[5], v_i[6] = R_ABC(param_list=param_list, X=v_i[4], Y=v_i[5], Z=v_i[6])
-    #v_i[4], v_i[5], v_i[6] = RT_ABC(param_list=param_list, X=v_i[4], Y=v_i[5], Z=v_i[6])#todo Так,
-    #v_i[4], v_i[5], v_i[6] = v_i[4] + G549shift[0], v_i[5] + G549shift[1], v_i[6] + G549shift[2]
+    v_i[4], v_i[5], v_i[6] = RT_ABC(param_list=param_list, X=v_i[4], Y=v_i[5], Z=v_i[6])
     print('1 v_i = ', v_i)
     return v_i
 

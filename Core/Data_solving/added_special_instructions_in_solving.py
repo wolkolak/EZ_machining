@@ -7,6 +7,7 @@ import copy
 
 places = {'X': 4, 'Y': 5, 'Z': 6, 'A': 7, 'B': 8, 'C': 9, 'I': 10, 'J': 11, 'K': 12, 'R': 13, 'F': 14}#todo CR check  'AR': 15
 
+
 def siemens_SUB_helper(vars1, vars2):
     for k in vars1:
         if k[0] == 'R' and k[1:].isnumeric() or k in vars2:
@@ -59,7 +60,8 @@ def REPEAT_lbl_instruction(self, local_line, i_str):
         return i_str + 1
 
 
-def feed_axis_from_dict(self, v_i, current_vars, last_significant_line, current_g_modal, polar_cur, DictG549shift):#, old_v
+def feed_axis_from_dict(self, v_i, current_vars, PrevLineInCurG549Absolute, current_g_modal, polar_cur, DictG549shift):#, old_v
+    #TODO ЧИНИТЬ ОБЯЗАТЕЛЬНО. Сломалось после создания цикла 800.
     if self.redactor.father_np_box is None:
         n = v_i[15]
     else:
@@ -76,27 +78,33 @@ def feed_axis_from_dict(self, v_i, current_vars, last_significant_line, current_
     #print()
     for key_n in places:
         print(f'key_n = {key_n}')
-        if goal[key_n[0]] is not None and len(goal[key_n[0]]) != 0:
+        print(f'key_n[0] = {key_n[0]}')
+        #if goal[key_n[0]] is not None and len(goal[key_n[0]]) != 0:
+        if goal[key_n] is not None and len(goal[key_n]) != 0:
+            print(f'goal[key_n] = {goal[key_n]}')
             if goal[key_n][0] == 'IC':
+                print(f'IC happened')
                 a = goal[key_n][1:]
                 v_i[places[key_n]] = postfixTokenCalc(a, DICT_VARS=current_vars,  proc=self.redactor.highlight.reversal_post_processor)
                 if current_g_modal['absolute_or_incremental'] == '90':
-                    v_i[places[key_n]] += last_significant_line[places[key_n]]
+                    v_i[places[key_n]] += PrevLineInCurG549Absolute[places[key_n]]
             elif goal[key_n][0] == 'AC':
                 v_i[places[key_n]] = postfixTokenCalc(goal[key_n][1:], DICT_VARS=current_vars, proc=self.redactor.highlight.reversal_post_processor)
                 if current_g_modal['absolute_or_incremental'] == '91':
-                    v_i[places[key_n]] -= last_significant_line[places[key_n]]
+                    v_i[places[key_n]] -= PrevLineInCurG549Absolute[places[key_n]]
             else:
-                v_i[places[key_n]]= postfixTokenCalc(goal[key_n], DICT_VARS=current_vars, proc=self.redactor.highlight.reversal_post_processor)
+                v_i[places[key_n]] = postfixTokenCalc(goal[key_n], DICT_VARS=current_vars,
+                                                      proc=self.redactor.highlight.reversal_post_processor)
             if np.isnan(v_i[places[key_n]]) :#None
-                self.redactor.Logs.math_logs = self.redactor.Logs.math_logs + f'{int(v_i[15])} line  expression error\n'
+                self.redactor.Logs.math_logs = self.redactor.Logs.math_logs + (f'{int(v_i[15])} line  expression '
+                                                                               f'error2\n')
     print('AR = ', AR)
     print(f'9999v_i = {v_i}')
     self.redactor.current_machine.k_applying1_line(v_i)
-    if AR is not None and AR != ():#не 360!!!
+    if AR is not None and len(AR) != 0:#и не 360!!!
         AR = postfixTokenCalc(AR, proc=self.redactor.highlight.reversal_post_processor)
         n_h, n_v, n_p = self.n_h, self.n_v, self.n_p
-        l = math.sqrt((v_i[n_h] - last_significant_line[n_h])**2 + (v_i[n_v] - last_significant_line[n_v])**2 )/2
+        l = math.sqrt((v_i[n_h] - PrevLineInCurG549Absolute[n_h])**2 + (v_i[n_v] - PrevLineInCurG549Absolute[n_v])**2 )/2
         v_i[places['R']] = l/math.sin(math.radians(AR/2))#goal['AR']#postfixTokenCalc(goal[key_], DICT_VARS=current_vars)
     elif AP is not None or RP is not None:
         #polar_cur
@@ -105,7 +113,7 @@ def feed_axis_from_dict(self, v_i, current_vars, last_significant_line, current_
         if RP is not None:
             RP = postfixTokenCalc(RP, DICT_VARS=current_vars, proc=self.redactor.highlight.reversal_post_processor)
             if RP is None:
-                self.redactor.Logs.math_logs = self.redactor.Logs.math_logs + f'{v_i[15]} line  expression error]\n'
+                self.redactor.Logs.math_logs = self.redactor.Logs.math_logs + f'{v_i[15]} line  expression error12\n'
                 return v_i
             self.RP = RP
         else:
@@ -113,7 +121,7 @@ def feed_axis_from_dict(self, v_i, current_vars, last_significant_line, current_
         if AP is not None:
             AP = postfixTokenCalc(AP, DICT_VARS=current_vars, proc=self.redactor.highlight.reversal_post_processor)
             if AP is None:
-                self.redactor.Logs.math_logs = self.redactor.Logs.math_logs + f'{v_i[15]} line  expression error \n'
+                self.redactor.Logs.math_logs = self.redactor.Logs.math_logs + f'{v_i[15]} line  expression error11 \n'
                 return v_i
             self.AP = AP
         else:
@@ -123,11 +131,11 @@ def feed_axis_from_dict(self, v_i, current_vars, last_significant_line, current_
         #v_i[13] = RP
         #print(f'old_v = {old_v}')
         #if current_g_modal['SC'] == self.m
-        print(f'last line = {last_significant_line}')
-        last = move_from_main_G549(np.copy(last_significant_line), DictG549shift['G' + str(current_g_modal['SC'])])
+        print(f'last PrevLineInCurG549Absolute line = {PrevLineInCurG549Absolute}')
+        last = move_from_main_G549(np.copy(PrevLineInCurG549Absolute), DictG549shift['G' + str(current_g_modal['SC'])])
         print(f"DictG549shift['G' + str(current_g_modal['SC']) = {DictG549shift['G' + str(current_g_modal['SC'])]}")
         print(f'DictG549shift = {DictG549shift}')
-        print(f'last line 22= {last_significant_line}')
+        print(f'last line 22= {PrevLineInCurG549Absolute}')
         print(f'89898 last = {last}')
         #polar - last for G54
         #if current_g_modal['absolute_or_incremental'] == '91':#relative
@@ -178,7 +186,8 @@ def feed_siemens_POLAR_from_dict(self, info, current_vars, last_significant_line
             else:
                 new_dict[key_n]= postfixTokenCalc(goal[key_n], DICT_VARS=current_vars, proc=self.redactor.highlight.reversal_post_processor)
             if np.isnan(new_dict[key_n]) :#None
-                self.redactor.Logs.math_logs = self.redactor.Logs.math_logs + f'{int(info[0][0])} line  expression error [{key_n}]\n'
+                self.redactor.Logs.math_logs = self.redactor.Logs.math_logs + (f'{int(info[0][0])} line  expression '
+                                                                               f'error [{key_n}]\n')
                 return polar_cur
     print('Предполагаем, что polar_coord_siemens раньше перехода к базовой SC')
     print(f'new_dict = {new_dict}')
@@ -312,9 +321,9 @@ def CYCLE800_handler(np_box, current_g_modal:dict, last_significant_line, v_i, i
 
     #euler_angles = np.array([0, 0, 0])
     #print(euler_angles)
-    rotation88 = [[1., 0., 0.],
-                  [0., 1., 0.],
-                  [0., 0., 1.]]
+    #rotation88 = [[1., 0., 0.],
+    #              [0., 1., 0.],
+    #              [0., 0., 1.]]
     #rot_mat_rel = np.matmul(np.transpose(r_0), r_1)
 
     #TODO ПРОБЛЕМА В СЛЕДУЮЩЕЙ СТРОКЕ????

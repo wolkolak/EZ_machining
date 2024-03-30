@@ -6,8 +6,8 @@ g54_59 = {  #ATTENTION: do not change format of the lines by hands. if ypu actua
 'G58': {'X': 0.0, 'Y': 0.0, 'Z': 0.0, 'A': 0.0, 'B': 0.0, 'C': 0.0}, 
 'G59': {'X': 0.0, 'Y': 0.0, 'Z': 0.0, 'A': 0.0, 'B': 0.0, 'C': 0.0}, 
 }
-
-offset_pointXYZ=[-200., 0., 100.]
+#offset_pointXYZ=[0.0, 0.0, 2000.0, 0., 0., 0]
+offset_pointXYZ=[-200., 0., 100., 0., 0., 0.]
 current_g54_g59 = 'G54'
 #machine_zero_variant = [-200., 0., 100.]
 change_TOOL_point1 = [0., 0., 1000., 0., 0., 0.]

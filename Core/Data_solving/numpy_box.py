@@ -13,11 +13,12 @@ from Core.Data_solving.np_solving_math import special_options_applying_new
 #def rotate_np1(points, origin, angle):
 #    return (points - origin) * np.exp(complex(0, angle)) + origin
 import scipy
-#from scipy.spatial.
-from Core.Data_solving._3D_geometry_SC_moves import my_transform, my_transform_R_T, projection
-
+#from Core.Data_solving.summirizer import CYCLE800_4_many_dots, curentSC_4_many_dots_old
+from Core.Data_solving._3D_geometry_SC_moves import my_transform, my_transform_R_T, projection, my_transform_return, C_ROT_1
+from Core.Machine_behavior.machine_transmigrations_forward import R_C, R_C_radians
 
 from Redactor import redactor
+from Core.Data_solving.summirizer import G549_4_many_dots_NEW  # RT_ABC_many_dots
 
 #def rotate_np(point, origin, degrees):
 #    radians = np.deg2rad(degrees)
@@ -71,7 +72,7 @@ def rotate_around_dot(origin, point, angle):
     print(f'qx = {qx}, qy= {qy}')
     return qx, qy
 
-def turn_around_C(ark_np_array, last_significant_line,  center, n, starting_angle, alpha_segmenta, pp, perp_step, n_p_new):
+def turn_around_C_dots(ark_np_array, last_significant_line,  center, n, starting_angle, alpha_segmenta, pp, perp_step, n_p_new):
     #alpha = math.radians(alpha_C)
     print('we are at 70')
     #Rc = math.sqrt(ark_np_array[n-1, 4] **2 + ark_np_array[n-1, 5] **2)
@@ -82,15 +83,9 @@ def turn_around_C(ark_np_array, last_significant_line,  center, n, starting_angl
 
     for k in range(n):
         resulting_angle_C = alpha_segmenta * k + starting_angle
-        # turn_around_C(ph_corr + Hstep*k, pv_corr + Vstep*k, resulting_angle, machine_center_now)
-        # Angle_C =
-        #ark_np_array[k] = turn_around_C(ark_np_array[k], last_significant_line, machine_center)
         ark_np_array[k, 17], ark_np_array[k, 18] = rotate_around_dot(origin=center[0:2], point=last_significant_line[4:6], angle=resulting_angle_C)
-        #ark_np_array[k, 4] = x * math.cos(resulting_angle_C) - y * math.sin(resulting_angle_C)
-        #ark_np_array[k, 5] = x * math.sin(resulting_angle_C) + y * math.cos(resulting_angle_C)
         ark_np_array[k, n_p_new] = pp + k * perp_step
         ark_np_array[k, 16] = 5.
-    #ark_np_array[n-1, 9] = math.degrees(resulting_angle_C)
     return ark_np_array#, resulting_angle_C#current_line
 
 
@@ -132,8 +127,13 @@ class NumpyBox():
         self.return_stack = []
         self.g_modal_new = DICT_with_papa(self)#todo заполнить из постпроцессора
         G_M = self.redactor.highlight.reversal_post_processor.G_MODAL_DICT_in_proc
+
         for gm in G_M:
             self.g_modal_new[gm] = G_M[gm]
+
+        self.g_modal_new['SC'] = self.redactor.current_machine.current_g54_g59[1:]
+        print(f'____________self.g_modal_new = {self.g_modal_new}')
+        print(f'G_M = {G_M}')
 
         #print('проверочка ', self.redactor.highlight.reversal_post_processor.brackets)
         VARSproc = self.redactor.highlight.reversal_post_processor.DICT_VARS
@@ -307,7 +307,7 @@ class NumpyBox():
         #print(f'333scene0.g54_g59_AXIS_Display[sc][7] = {scene0.g54_g59_AXIS_Display[sc][7]}')
         self.redactor.editor.highlightCurrentLine_chooseNewDot()
 
-    def add_ark_axis_points(self, cur_v, current_g_modal, last_significant_line, cur_i, n_h, n_v, n_p, min_ark_step, main_axis=None):
+    def add_ark_axis_points(self, cur_v, current_g_modal, last_significant_line, cur_i, n_h, n_v, n_p, min_ark_step, main_axis=None, main_G549=None, DictG549shift=None):
         # todo https://stackoverflow.com/questions/34372480/rotate-point-about-another-point-in-degrees-python
         """We need variable R, because simple ark would be wrong"""
         #пока что просто для оси С
@@ -327,145 +327,229 @@ class NumpyBox():
         #OAx = ph - np_line[ch]#todo need?
         #OAy = pv - np_line[cv]#todo need?
 
-        ph_corr = last_significant_line[n_h]#13
-        pv_corr = last_significant_line[n_v]#13
+        #ph_corr = last_significant_line[n_h]#13
+        #pv_corr = last_significant_line[n_v]#13
         #pp = last_significant_line[n_p]
         #TODO looking for machine_C_center
         print(f'{current_g_modal}')
         sc = 'G' + str(current_g_modal['SC'])
         scene0 = self.redactor.tab_.center_widget.left.left_tab.parent_of_3d_widget.openGL
 
-        machine_center = scene0.g54_g59_AXIS_Display[sc]#TODO только для текущей СК
+        machine_center = copy.copy(scene0.g54_g59_AXIS_Display[sc])#TODO только для текущей СК
 
-        #machine_center_now = np.zeros(6)
-        #for i_1 in range(0, 6):
-        #if len(machine_center[8]) > 1:
-        #    print('len(machine_center[8]) > 1:')
-        #    for i1 in range(6):
-        #        machine_center_now[i1] = machine_center_now[i1] - machine_center[8][i1]
-        #TODO Тут учесть повороты CYCLE800!!!
-        #print(f'666 machine_center = {machine_center}')
-        #это переход от G54 к нулю станка.
-        #for i1 in range(6):#TODO это всё пока выключаем
-        #    machine_center_now[i1] = -machine_center[i1] + machine_center_now[i1]
-        #print(f'667 machine_center = {machine_center_now}')
-        #euler_angles = np.array([45, 0, 0])
-        #euler_angles_rad = np.radians(euler_angles)
-        #print(f'euler_angles_rad = {euler_angles_rad}')
-        #rotation = Rotation.from_euler('xyz', euler_angles_rad)#.as_matrix()
-        #point = np.array([machine_center_now[0], machine_center_now[1], machine_center_now[2]])#????
-        #point = rotation.apply(point)
-        #machine_center_now = my_transform(little_SC=machine_center_now, big_SC=machine_center)
+        machine_center[3:6] = [math.radians(dd) for dd in machine_center[3:6]]
         m = self.redactor.current_machine
-        #machine_center_now[1] = machine_center_now[1] - m.DICT_AX_PARAMETERS['C']['LShoulder']
-
-
         center_AX1 = np.zeros(6)#C Axis
         m0 = np.zeros(6)
         m0[1] = m.DICT_AX_PARAMETERS['C']['LShoulder']
         print(f"m.DICT_AX_PARAMETERS['C']['t_angle'] = {m.DICT_AX_PARAMETERS['C']['t_angle']}")
-        m0[3:6] = m.DICT_AX_PARAMETERS['C']['t_angle']
+        m0[3:6] = [math.radians(dd) for dd in m.DICT_AX_PARAMETERS['C']['t_angle']]
+
         #m0[3] = -m0[3];        m0[4] = -m0[4];        m0[5] = -m0[5]
         print(f'm0 = {m0}')
+        #print()
         machine_center_now = my_transform(from_SC=center_AX1, to_SC=m0)
+        #остановился здесь
 
         print(f'8890 machine_center= {machine_center}')
 
-        #euler_angles = np.array([45, 0, 0])
-        #euler_angles_rad = np.radians(euler_angles)
-        #machine_center_now = np.zeros(6)
         print(f'8891 machine_center_now = {machine_center_now}')
         machine_center_now = my_transform(from_SC=machine_center_now, to_SC=machine_center)#верно работает
 
+        machine_center_now_return = [-m for m in machine_center_now]
+        #todo Это всё можно сделать !ОДИН! раз. То что ниже делаем постоянно
         print(f'777 point = {machine_center_now}')
-        machine_center_from_current_dot = np.zeros(6)
-        plane_rotation = machine_center_now[3:6]
-        plane_rotation = scipy.spatial.transform.Rotation.from_euler('xyz', plane_rotation).as_mrp()
-        print(f'444 plane_rotation = {plane_rotation}')
-        machine_center_from_current_dot = projection(p=plane_rotation, a=machine_center_now[0:3])
-        #здесь
-        print('machine_center_from_current_dot = ', machine_center_from_current_dot)
-        #TODO _______________________________________________
-        #for i1 in range(6):
-        #machine_center_now[1] = machine_center_now[1] - m.DICT_AX_PARAMETERS['C']['LShoulder']
-        #____________________________________________________
-        print('maybe this: ', m.DICT_AX_PARAMETERS['C']['LShoulder'])
-        print(f'369 machine_center_now = {machine_center_now}')
-        #Не работает
+        print(f'vvv 7 machine_center_now_return = {machine_center_now_return}')
+        #https://scask.ru/a_book_mm3d.php?id=60
+        #https://ychebnikkompgrafblog.wordpress.com/2-7-%D0%BF%D0%BE%D0%B2%D0%BE%D1%80%D0%BE%D1%82-%D0%B2%D0%BE%D0%BA%D1%80%D1%83%D0%B3-%D0%BF%D1%80%D0%BE%D0%B8%D0%B7%D0%B2%D0%BE%D0%BB%D1%8C%D0%BD%D0%BE%D0%B9-%D0%BE%D1%81%D0%B8-%D0%B2-%D0%BF%D1%80/
+        #todo сейчас я перенесу текущую точку в СК с данными machine_center_now
+
+        np_line_const = np.copy(np_line)
+
+        np_line[7] = 0#math.degrees(np_line[7])
+        np_line[8] = 0#math.degrees(np_line[8])#TODO можно отдельную функцию написать под радианы/градусы. Заодно лишние переменные убрать
+        np_line[9] = 0#math.degrees(np_line[9])
+        print(f'между тем np_line было равно {np_line}')
+        new_coord_const = my_transform(from_SC=np_line[4:10], to_SC=machine_center_now)#machine_center_now нужны радианы по идее
+        #new_coord_const = my_transform_new(from_SC=np_line[4:7], to_SC=machine_center_now)
+        print(f'2 между тем np_line было равно {np_line}')
+        #new_coord_const = list(new_coord_const)
+        print(f'779  point in  {machine_center_now} would be {new_coord_const}')
+
+
+
+        new_coord_const[3] = np_line_const[7]
+        new_coord_const[4] = np_line_const[8]
+        new_coord_const[5] = np_line_const[9]
+        p_ = np.zeros(9)
+        #p_[8] = math.degrees(np_line_const[9])  # 180#TODO Надо подумать, но позже/ Здесь только С получается
+        p_[8] = np_line_const[9]
+
+        print(f'*33** p_ = {p_}')
+        print(f'np_line = {np_line}')
+        new_coord = R_C_radians(p_, new_coord_const[0], new_coord_const[1], new_coord_const[2],)#radians
+        #new_coord = list(new_coord)
+        new_coord = [*new_coord, 0, 0, 0]
+        print(f'791  point in  {machine_center_now} would be {new_coord}, type = {type(new_coord)}')
+        #TODO дальше сместить
+        #куда?
+        print(f'machine_center_now_return = {machine_center_now_return}')
+        #machine_center_now_return[3] = -machine_center_now_return[3]
+        #если это итоговая координата, то она пока не нужна.
+        coord_in_base = my_transform_return(from_SC=new_coord, to_SC=machine_center_now)
+        #cur_v[-1][17:20] = coord_in_base
+        np_line[17:20] = coord_in_base
+        np_line[7:10] = np_line_const[7:10]
+
+        #np_line[7] = np_line_7
+        #np_line[8] = np_line_8
+        #np_line[9] = np_line_9
+        #machine_center_now_return =
+
+        print('Итоговая координата равна ', coord_in_base)
+        print('cur_v[-1] = ', cur_v[-1])
+        print('np_line   = ', np_line)
+        #g54_dict = g54_g59_AXIS[current_g_modal['SC']][8]
+        #g54_g59_AXIS
+        print(f'main_G549 = {main_G549}')
+        main_SC_coord = DictG549shift['G' + str(main_G549)]
+        print(f'main_SC_coord = {main_SC_coord}')
+        main_G549_ANGLES = False if (machine_center_now[3] == 0 and machine_center_now[4] == 0 and machine_center_now[5] == 0) else True
         if main_axis == 'C':
             # todo возможно получается однобоко. ибо для2х осей и более это не подойдёт. вроде.
-            delta = cur_v[cur_i, 9] - last_significant_line[9]#уже в радианах
-            delta_plus = abs(delta)#радианы
-#lkjlj
-            #point = last_significant_line[4:6]#????
-            #machine_center_now = rotation.apply(point)
-            #cur_v[-1][17:20] = rotation.apply(cur_v[-1][17:20])
-            cur_v[-1][17], cur_v[-1][18] = rotate_around_dot(origin=machine_center_now[0:2], point=last_significant_line[4:6], angle=delta_plus)
-            #TODO Что если вращать вокруг вектора  777 point = [200. -502.75 -78.49 -45. 0. 0.]
-            #Rotation = scipy.spatial.transform.Rotation
-            #Rotation.as_rotvec()
+            #if current_g_modal['SC'] == main_G549  and current_g_modal['CYCLE800'] is None:  # and main_G549_ANGLES
+            delta = cur_v[cur_i, 9] - last_significant_line[9]  # уже в радианах
+            delta_plus = abs(delta)  # радианы
+            #TODO НЕТ
+            all_rounds_plus = math.floor(delta_plus / 2 / math.pi) * 2 * math.pi
+            alpha = delta_plus - all_rounds_plus
+            if delta_plus == 0:
+                print('ПОЛУНДРА БЛЭТ!')
+                if np_line[9] != 0:
+                    return cur_v, 0
+            elif delta_plus >= 2 * math.pi:
+                alpha_segmenta = math.radians(15)
+                n = math.floor(all_rounds_plus / alpha_segmenta)  # alpha_segmenta plus
+                n = n + math.floor(alpha / alpha_segmenta)
+            elif delta_plus < 0.035:
+                alpha_segmenta = delta_plus / 5
+                print('alpha_segmenta = ', alpha_segmenta)
+                n = math.floor(alpha / alpha_segmenta)
+            else:
+                alpha_segmenta = math.radians(8)
+                n = math.floor(alpha / alpha_segmenta)
+            #n = n - 1  # todo ???? может вернуть ради двойных краев движений? чтобы цвета не сбивались
+            ark_np_array = np.full((n, axises), np_line)
+            print(f'007 np_line = {np_line}')
+            Lperp = cur_v[cur_i, n_p] - last_significant_line[n_p]
+            k_by_step = alpha_segmenta / delta_plus  # math.radians(delta_plus)
+            perp_step = Lperp * k_by_step
+            #Vstep = Vprep * k_by_step
+            #Hstep = Hprep * k_by_step
+            prev_alpha = last_significant_line[9]  # math.radians(last_significant_line[9])
+            pp = pp + perp_step
+            print(f'|||last_significant_line = {last_significant_line}')
+            print(f'|||np_line = {np_line}')
+            x_step = (np_line[4] - last_significant_line[4])/n
+            y_step = (np_line[5] - last_significant_line[5])/n
+            z_step = (np_line[6] - last_significant_line[6])/n
+            print(f'y_step = {y_step}')
+            print('delta = ', delta)
+            starting_angle = prev_alpha - alpha_segmenta
+            if delta <= math.pi:
+                #if x_step == y_step == z_step == 0:
+                print('starting_angle = ', starting_angle)
+                ark_np_array = C_ROT_1(np_line, ark_np_array, n, alpha_segmenta, starting_angle, p_, x_step, y_step, z_step, new_coord_const,
+                                       machine_center_now, last_significant_line)
+            else:
+                print('Альтернативно')
+                ark_np_array = turn_around_C_dots(ark_np_array, last_significant_line, machine_center_now, n, starting_angle, alpha_segmenta, pp,
+                                             perp_step, n_p_new)
+            print(f'-__cur_v = {cur_v}')
+
+
+
+            return np.insert(cur_v, cur_i, ark_np_array, axis=0), n
+
+
+
+            #    #без преобразований вращения
+            #elif current_g_modal['SC'] == main_G549 and main_G549_ANGLES: #current_g_modal['CYCLE800'] HERE
+            #    pass
+            #elif current_g_modal['SC'] != main_G549 and current_g_modal['CYCLE800'] is None:#G55 и всё
+            #    pass
+            #elif current_g_modal['SC'] != main_G549 and main_G549_ANGLES :#G54 но она повернута
+            #    pass
+            #elif current_g_modal['SC'] != main_G549 :#G54 чисто
+            #    pass
+
+
+            #delta = cur_v[cur_i, 9] - last_significant_line[9]#уже в радианах
+            #delta_plus = abs(delta)#радианы
+            #cur_v[-1][17], cur_v[-1][18] = rotate_around_dot(origin=machine_center_now[0:2], point=last_significant_line[4:6], angle=delta_plus)
+            ##TODO Что если вращать вокруг вектора  777 point = [200. -502.75 -78.49 -45. 0. 0.]
+            ##Rotation = scipy.spatial.transform.Rotation
+            ##Rotation.as_rotvec()
 
 
 
 
             #cur_v[-1][17:20] = rotation.apply(cur_v[-1][17:20])
             #all_rounds_plus = math.floor(delta_plus/360) * 360
-            all_rounds_plus = math.floor(delta_plus / 2 / math.pi) * 2 * math.pi
-            alpha = delta_plus - all_rounds_plus
-            if delta_plus >= 2 * math.pi:
-                alpha_segmenta = math.radians(15)
-                n = math.floor(all_rounds_plus/alpha_segmenta) #alpha_segmenta plus
-                n = n + math.floor(alpha / alpha_segmenta)
-            elif delta_plus < 0.035:
-                alpha_segmenta = delta_plus/5
-                n = math.floor(alpha / alpha_segmenta)
-            else:
-                alpha_segmenta = math.radians(8)
-                n = math.floor(alpha / alpha_segmenta)
-            n = n - 1#todo ???? может вернуть ради двойных краев движений? чтобы цвета не сбивались
+            ##all_rounds_plus = math.floor(delta_plus / 2 / math.pi) * 2 * math.pi
+            ##alpha = delta_plus - all_rounds_plus
+            ##if delta_plus >= 2 * math.pi:
+            ##    alpha_segmenta = math.radians(15)
+            ##    n = math.floor(all_rounds_plus/alpha_segmenta) #alpha_segmenta plus
+            ##    n = n + math.floor(alpha / alpha_segmenta)
+            ##elif delta_plus < 0.035:
+            ##    alpha_segmenta = delta_plus/5
+            ##    n = math.floor(alpha / alpha_segmenta)
+            ##else:
+            ##    alpha_segmenta = math.radians(8)
+            ##    n = math.floor(alpha / alpha_segmenta)
+            ##n = n - 1#todo ???? может вернуть ради двойных краев движений? чтобы цвета не сбивались
             #n = n + 20
             #ERROR todo
             #alpha_segmenta = math.radians(1)
             #n = math.floor(alpha / alpha_segmenta)
             #print('#ERROR todo, n = ', n)
-            ark_np_array = np.full((n, axises), np_line)
+            ##ark_np_array = np.full((n, axises), np_line)
             # создаем массив
-            Lperp = cur_v[cur_i, n_p] - last_significant_line[n_p]
-            Vprep = cur_v[cur_i, n_v] - last_significant_line[n_v]
-            Hprep = cur_v[cur_i, n_h] - last_significant_line[n_h]
-            k_by_step = alpha_segmenta / delta_plus#math.radians(delta_plus)
-            perp_step = Lperp * k_by_step
-            Vstep = Vprep * k_by_step
-            Hstep = Hprep * k_by_step
-            prev_alpha = last_significant_line[9]#math.radians(last_significant_line[9])
+            ##Lperp = cur_v[cur_i, n_p] - last_significant_line[n_p]
+            ##Vprep = cur_v[cur_i, n_v] - last_significant_line[n_v]
+            ##Hprep = cur_v[cur_i, n_h] - last_significant_line[n_h]
+            ##k_by_step = alpha_segmenta / delta_plus#math.radians(delta_plus)
+            ##perp_step = Lperp * k_by_step
+            ##Vstep = Vprep * k_by_step
+            ##Hstep = Hprep * k_by_step
+            ##prev_alpha = last_significant_line[9]#math.radians(last_significant_line[9])
             #ph_corr = ph_corr + Hstep
             #pv_corr = pv_corr + Vstep
-            pp = pp + perp_step
-
-            if delta < 0:
-                starting_angle = prev_alpha -alpha_segmenta
-                for k in range(n):
-                    resulting_angle = -alpha_segmenta*k+starting_angle
-                    #ark_np_array[k, n_h_new], ark_np_array[k, n_v_new] = turn_around_C(ph_corr + Hstep*k, pv_corr + Vstep*k, resulting_angle, machine_center_now)
-                    ark_np_array[k] = turn_around_C(ark_np_array[k], last_significant_line, machine_center, n)
-                    ark_np_array[k, n_p_new] = pp + k * perp_step
-                    ark_np_array[k, 16] = 5.
-                    ark_np_array[k, 9] = math.degrees(resulting_angle)
-            else:
-                starting_angle = prev_alpha + alpha_segmenta
-                print('this part working')
-                print('machine_center_now = ', machine_center_now)
-
-                ark_np_array = turn_around_C(ark_np_array, last_significant_line, machine_center_now, n, starting_angle, alpha_segmenta, pp, perp_step, n_p_new)
-
-
-                #print("--- %s seconds ---" % (time.time() - start_time)) 5% slower than one line
-        else:
-            print('redactor add_ark_points failed')
+            ##pp = pp + perp_step
+            ##    #херня
+            ##if delta < 0:
+            ##    starting_angle = prev_alpha -alpha_segmenta
+            ##    for k in range(n):
+            ##        resulting_angle = -alpha_segmenta*k+starting_angle
+            ##        #ark_np_array[k, n_h_new], ark_np_array[k, n_v_new] = turn_around_C_dots(ph_corr + Hstep*k, pv_corr + Vstep*k, resulting_angle, machine_center_now)
+            ##        ark_np_array[k] = turn_around_C_dots(ark_np_array[k], last_significant_line, machine_center, n,)
+            ##        #(ark_np_array, last_significant_line, center, n, starting_angle, alpha_segmenta, pp, perp_step, n_p_new)
+            ##        ark_np_array[k, n_p_new] = pp + k * perp_step
+            ##        ark_np_array[k, 16] = 5.
+            ##        ark_np_array[k, 9] = math.degrees(resulting_angle)
+            ##else:
+            ##    starting_angle = prev_alpha + alpha_segmenta
+            ##    print('this part working')
+            ##    print('machine_center_now = ', machine_center_now)
+            ##    ark_np_array = turn_around_C_dots(ark_np_array, last_significant_line, machine_center_now, n, starting_angle, alpha_segmenta, pp, perp_step, n_p_new)
+            ##    #print("--- %s seconds ---" % (time.time() - start_time)) 5% slower than one line
+        ##else:
+        ##    print('redactor add_ark_points failed')
         #хз с шахматами вчего то забыл
-        print(f'-__cur_v = {cur_v}')
-        #cur_v[-1] =
-        return np.insert(cur_v, cur_i, ark_np_array, axis=0), n
+        ##print(f'-__cur_v = {cur_v}')
+        ###cur_v[-1] =
+        ##return np.insert(cur_v, cur_i, ark_np_array, axis=0), n
 
 
     #def fanuc_polar_coordinatesOLD(self, last_significant_line, v, n_line): #просто стол станка буду поворачивать в это же время
@@ -515,7 +599,7 @@ class NumpyBox():
         print(f'v_i end = {v_i}')
         return v_i
 
-    def relative_coord_option(self, last_significant_line, new_line):#подходит для C
+    def relative_coord_option_DEPRECIATED(self, last_significant_line, new_line):#подходит для C
 
         print('relative_coord_option')
         print('last_significant_line_: ', last_significant_line)
@@ -523,7 +607,7 @@ class NumpyBox():
         for k in range(4, 7):#17, 20)
             if not np.isnan(new_line[k]):
                 new_line[k] = new_line[k] + last_significant_line[k]
-        for k in range(17, 20):#17, 20)
+        for k in range(4, 7):#17, 20)
             if not np.isnan(new_line[k]):
                 new_line[k] = new_line[k] + last_significant_line[k]
         for k in range(10, 13):#+IJK
@@ -532,6 +616,22 @@ class NumpyBox():
         print('2 new_line = ', new_line)
         return new_line
 
+    def relative_coord_option(self, last_significant_line, new_line):#подходит для C
+
+        print('relative_coord_option')
+        print('last_significant_line_: ', last_significant_line)
+        print('1 new_line = ', new_line)
+        for k in range(4, 7):#17, 20)
+            if not np.isnan(new_line[k]):
+                new_line[k] = new_line[k] + last_significant_line[k]
+        #for k in range(17, 20):#17, 20)
+        #    if not np.isnan(new_line[k]):
+        #        new_line[k] = new_line[k] + last_significant_line[k]
+        for k in range(10, 13):#+IJK
+            if not np.isnan(new_line[k]):
+                new_line[k] = new_line[k] + last_significant_line[k]
+        print('2 new_line = ', new_line)
+        return new_line
 
     def number_hor_vert_perp_from_plane(self, plane):
         #print('plane = {}, type = {}'.format(plane, type(plane)))
@@ -551,32 +651,41 @@ class NumpyBox():
         #print('n_h = {}, n_v = {}, n_p = {}'.format(n_h, n_v, n_p))
         return n_h, n_v, n_p
 
-    def add_ark_points(self, v, last_significant_line, np_num, n_h, n_v, n_p, min_ark_step):
-        #
-        # todo https://stackoverflow.com/questions/34372480/rotate-point-about-another-point-in-degrees-python
-        #print('|ARR = ', v[np_num])
+    def add_ark_points(self, v, np_num, n_h, n_v, n_p, min_ark_step,
+                       curentSC, main_G549, CYCLE800,
+                       L_S_L_noSHIFT:np.ndarray,
+                       N_S_L_noSHIFT:np.ndarray):
+        """
+        Add points to make ark in the current G549
+        """
+
+        print(f'add_ark_points curentSC = {curentSC}')
+        print(f'L_S_L_noSHIFT = {L_S_L_noSHIFT}')
+        print(f'N_S_L_noSHIFT = {N_S_L_noSHIFT}')
+
         np_line = v[np_num]
-        # предыдущие данные
-        ph = last_significant_line[n_h]  # previous horizontal
-        pv = last_significant_line[n_v]  # previous vertical
-        pp = last_significant_line[n_p]  # previous perpendicular
 
-        ch = n_h + 6#- 9# #+
-        cv = n_v + 6#- 9#
-        #cp = n_p + 6
-        R = np_line[13]
+        ph = L_S_L_noSHIFT[n_h]  # previous horizontal
+        pv = L_S_L_noSHIFT[n_v]  # previous vertical
+        pp = L_S_L_noSHIFT[n_p]  # previous perpendicular
 
+        print(f'pv = {pv}, ph = {ph}, pp = {pp}')
+        ch = n_h + 6  # - 9# #+
+        cv = n_v + 6  # - 9#
+        # cp = n_p + 6
+        R = np_line[13]#saved
 
         # 1 vectors
         OAx = ph - np_line[ch]
         OAy = pv - np_line[cv]
 
-        ABx = np_line[n_h] - ph
-        ABy = np_line[n_v] - pv
+        ABx = N_S_L_noSHIFT[n_h] - ph#saved
+        ABy = N_S_L_noSHIFT[n_v] - pv#saved
 
+        print(f'OAx = {OAx}, OAy = {OAy}, ABx = {ABx }, ABy = {ABy}, R = {R}')
         # OA = [OAx, OAy]
         # AB = [ABx, ABy]
-        #print('||| V = ', v)
+        # print('||| V = ', v)
         # 2 g2 g3
         if np_line[3] == 2:
             AAx = OAy
@@ -587,36 +696,40 @@ class NumpyBox():
         else:
             print('redactor add_ark_points fail')
         # 3 cor gamma
-        #print('AAx = {}, ABx = {}, AAy = {}, ABy = {}'.format(AAx, ABx, AAy, ABy))
+        # print('AAx = {}, ABx = {}, AAy = {}, ABy = {}'.format(AAx, ABx, AAy, ABy))
         cos_gamma = (AAx * ABx + AAy * ABy) / math.sqrt((AAx ** 2 + AAy ** 2) * (ABx ** 2 + ABy ** 2))
         # 3
         print(f'cos_gamma = {cos_gamma}')
         if np.isnan(cos_gamma):
             print('naaaaan')
             self.redactor.Logs.math_logs = self.redactor.Logs.math_logs + f'{int(np_line[15])} line  R=0??\n'
-            self.redactor.tab_.center_widget.left.left_tab.parent_of_3d_widget.openGL.ERROR_lines.extend((last_significant_line, np_line))
+            self.redactor.tab_.center_widget.left.left_tab.parent_of_3d_widget.openGL.ERROR_lines.extend(
+                (L_S_L_noSHIFT[9], np_line))
             return v, 0
         alpha = 2 * math.acos(cos_gamma)
 
-        #min_ark_step = R / 10
-        #print('here min_ark_step = ', min_ark_step)
-        #print('R = ', R)
+        # min_ark_step = R / 10
+        # print('here min_ark_step = ', min_ark_step)
+        # print('R = ', R)
         cos_alpha_segmenta = 1 - 0.5 * ((min_ark_step ** 2) / (R ** 2))
-        #print('cos_alpha_segmenta = ', cos_alpha_segmenta)
+        # print('cos_alpha_segmenta = ', cos_alpha_segmenta)
         sin_alpha_segmenta = math.sqrt(1 - cos_alpha_segmenta ** 2)
         alpha_segmenta = math.acos(cos_alpha_segmenta)
         print(f'alpha = {alpha}, alppha segmenta = {alpha_segmenta}')
         # ищем сколько строк и синусы
-        #var1 = alpha / alpha_segmenta
+        # var1 = alpha / alpha_segmenta
         n = math.floor(alpha / alpha_segmenta)
         if n < 0:
             print('ТРЕВОООГАА!!! Дальше остаток тоже переделывать')
         # создаем массив
 
-        ark_np_array = np.full((n, axises), np_line)
-        Lperp = v[np_num, n_p] - last_significant_line[n_p]
+        #ark_np_array = np.full((n, axises), np_line)
+        ark_np_array = np.full((n, axises), N_S_L_noSHIFT)
+
+        #Lperp = v[np_num, n_p] - last_significant_line[n_p]
+        Lperp = N_S_L_noSHIFT[n_p] - L_S_L_noSHIFT[n_p]
         alpha_less = n * alpha_segmenta
-        #Lperp = Lperp * ((alpha_segmenta * n) / math.radians(alpha))
+        # Lperp = Lperp * ((alpha_segmenta * n) / math.radians(alpha))
         if alpha != 0:
             Lperp = Lperp * (alpha_less / alpha)
         else:
@@ -626,8 +739,8 @@ class NumpyBox():
         perp_step = Lperp / n  # divide by zero?
         ph = OAx
         pv = OAy
-        #copy_add = 13
-        #print('Угол = {}, n = {}'.format(alpha, n))
+        # copy_add = 13
+        # print('Угол = {}, n = {}'.format(alpha, n))
         n_h_new = n_h + 13
         n_v_new = n_v + 13
         n_p_new = n_p + 13
@@ -641,7 +754,7 @@ class NumpyBox():
                 ph = new_hor_0
                 pv = new_vert_0
                 ark_np_array[k, n_p_new] = pp + k * perp_step
-                ark_np_array[k, 16] = 5. #todo дополнительные точки. мы хотим рисовать линии но не точки
+                ark_np_array[k, 16] = 5.  # todo дополнительные точки. мы хотим рисовать линии но не точки
         elif np_line[3] == 3:
             pp = pp + perp_step
             for k in range(n):
@@ -653,34 +766,34 @@ class NumpyBox():
                 pv = new_vert_0
                 ark_np_array[k, n_p_new] = pp + k * perp_step
                 ark_np_array[k, 16] = 5.
-                #print('new_hor_0 = ', new_hor_0)
-                #print('new_vert_0 = ', new_vert_0)
+                # print('new_hor_0 = ', new_hor_0)
+                # print('new_vert_0 = ', new_vert_0)
         else:
             print('redactor add_ark_points failed')
 
-        if v[np_num, 9] == last_significant_line[9]:
+
+        #if v[np_num, 9] == last_significant_line[9]:
+        if N_S_L_noSHIFT[9] == L_S_L_noSHIFT[9]:
             if ark_np_array[0, 9] != 0:
-                #a = math.radians(ark_np_array[0, 9])
+                # a = math.radians(ark_np_array[0, 9])
                 a = ark_np_array[0, 9]
                 for line in ark_np_array: line[17], line[18] = turn_around_radians1(line[17], line[18], a)
         else:
-            #print('|||  ark step = ', ark_np_array)
-            deltaC = v[np_num, 9] - last_significant_line[9]
-            #Cperp = math.radians(deltaC) * (alpha_less / alpha)
+            # print('|||  ark step = ', ark_np_array)
+            #deltaC = v[np_num, 9] - last_significant_line[9]
+            deltaC = N_S_L_noSHIFT[9] - L_S_L_noSHIFT[9]
+            # Cperp = math.radians(deltaC) * (alpha_less / alpha)
             Cperp = deltaC * (alpha_less / alpha)
             C_step = Cperp / n
-            startCangle = last_significant_line[9] + C_step
-            #print('||| len(ark_np_array = ', len(ark_np_array))
-            #Перестроить для поворотов вокруг оси С. Здесь и у G1-G0 добавить С промежуточным точкам
-            #todo Пока выключил обороты с осью С (слудющая строка)
-            #for i_ in range(len(ark_np_array)): ark_np_array[i_, 17], ark_np_array[i_, 18],  ark_np_array[i_, 9] = turn_around_radians2(ark_np_array[i_, 17], ark_np_array[i_, 18], startCangle + i_ * C_step)
-            #for line in ark_np_array: line[17], line[18] = turn_around_radians1(line[17], line[18], C_step)
-
-
+            startCangle = L_S_L_noSHIFT[9][9] + C_step
+            # todo Пока выключил обороты с осью С (слудющая строка)
+        print(f'  GGG CYCLE800 = {CYCLE800}')
+        print(f'aerk array first = {ark_np_array}')
+        if self.dots_transformation_matrix is not None:
+            #trans_matrix_from_SC
+            G549_4_many_dots_NEW(ark_np_array, self.dots_transformation_matrix)
         return np.insert(v, np_num, ark_np_array, axis=0), n
 
-    #def slide_next_address_cuz_new_points(self):
-    #    self.current_frame_address_in_visible_pool = 0
 
 
 def angle_axises_rotate_Direct_line(self):

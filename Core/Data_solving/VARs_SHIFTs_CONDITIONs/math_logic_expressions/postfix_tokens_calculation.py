@@ -1,6 +1,13 @@
-from Core.Data_solving.VARs_SHIFTs_CONDITIONs.math_logic_expressions.avaliable_math_logic_operators import OPERATORs_DICT_func_1, \
-    OPERATORs_PRECEDENCE_DICT, OPERATORs_DICT_binary_between, OPERATORs_DICT_math_U
+from Core.Data_solving.VARs_SHIFTs_CONDITIONs.math_logic_expressions.avaliable_math_logic_operators import \
+    OPERATORs_DICT_func_1, \
+    OPERATORs_PRECEDENCE_DICT, \
+    OPERATORs_DICT_binary_between, \
+    OPERATORs_DICT_math_U
 
+o1 = OPERATORs_DICT_func_1
+o2 = OPERATORs_PRECEDENCE_DICT
+o3 = OPERATORs_DICT_binary_between
+o4 = OPERATORs_DICT_math_U
 
 
 
@@ -17,6 +24,11 @@ def postfixTokenCalc(tokens: tuple, DICT_VARS=None, proc=None):
         OPERATORs_PRECEDENCE_DICT =     proc.OPERATORs_PRECEDENCE_DICT
         OPERATORs_DICT_binary_between = proc.OPERATORs_DICT_binary_between
         OPERATORs_DICT_math_U =         proc.OPERATORs_DICT_math_U
+    else:
+        OPERATORs_DICT_func_1 =         o1
+        OPERATORs_PRECEDENCE_DICT =     o2
+        OPERATORs_DICT_binary_between = o3
+        OPERATORs_DICT_math_U =         o4
     print(f'postfixTokenCalc tuple = {tokens}')
     if DICT_VARS is None:
         DICT_VARS = {}
@@ -41,9 +53,6 @@ def postfixTokenCalc(tokens: tuple, DICT_VARS=None, proc=None):
                         else:
                             return None
                     left = stack_l.pop(-1)
-
-
-
                     if left is not None and right is not None:
                         print(f'left = {left}')
                         stack_l.append(OPERATORs_DICT_binary_between[t](left, right))
@@ -93,3 +102,4 @@ if __name__ == "__main__":
     #print('RESULT2 = ', solve)
 
     print('complex?: ', postfixTokenCalc((5, 3j, '-',), proc=proc))
+    print('complex?: ', postfixTokenCalc((5, 3j, '-',)))

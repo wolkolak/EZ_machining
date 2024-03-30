@@ -54,8 +54,7 @@ splitter_parameters = {'lefty': 260, 'righty': 1165, 'flag': 1 }
 
 min_ark_step = 0.5
 
-g_programs_folder = 'C:/Users/wolko/Desktop/EZ_machining-master/examples'
-
+g_programs_folder = 'C:/Users/wolko/Desktop/EZ_machining-master/examples'
 
 
 ololol = 'тест бегемотика'
@@ -63,7 +62,8 @@ ololol = 'тест бегемотика'
 scaling_draft_prime = 167.0
 
 
-default_machine = 'Modelling_clay/machines/Machine_BA_Head_45'
+default_machine = 'Modelling_clay/machines/NT6000_Table_C_Head_BA'
+
 
 
 

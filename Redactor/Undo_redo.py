@@ -129,24 +129,17 @@ class StoreCommand(QUndoCommand):
         if self.stack.sutulaya_sobaka is True:
             print('pseudo undo')
         else:
-            #u dont need to play around macroUndo cuz it nether dive here
-            #print(
-            #    'undo text_inserted: {}, готов записать в команду № {}'.format(self.text_inserted, self.stack.index()))
             self.stack.edit_type = 'undo'
             self.store_cursor.setPosition(self.pos3, 0)  #don't worry, selection happened
             self.store_cursor.setPosition(self.pos1, 1)
             #print(f'cursor postion = {self.store_cursor.position()}, anchor = {self.store_cursor.anchor()}')
             self.stack.previous_max_line = self.field._document.findBlock(self.pos3).blockNumber()#+1
             self.store_cursor.insertText(self.text_deleted)#после onchange НАЧИНАЕТСЯ HighLight
-            #self.stack.edit.min_line_np = self.stack.edit.textCursor().blockNumber()
-            #self.stack.edit.second_place = self.stack.edit.textCursor().blockNumber()
-            #print('index undostack: ', self.stack.index())
             print('undo end')
 
 
     def redo(self):
         print('redo: {}, готов записать в команду № {}'.format(self.text(), self.stack.index()))
-        #return
         if self.command_created_only is False:
             #print('command_created_only is False')
             self.stack.edit_type = 'redo'
@@ -154,11 +147,4 @@ class StoreCommand(QUndoCommand):
             self.store_cursor.setPosition(self.pos2, 1)
             self.stack.previous_max_line = self.field._document.findBlock(self.pos2).blockNumber()#-1
             #TODO -1????????????????????????? added for isert in first line
-            #print('redo max = ', self.stack.edit.base.progress_bar.maximum())
             self.store_cursor.insertText(self.text_inserted)
-            #МОЖЕТ сюда внести рехайлайт и его правила
-            #self.store_cursor.p
-            #self.stack.edit.min_line_np = self.stack.edit.textCursor().blockNumber()
-            #self.stack.edit.second_place = self.stack.edit.textCursor().blockNumber()
-            #self.stack.edit.second_place = self.stack.edit.textCursor().blockNumber()#????????????????
-            #может обновить точку курсора?

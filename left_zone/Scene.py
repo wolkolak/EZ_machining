@@ -22,7 +22,7 @@ from Core.Machine_behavior.Draw_fincs_universe_TRJt_factorial_64 import order_ro
 from left_zone.additional_functions import read_tool_file, choose_tool_function
 
 from Core.Machine_behavior.angles_compute_for_machine_parts import A_table_function, B_table_function, C_table_function, \
-    A_head_function, B_head_function, C_head_function
+    A_head_function, B_head_function, C_head_function, last_head_move
 from Core.Machine_behavior.machine_transmigrations_forward import TR_ABC, RT_ABC
 from Core.Machine_behavior.machine_transmigrations_return import return_TR_CBA, return_RT_CBA
 
@@ -86,6 +86,7 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget/ Уже?
         self.A_table_function = A_table_function;   self.A_head_function = A_head_function
         self.B_head_function = B_head_function;     self.B_table_function = B_table_function
         self.C_table_function = C_table_function;   self.C_head_function = C_head_function
+        self.last_head_move = last_head_move
 
 
 
@@ -268,7 +269,7 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget/ Уже?
         if a0.angleDelta().y() > 0:
             self.k_rapprochement = self.k_rapprochement / 0.8
             #что на середине экрана
-            print('+ k_rapprochement - = ', self.k_rapprochement)
+            #print('+ k_rapprochement - = ', self.k_rapprochement)
             self.cam_height = self.cam_height / 0.8
             self.cam_horizontal = self.cam_horizontal / 0.8
             #сместить
@@ -493,7 +494,8 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget/ Уже?
 
 
         glScale(self.k_rapprochement, self.k_rapprochement, self.k_rapprochement)
-        self.view_SC_part()
+        #self.green_cub_lines()
+        self.view_SC_dot()
         #todo в этой же точке рисуем СК обработки. НЕТ! Может и в другой если качаем. при старте совпадают
         # Размер не зависит от k_rapprochement
         # Направление осей зависит от
@@ -503,17 +505,33 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget/ Уже?
         # todo here we will make bind dot
         # это перенос конкретной координаты кончика инструмента в ОСК TODO
 
+        self.green_cub_lines()#TODO ВОТ отсюда нужно строить ВСЁ ЗАНОВО
+        #ФФФФ
 
         self.draw_machine()#todo внести перенос в точку и вынести после
-        self.transmigration_func()
+        #zdes uje ne te coords base
+        self.transmigration_func()#no real transfers
+
         self.draw_points(self.gcod)
         self.error_lines_draw()
         self.draw_lines(self.gcod)
-
         #self.draw_special_dot()
         glFlush()
         glPopMatrix()
         self.render_text()
+
+
+    def green_cub_lines(self):
+        glLineWidth(2)
+        glColor3f(0.2, 1, 0.2)
+        glBegin(GL_LINE_STRIP)
+        glVertex3f(0, 0, 0)
+        glVertex3f(100, 0, 0)
+        glVertex3f(100, 100, 1)
+        glVertex3f(100, 100, 100)
+        glVertex3f(0, 100, 100)
+        glVertex3f(0, 0, 100)
+        glEnd()
 
     def error_lines_draw(self):
         glLineWidth(3)
@@ -526,60 +544,30 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget/ Уже?
         glEnd()
 
     def transmigration_func(self):
+        """
+        only solving, no rel transfers
+        :return:
+        """
+
         x, y, z = self.tip_way_func(self)
+        #zdes podumat
         dx, dy, dz = self.DICT_G549shift[self.g54_g59_default]
-        for f_l in  self.after_draw_return_list:
+        for f_l in self.after_draw_return_list:
             x, y, z = f_l[0](f_l[1], x, y, z)
         param_list = [dx, dy, dz, 0, 0, 0, -self.main_G549['A'], -self.main_G549['B'], -self.main_G549['C']]
+
         x, y, z = TR_ABC(param_list, x, y, z)#todo ТАк нельзя. Вращать нужно не вокруг новых осей, а вокруг базовых?
         #todo сменить в паре - здесь может и не надо
-
         #x, y, z = -x, -y, -z
-
-        glColor3f(1, 0, 0.5)
+        glColor3f(1, 0, 0.5)#dot at the tool tip
         glPointSize(7)
         glBegin(GL_POINTS)
-        glVertex3f(x, y, z)
+        glVertex3f(x, y, z)#in main coords
         glEnd()
 
-        #len1 = self.count_machine_op
-        #for i in range(self.Table_Head_place):
-        #    r_op = self.after_draw_return_list[i]
-        #    pp = r_op[1][:]
-        #    x, y, z = r_op[0](pp, x, y, z)
-        #for i in range(self.Table_Head_place, len1):
-        #    r_op = self.after_draw_return_list[i]
-        #    pp = r_op[1][:]
-        #    x, y, z = r_op[0](pp, x, y, z)
-
-
-    #def draw_SC_dot(self):
-    #    glPointSize(20)
-    #    glColor3f(1, 0, 1)
-    #    glBegin(GL_POINTS)
-    #    glVertex3f(0.0, 0.0, 0.0)
-    #    glEnd()
-
-
-
-    def machine_zeros_draw(self, i):
-        #хз что делать. дичь же.
-        glTranslatef(self.m_zero_to_m_1ax_center_CONST[0], self.m_zero_to_m_1ax_center_CONST[1], self.m_zero_to_m_1ax_center_CONST[2])
-        glCallList(self.special_machine_points['M0_CONST'])
-        glCallList(self.special_machine_points['TOOL_POINT1'])
-        glCallList(self.special_machine_points['TOOL_POINT2'])
-
-        glTranslatef(self.offset_pointXYZ[0], self.offset_pointXYZ[1], self.offset_pointXYZ[2])
-        glCallList(self.special_machine_points['M0_VARIANT'])
-        glTranslatef(-self.offset_pointXYZ[0], -self.offset_pointXYZ[1], -self.offset_pointXYZ[2])
-
-        glTranslatef(-self.m_zero_to_m_1ax_center_CONST[0], -self.m_zero_to_m_1ax_center_CONST[1], -self.m_zero_to_m_1ax_center_CONST[2])
-
-        #self.view_SC_machining(i=i)
-        self.view_SC_machining()
-
-
     def draw_machine(self):
+        #сейчас мы находимся в первоначальном нуле G549
+        #self.view_SC_machining()
         color = [[0., 0., 1.], [0., 1., 0.], [1., 0., 0.]]
         glColor3f(*color[0])
         #TODO the problem here - if order different, than a new function might be necessary SIC!!!
@@ -592,45 +580,86 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget/ Уже?
 
         #todo где то поворот, но позже его добавлю
 
+        #print(f'd_x, d_y, d_z = {d_x, d_y, d_z}')
+
         glRotate(-self.main_G549['C'], 0., 0., 1.)
         glRotate(-self.main_G549['B'], 0., 1., 0.)
         glRotate(-self.main_G549['A'], 1., 0., 0.)
 
+
         #print('DICT_G549shift default = ', self.g54_g59_default)
         #print('self.DICT_G549shift = ', self.DICT_G549shift)
-        d_x, d_y, d_z = self.DICT_G549shift[self.g54_g59_default]  # todo Сделать универсальным
-        glTranslatef(d_x, d_y, d_z)
+        #glTranslatef(*[-m for m in self.m_zero_to_m_1ax_center_CONST])
+        #self.test_point()
+        #glTranslatef(*self.m_zero_to_m_1ax_center_CONST)
+        #self.test_point()
+
+
+
+        d_x, d_y, d_z = self.DICT_G549shift[self.g54_g59_default]  # Функция уже выполнена! Здесь мы только смотрим результат
+        #Результат смещения
+        #TODO или назад отскочить можно?
+
+        glTranslatef(d_x, d_y, d_z)#перешёл из СК базовой к машинному нулю/ Нет, переходит к центру стола
+
+        #glTranslatef(0, 800, 0)
+
+        #glTranslatef(0, -800, 0)
+        #glTranslatef(*self.m_zero_to_m_1ax_center_CONST)
+
+
+
+        #Дальше нужно нарисовать другие нули: т смены инструмента и точка крпления головы так как они от машиинного нуля
+
+        #glCallList(self.special_machine_points['M0_CONST'])
+
+
+        #glTranslatef(self.offset_pointXYZ[0], self.offset_pointXYZ[1], self.offset_pointXYZ[2])
+        #glCallList(self.special_machine_points['M0_VARIANT'])#можно и без этого
+        #Теперь нужно нащупать центры вращения стола от детали к станку
+        #переместиться на offset_pointXYZ от стола к голове
+        #от крепления головы к её последнему элементу, всё это ниже:
+        #self.test_point()
+        #self.machine_zeros_draw(i=i)
         i = 0
         for list_ in self.machine_draw_list:
             if i == self.Table_Head_place:
-                self.machine_zeros_draw(i=i)
+                #self.machine_zeros_draw(i=i)
+                glTranslatef(*self.m_zero_to_m_1ax_center_CONST)
+                glCallList(self.special_machine_points['M0_CONST'])
+                glCallList(self.special_machine_points['TOOL_POINT1'])
+                glCallList(self.special_machine_points['TOOL_POINT2'])
+                #glCallList(self.special_machine_points['M0_VARIANT'])
+                self.view_SC_machining()
+                glTranslatef(*[-coord for coord in self.m_zero_to_m_1ax_center_CONST])
+
             params = list_[6]
             list_[0](list_[2], list_[3], list_[4], list_[5], params)
             i += 1
 
         self.collet_draw()
-
+        #return
+        #теперь назад
         for list_ in self.after_draw_return_list:
             params = list_[1]
             list_[2](params)
 
+        #glTranslatef(*[-m for m in self.m_zero_to_m_1ax_center_CONST])
         glTranslatef(-d_x, -d_y, -d_z)
         glRotate(self.main_G549['A'], 1., 0., 0.)
         glRotate(self.main_G549['B'], 0., 1., 0.)
         glRotate(self.main_G549['C'], 0., 0., 1.)
 
-        glColor3f(0.2, 1, 0.2)
-        glBegin(GL_LINE_STRIP)
-        glVertex3f(0, 0, 0)
-        glVertex3f(100, 0, 0)
-        glVertex3f(100, 100, 1)
-        glVertex3f(100, 100, 100)
-        glVertex3f(0, 100, 100)
-        glVertex3f(0, 0, 100)
+        #вернулся к нулю к G549 default
+
+
+    def test_point(self):
+        hor, vert = 0, 0
+        glPointSize(50)
+        glBegin(GL_POINTS)
+        glColor3f(0.5, 1., 0.5)
+        glVertex3f(hor, vert, 0.0)
         glEnd()
-
-
-
 
     def collet_draw(self):
         glCallList(self.my_collet)
@@ -719,7 +748,7 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget/ Уже?
 
 
 
-    def view_SC_part(self):
+    def view_SC_dot(self):
         glPointSize(10)
         glBegin(GL_POINTS)
         glColor3f(1.5, 0.5, 0.5)
@@ -733,6 +762,7 @@ class Window3D(QOpenGLWidget):#todo заменить на QOpenGLWidget/ Уже?
         #my_list_f = self.machine_draw_list #todo для TRAORI
         #glTranslatef(x, y, z)
         #todo Поворот
+
         Display = self.g54_g59_AXIS_Display
         #print('Display = ', Display)
         for sc in Display:

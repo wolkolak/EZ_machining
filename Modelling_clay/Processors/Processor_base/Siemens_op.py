@@ -92,7 +92,7 @@ OPERATORs_PRECEDENCE_DICT = {
             '+':       1,
             '*':       2,
             '/':       2,
-            'IC':4,
+            'IC':      4,
             'SQRT':    4,
             'POW1':    4,
             'POW2':    4,

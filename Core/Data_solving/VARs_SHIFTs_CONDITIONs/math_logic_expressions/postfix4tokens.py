@@ -4,6 +4,7 @@ from Core.Data_solving.VARs_SHIFTs_CONDITIONs.math_logic_expressions.avaliable_m
     OPERATORs_DICT_binary_between, OPERATORs_DICT_math_U, OPERATORs_DICT_func_2
 from Core.Data_solving.VARs_SHIFTs_CONDITIONs.math_logic_expressions.avaliable_math_logic_operators import before_unar_arithmetic
 
+AC_IC = ('AC', 'IC')
 
 def tokensPostfixing(tokens: list, brackets=None, proc=None):
     """
@@ -21,6 +22,12 @@ def tokensPostfixing(tokens: list, brackets=None, proc=None):
     stack = []
     result = []
     start_exp = True
+    pref = None
+    if tokens[0] in AC_IC:
+        pref = tokens.pop(0)
+    elif len(tokens) > 1 and tokens[1] in AC_IC:
+        pref = tokens.pop(1)
+
     for t in tokens:
         try:
             t = float(t)
@@ -28,7 +35,7 @@ def tokensPostfixing(tokens: list, brackets=None, proc=None):
         except:
             if t in OPERATORs_DICT_func_1 or t in OPERATORs_DICT_func_2:#sin, int, pow
                 stack.append(t)
-            elif t ==',':
+            elif t == ',':
                 while len(stack)>0 and stack[-1] != brackets[0]:
                     result.append(stack.pop(-1))
                     if len(stack) == 0:
@@ -62,6 +69,8 @@ def tokensPostfixing(tokens: list, brackets=None, proc=None):
             print('Not enough brackets')
             return None
         result.append(stack.pop(-1))
+    if pref is not None:
+        result.insert(0, pref)
     result = tuple(result)
     return result
 

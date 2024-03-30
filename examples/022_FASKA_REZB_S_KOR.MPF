@@ -1,0 +1,101 @@
+N5 G17 G40 G54 G64 G90
+N10 CYCLE800()
+N15 TRAFOOF
+N20 L_FREI
+N25 L_ZYM91
+N30 ;----------------------
+N35 ;Tool: s korrektorom!!! 
+N40 ;----------------------
+N45 DM_MILL
+N50 T="F9.23"     ;;;KOP-P =5.73
+N55 M6
+N60 D1
+N65 DM_RAPID(20)
+N70 COMPCAD
+N75 FFWOF SOFT
+N80 L_FREI
+N85 L_ZYM91
+N90 TOFFL=0
+N95 S2000 M3
+N100 F1000
+N105 G0 
+N110 M73 M7
+
+N115 CYCLE800(1,"TC1",0,57,-56.75,0,-18,90,-90,0,0,0,0,-1,)
+
+N125 G0 X0 Y0 Z100       
+N130 G0 Z10
+N135 G1 Z-4
+
+
+
+N140 R1=22.5  ;diametr obnizki
+N145 R2=20.5    ;diametr otv pod rezbu
+N150 R3=0.5   ;shag vitka
+N155 ;__________________________________________________
+N160 IF R2>=R1 GOTOF END  
+N165 R5=R1/2-R2/2   ;razmer faski
+N170 R5=R5+0.2      ;prodlenie faski
+N175 R1=R1/2        ;startovii radius
+N180 R1=R1-0.1      ;umen'shenie radiusa
+N185 R7=R1-R3/2     ;1-ya polovina spiral'nogo vitka
+N190 R8=R7-R3/2     ;2-ya polovina spiral'nogo vitka
+N195 R6=0           ;schetchik glubini
+
+N200 ;proverka shaga:
+N205 IF R3>=R5 GOTOF END
+N210 ;proverka korrektora:
+N215 R9=R1-R5
+N220 R9=R9-0.1     ;0.1 nuzhen chtobi radius bil' garantirovanno bolshe chem korrektor
+N225 IF $TC_DP6[$P_TOOLNO,1]>=R9 GOTOF END
+ 
+N230 ;programma:
+N235 G1 G41 X=R1 Y0
+N240 G3 X=-R1 Y0 AR=180
+N245 G3 X=R1 Y0 AR=180
+N250 R6=R6+R3
+N255 AAA:
+N260 G3 X=-R7 Y0 Z=IC(-R3/2) AR=180
+N265 G3 X=R8 Y0 Z=IC(-R3/2) AR=180
+N270 R6=R6+R3
+N275 IF R6>R5 GOTOF CCC    ;perehod k pereschetu shaga
+N280 R7=R8-R3/2
+N285 R8=R7-R3/2
+N290 IF R6==R5 GOTOF BBB   ;perehod k poslednemu vitku
+N295 GOTOB AAA
+
+N300 CCC:    ;pereschet shaga
+N305 R6=R6-R3
+N310 R3=R5-R6
+N315 R7=R8-R3/2
+N320 R8=R7-R3/2
+
+N325 BBB:    ;poslednii vitok
+N330 G3 X=-R7 Y0 Z=IC(-R3/2) AR=180
+N335 G3 X=R8 Y0 Z=IC(-R3/2) AR=180
+N340 G3 X=-R8 Y0 AR=180
+N345 G3 X=R8 Y0 AR=180
+N350 G1 G40 X=IC(-R8) Y=IC(0)
+N355 ;--------------------------------------------------------
+
+N360 G0 Z100
+
+
+
+N380 TOFFL=0
+N385 CYCLE800()
+N390 TRAFOOF
+N395 DM_MILL
+N400 M5
+N405 M30
+
+N410 END:
+N415 M0 ;nekorektnii parametr
+N420 L_FREI
+
+N425 TOFFL=0
+N430 CYCLE800()
+N435 TRAFOOF
+N440 DM_MILL
+N445 M5
+N450 M30

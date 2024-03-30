@@ -65,10 +65,10 @@ def create_M0_VARIANT(self):
     length = 10
     glColor3f(0.5, 0.5, 0.5)
 
-    #glTranslatef(self.machine_zero_variant[0], self.machine_zero_variant[1], self.machine_zero_variant[2])
+    glTranslatef(self.offset_pointXYZ[0], self.offset_pointXYZ[1], self.offset_pointXYZ[2])
 
     create_pyramid(length)
-
+    glTranslatef(-self.offset_pointXYZ[0], -self.offset_pointXYZ[1], -self.offset_pointXYZ[2])
     #glTranslatef(-self.machine_zero_variant[0], -self.machine_zero_variant[1], -self.machine_zero_variant[2])
     glEndList()
     return CONNECTION

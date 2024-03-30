@@ -1,22 +1,27 @@
 
-
+#Рассмотреть обе функции и подумать
 
 def give_G549_shift(self, my_list_f):
+    #TODO здесь переделывать!!!!!!!!!!!!!!!!!!!!
+
     #my_list_f = self.machine_start_configuration  # todo для обычного режима
     # my_list_f = self.machine_draw_list #todo для TRAORI
-    x, y, z = 0., 0., 0.
+    x = -self.m_zero_to_m_1ax_center_CONST[0]
+    y = -self.m_zero_to_m_1ax_center_CONST[1]
+    z = -self.m_zero_to_m_1ax_center_CONST[2]
     print('self.machine_draw_list len= ', len(self.machine_draw_list))
     print('self.Table_Head_place  = ', self.Table_Head_place)
 
     for u in range(0, self.Table_Head_place):  # чтобы можно было качать
+        #my_list_f[u][6][1] = 0
         print('self.machine_draw_list[u] = ', self.machine_draw_list[u])
         params = [-ff for ff in my_list_f[u][6]]
         x, y, z = self.machine_draw_list[u][8](params, x, y, z)
     print('x, y, z  = ', x, y, z )
     # self.XYZABC_ADD не надо?
-    from_Machine_to_G549_X = self.m_zero_to_m_1ax_center_CONST[0] + self.offset_pointXYZ[0] + self.main_G549['X']
-    from_Machine_to_G549_Y = self.m_zero_to_m_1ax_center_CONST[1] + self.offset_pointXYZ[1] + self.main_G549['Y']
-    from_Machine_to_G549_Z = self.m_zero_to_m_1ax_center_CONST[2] + self.offset_pointXYZ[2] + self.main_G549['Z']
+    from_Machine_to_G549_X = self.main_G549['X'] #+ self.m_zero_to_m_1ax_center_CONST[0]#- self.XYZABC_ADD[0]#- self.m_zero_to_m_1ax_center_CONST[0] #+ self.offset_pointXYZ[0]
+    from_Machine_to_G549_Y = self.main_G549['Y'] #+ self.m_zero_to_m_1ax_center_CONST[1]#- self.XYZABC_ADD[1]#- self.m_zero_to_m_1ax_center_CONST[1] #+ self.offset_pointXYZ[1]
+    from_Machine_to_G549_Z = self.main_G549['Z'] #+ self.m_zero_to_m_1ax_center_CONST[2]#- self.XYZABC_ADD[2]#- self.m_zero_to_m_1ax_center_CONST[2] #+ self.offset_pointXYZ[2]
 
     d_x = x - from_Machine_to_G549_X
     d_y = y - from_Machine_to_G549_Y

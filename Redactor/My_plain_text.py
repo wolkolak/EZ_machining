@@ -42,6 +42,7 @@ class MyEdit(QPlainTextEdit):
 
         #self.after_rehighlight = False
         self.changed = False
+        self.types_of_operations = ('symbol', 'space')
         self.zoomIn(5)
         print('here my check 1')
         self.line_iter = 0
@@ -228,7 +229,7 @@ class MyEdit(QPlainTextEdit):
             self.undoStack.undo()
             self.rehighlightNextBlocks()
 
-    def my_redo(self):
+    def my_redo(self):#todo 2 rehighlight подряд работают неверно
         print('redo21')
         if self.undoStack.canRedo():
             self.undoStack.redo()
@@ -313,14 +314,24 @@ class MyEdit(QPlainTextEdit):
             #что то здесь???
 
         elif self.undoStack.edit_type == 'redo':# тут неверно подсчитывается макимум для для count
+
+            # TODO чего то здесь не хватает
+
             print('on change redo')#ТОЛЬКО REDO redo
             z = self.undoStack.command(self.undoStack.index())
+            print('self.stack.edit_type nyaaa = ', self.undoStack.text(self.undoStack.index()))
+            add_redo4_symbols = 0
+            if self.undoStack.text(self.undoStack.index()) in self.types_of_operations:
+                add_redo4_symbols = 1
+
+
             if z.childCount() > 0:
                 z = z.child(self.undoStack.child_count)
                 self.undoStack.child_count = self.undoStack.child_count + 1
             line1 = self._document.findBlock(z.pos1).blockNumber() + 1
             line2 = self.undoStack.previous_max_line #+ 1
-            line3 = self._document.findBlock(z.pos3).blockNumber() + 1
+            line3 = self._document.findBlock(z.pos3).blockNumber() + 1 + add_redo4_symbols#+1 для символов
+
             self.min_line_np = line1
             self.second_place = line2 + z.add_redo#-1????????
             print('z.text() = ', z.text())

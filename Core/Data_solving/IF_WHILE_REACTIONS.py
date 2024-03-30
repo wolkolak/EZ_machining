@@ -20,7 +20,7 @@ def if_classic(np_box, info, current_vars, i_str, jumped_here, i):  # , local_li
     res = postfixTokenCalc(info[1][1], DICT_VARS=current_vars, proc=np_box.redactor.highlight.reversal_post_processor)
     print('res = ', res)
     if res is None:
-        np_box.redactor.Logs.math_logs = np_box.redactor.Logs.math_logs + f'{info[0][0]} line expression error\n'
+        np_box.redactor.Logs.math_logs = np_box.redactor.Logs.math_logs + f'{info[0][0]} line expression error18\n'
         res = False
     # i = np.searchsorted(np_box.SHIFTcontainer.np_for_vars[:, 0], i_str)
     i__ = info[2]
@@ -70,7 +70,7 @@ def classic_while(np_box, info, current_vars, i_str, jumped_here, i):  # , local
     res = postfixTokenCalc(info[1][1], DICT_VARS=current_vars, proc=np_box.redactor.highlight.reversal_post_processor)
     print(f'classic_while: {res} in {info}')
     if res is None:
-        np_box.redactor.Logs.math_logs = np_box.redactor.Logs.math_logs + f'{info[0][0]} line expression error\n'
+        np_box.redactor.Logs.math_logs = np_box.redactor.Logs.math_logs + f'{info[0][0]} line expression error17\n'
         res = False
     print(f'Искомый {i_str} condition is {res}')
     # i = np_box.SHIFTcontainer.return_new_i(i_str)
@@ -100,7 +100,7 @@ def classic_UNTIL_repeat(np_box, info, current_vars, i_str, jumped_here, i):  # 
     print('classic_DO WHILE END')
     res = postfixTokenCalc(info[1][1], DICT_VARS=current_vars, proc=np_box.redactor.highlight.reversal_post_processor)
     if res is None:
-        np_box.redactor.Logs.math_logs = np_box.redactor.Logs.math_logs + f'{info[0][0]} line expression error\n'
+        np_box.redactor.Logs.math_logs = np_box.redactor.Logs.math_logs + f'{info[0][0]} line expression error16\n'
         res = False
     print(f'Искомый {i_str} condition is {res}')
     # i = np_box.SHIFTcontainer.return_new_i(i_str)
@@ -382,7 +382,7 @@ def fanuc_if_goto(np_box, info, current_vars, i_str, jumped_here, i, mod=0):
     res = postfixTokenCalc(info[1][1], DICT_VARS=current_vars, proc=np_box.redactor.highlight.reversal_post_processor)
     print('res = ', res)
     if res is None or info[1][2] is None:
-        np_box.redactor.Logs.math_logs = np_box.redactor.Logs.math_logs + f'{info[0][0]} line expression error\n'
+        np_box.redactor.Logs.math_logs = np_box.redactor.Logs.math_logs + f'{info[0][0]} line expression error15\n'
         return i_str + 1, False, i
     if res:
         return fanuc_goto_super(np_box, info, current_vars, i_str, jumped_here, i, mod, lbl_name=info[1][2])
@@ -395,7 +395,7 @@ def siemens_if_goto(np_box, info, current_vars, i_str, jumped_here, i, mod=0):
     res = postfixTokenCalc(info[1][1], DICT_VARS=current_vars, proc=np_box.redactor.highlight.reversal_post_processor)
     print('res = ', res)
     if res is None or info[1][2] is None:
-        np_box.redactor.Logs.math_logs = np_box.redactor.Logs.math_logs + f'{info[0][0]} line expression error\n'
+        np_box.redactor.Logs.math_logs = np_box.redactor.Logs.math_logs + f'{info[0][0]} line expression error14\n'
         return i_str + 1, False, i
     if res:
         return siemens_goto_super(np_box, info, current_vars, i_str, jumped_here, i, mod, lbl_name=info[1][2])
@@ -434,7 +434,7 @@ def siemens_if_gotoC(np_box, info, current_vars, i_str, jumped_here, i, mod=0):
 def siemens_if_gotoS(np_box, info, current_vars, i_str, jumped_here, i, mod=0):
     res = postfixTokenCalc(info[1][1], DICT_VARS=current_vars, proc=np_box.redactor.highlight.reversal_post_processor)
     if res is None:
-        np_box.redactor.Logs.math_logs = np_box.redactor.Logs.math_logs + f'{info[0][0]} line expression error\n'
+        np_box.redactor.Logs.math_logs = np_box.redactor.Logs.math_logs + f'{info[0][0]} line expression error13\n'
         return i_str + 1, False, i
     if res:
         return 0, True, i

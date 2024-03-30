@@ -161,7 +161,8 @@ def corrected_number_of_lines(my_edit, key, replace_to_nothing):#, oncoming_comm
 
                 print(f'Zdes 76')
                 #pass
-                add_undo = 2
+                add4undo = -2
+                add_undo = 2+add4undo  # todo Откуда блэт взяллось add4undo???! Вроде фурычит
                 #add_redo = 1
                 #corrected_qt_number_of_lines += 1
             #add_redo = 2  # -1
@@ -249,19 +250,20 @@ def corrected_number_of_lines(my_edit, key, replace_to_nothing):#, oncoming_comm
             if h:
                 corrected_qt_number_of_lines = 1
                 add_redo = 1
+
+            #add_redo = -1
+            #return corrected_qt_number_of_lines, starshiy_block, mladshii_block, add_undo, add_redo
         #else:
-        #    add_redo = 0
+        #    add_redo = 1
         #print('corrected_qt_number_of_lines = ', corrected_qt_number_of_lines)
     print('mladshii_block = ', mladshii_block)
     print('starshiy_block = ', starshiy_block)
     print('corrected_qt_number_of_lines = ', corrected_qt_number_of_lines)
     print('my_edit.blocks_before = ', my_edit.blocks_before)
-
+    #add_redo = 2  # TODO Добавил т.к. без это линяя строка оставалась всегда
     # есть следующая строка?
     if starshiy_block + corrected_qt_number_of_lines >= my_edit.blocks_before:# and not problem todo вылетать будет
-
         #corrected_qt_number_of_lines = 0
-
         corrected_qt_number_of_lines = corrected_qt_number_of_lines - 1
         if starshiy_block + corrected_qt_number_of_lines >= my_edit.blocks_before:# and not forbid:
             corrected_qt_number_of_lines = corrected_qt_number_of_lines - 1
@@ -274,9 +276,10 @@ def corrected_number_of_lines(my_edit, key, replace_to_nothing):#, oncoming_comm
     if starshiy_block + add_undo == my_edit.blocks_before:# and not problem:#
         print('if starshiy_block + add_undo == my_edit.blocks_before:')
         add_undo = 0
+
     #print('tutt:? {} >= {}'.format(starshiy_block + corrected_qt_number_of_lines, my_edit.blocks_before))
     #print('add_undo ', add_undo)
-    print('2 corrected_qt_number_of_lines = {}, starshiy_block = {}, mladshii_block = {}, add_undo = {}, add_redo = {}'.format(corrected_qt_number_of_lines, starshiy_block, mladshii_block, add_undo, add_redo))
+    print('211 corrected_qt_number_of_lines = {}, starshiy_block = {}, mladshii_block = {}, add_undo = {}, add_redo = {}'.format(corrected_qt_number_of_lines, starshiy_block, mladshii_block, add_undo, add_redo))
 
     #print(f'2 corrected_qt_number_of_lines = {corrected_qt_number_of_lines}')
     #if my_edit.undoStack.edit_type == 'insert':

@@ -63,6 +63,8 @@ class PAPAcontainer():
         local_line = np.searchsorted(self.np_for_vars[0:, 0], line)
         print(f'local_line = {local_line}')
         print(f'3434 self.np_for_vars[local_line] = {self.np_for_vars[local_line]}')
+        #TODO на 3434 словил IndexError: index 1 is out of bounds for axis 0 with size 1
+        #TODO Много ctrl+z, ctrl+y. CYCLE800/ последнее нажатие ctrl+y
         return self.base_dict[self.np_for_vars[local_line][self.index]], local_line
 
 

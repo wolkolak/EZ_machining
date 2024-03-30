@@ -1,11 +1,16 @@
-import math
-import operator
-from Core.Data_solving.VARs_SHIFTs_CONDITIONs.math_logic_expressions.add_math_logic_operators import *
+import numpy as np
 
+m_3 = np.array([[ 0, 0., 0],
+                [1, 0, 0],
+                [0, 0., 0],
+                [0, 0, 1]])
 
-g = math.atan(3/4)
-print(math.degrees(g))
+m_4 = np.array([[0., 0, 0., 5],
+                [0, 0, 0, 4],
+                [0., 0, 0., 3],
+                [0, 0, 0, 2]])
 
-g2 = atan(3/4)
-print(g2)
-#print(f'to degree = {math.degrees(0.01308922182318072)}')
+print(m_3.data)
+m_3 += m_4[:3, 3]
+print(m_3.data)
+print(m_3)

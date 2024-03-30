@@ -1,0 +1,13 @@
+R1 = 10
+R2 = 1
+
+G1Z2.Y2.X30.   
+G1
+
+WHILE R2 <= 3 
+cycle_goto
+R2 = R2 + 1
+END
+X10.
+X25.Z0.
+X100.

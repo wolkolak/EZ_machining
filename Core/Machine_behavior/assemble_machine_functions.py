@@ -152,6 +152,7 @@ def assemble_functions_to_draw_machine(self):#todo Сюда нужно доба�
              add_JawTier_head_to_list(self, func6, place_in_list=place_in_list)
 
     CurrentAXDict_old = {}
+    print(f'[[[ order = {order}')
     NewMorder = order[:head_start] + 'M' + order[head_start:]
     print('NewMorder = ', NewMorder)
     str_xyzabc = 'XYZABC'
@@ -162,8 +163,22 @@ def assemble_functions_to_draw_machine(self):#todo Сюда нужно доба�
             numb = str_xyzabc.index(NewMorder[l])#-1
             self.machine_draw_list[l + start_count][6][8] += self.XYZABC_ADD[numb]
 
-        if NewMorder[l] == 'M' and self.machine_draw_list[l + start_count][0] is not HeadTable:# and something
-            start_count += 1
+
+        print(f'66 HeadTable = {HeadTable}')
+        #sss
+        print(f'self.machine_draw_list = {self.machine_draw_list}')
+        if NewMorder[l] == 'M':
+            #if l + start_count == len(self.machine_draw_list):
+            #    self.machine_draw_list.append(self.last_head_move)
+            ##    #    #start_count += 1
+            ##    #dx, dy, dz, X_balk, Y_balk, Z_balk
+            ##    print(f'dx, dy, dz = {dx, dy, dz}')
+            #    CurrentAXDict_old[NewMorder[l]] = [dx, dy, dz] #self.machine_draw_list[l + start_count][6]
+            ##    #print(f'type444 = {type(CurrentAXDict_old[NewMorder[l]])}')
+            #    break
+
+            if self.machine_draw_list[l + start_count][0] is not HeadTable:# and something
+                start_count += 1
         CurrentAXDict_old[NewMorder[l]] = self.machine_draw_list[l + start_count][6]#
         if NewMorder[l] in self.for_45grad_angles and self.for_45grad_angles[NewMorder[l]][1]:# and not aliquot_90_degrees(self.for_45grad_angles[NewMorder[l]][0]):
             start_count += 1
@@ -212,6 +227,7 @@ def assemble_functions_to_draw_machine(self):#todo Сюда нужно доба�
         #return_op[2] = return_op[2](return_op[1][6:9])
         self.after_draw_return_list.append(return_op)
         i+=1
+
     self.after_draw_return_list.reverse()
 
     self.DICT_G549shift = give_G549_shifts(self, machine_item)

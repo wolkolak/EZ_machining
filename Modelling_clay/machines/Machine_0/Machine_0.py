@@ -13,15 +13,15 @@ class Machine(ABC):
         self.father = father
         self.machine_settings_open, self.machine_settings_import = self.get_home_machine_settings()
         print('self.machine_settings_open = ', self.machine_settings_open)
-        self.m_zero_to_m_1ax_center_CONST = [0., 0., 0.]
+        self.m_zero_to_m_1ax_center_CONST = [0., 0., 0.]#todo смещает серую точку от места крепления головы. Визуально - когда иначе не видно.
         self.start_distance_zero_to_lever = [0., 0., 0.]
         self.XYZABC_ADD = [0., 0., 0., 0., 0., 0.]
         self.open_machine_settings()
         self.ax_order = 'ABC'   # from closest rotate ax around part to the most distant one
-                                # Axis from differnt machine parts has no relative order. sort it as u want
-        self.DICT_AX_PARAMETERS = {'A': {'Place': 'Table',  'LShoulder': 100,    'j_angle': [0., 0., 0.], 't_angle': [0., 0., 0.], 'local_order': 'TRjt'},# it can be None or anything really
-                                   'B': {'Place': 'Table',  'LShoulder': 100,    'j_angle': [0., 0., 0.], 't_angle': [0., 0., 0.], 'local_order': 'TRjt'},
-                                   'C': {'Place': 'Head',   'LShoulder': 100,    'j_angle': [0., 0., 0.], 't_angle': [0., 0., 0.], 'local_order': 'TRjt'}
+                                # Axis from differnt machine parts have no relative order. sort it as u want
+        self.DICT_AX_PARAMETERS = {'A': {'Place': 'Table',  'LShoulder': 100,    'j_angle': [0., 0., 0.], 't_angle': [0., 0., 0.], 'local_order': 'TRjt'},  # it can be None or anything really
+                                   'B': {'Place': 'Table',  'LShoulder': 100,    'j_angle': [0., 0., 0.], 't_angle': [0., 0., 0.], 'local_order': 'TRjt'},  # t_angle это поворот, который мы делаем до того как переместимся в следующее звено. Наверное.
+                                   'C': {'Place': 'Head',   'LShoulder': 100,    'j_angle': [0., 0., 0.], 't_angle': [0., 0., 0.], 'local_order': 'TRjt'}  # j_angle не влияет ни на что
                                    }
         self.k_XYZABC = {'X': 1., 'Y': 1., 'Z': 1., 'A': 1., 'B': 1., 'C': 1.}
         self.collet = {'angle': 0., 'L_from_segment_tip': 0., 'baseR': 60.,
