@@ -14,8 +14,8 @@ from Core.Data_solving.np_solving_math import special_options_applying_new
 #    return (points - origin) * np.exp(complex(0, angle)) + origin
 import scipy
 #from scipy.spatial.
-from Core.Data_solving._3D_geometry_SC_moves import my_transform, my_transform_R_T, projection
-
+from Core.Data_solving._3D_geometry_SC_moves import my_transform, my_transform_R_T, projection, my_transform_return, C_ROT_1
+from Core.Machine_behavior.machine_transmigrations_forward import R_C, R_C_radians
 
 from Redactor import redactor
 
@@ -307,7 +307,7 @@ class NumpyBox():
         #print(f'333scene0.g54_g59_AXIS_Display[sc][7] = {scene0.g54_g59_AXIS_Display[sc][7]}')
         self.redactor.editor.highlightCurrentLine_chooseNewDot()
 
-    def add_ark_axis_points(self, cur_v, current_g_modal, last_significant_line, cur_i, n_h, n_v, n_p, min_ark_step, main_axis=None):
+    def add_ark_axis_points(self, cur_v, current_g_modal, last_significant_line, cur_i, n_h, n_v, n_p, min_ark_step, main_axis=None, main_G549=None, DictG549shift=None):
         # todo https://stackoverflow.com/questions/34372480/rotate-point-about-another-point-in-degrees-python
         """We need variable R, because simple ark would be wrong"""
         #пока что просто для оси С
@@ -335,71 +335,199 @@ class NumpyBox():
         sc = 'G' + str(current_g_modal['SC'])
         scene0 = self.redactor.tab_.center_widget.left.left_tab.parent_of_3d_widget.openGL
 
-        machine_center = scene0.g54_g59_AXIS_Display[sc]#TODO только для текущей СК
+        machine_center = copy.copy(scene0.g54_g59_AXIS_Display[sc])#TODO только для текущей СК
 
-        #machine_center_now = np.zeros(6)
-        #for i_1 in range(0, 6):
-        #if len(machine_center[8]) > 1:
-        #    print('len(machine_center[8]) > 1:')
-        #    for i1 in range(6):
-        #        machine_center_now[i1] = machine_center_now[i1] - machine_center[8][i1]
-        #TODO Тут учесть повороты CYCLE800!!!
-        #print(f'666 machine_center = {machine_center}')
-        #это переход от G54 к нулю станка.
-        #for i1 in range(6):#TODO это всё пока выключаем
-        #    machine_center_now[i1] = -machine_center[i1] + machine_center_now[i1]
-        #print(f'667 machine_center = {machine_center_now}')
-        #euler_angles = np.array([45, 0, 0])
-        #euler_angles_rad = np.radians(euler_angles)
-        #print(f'euler_angles_rad = {euler_angles_rad}')
-        #rotation = Rotation.from_euler('xyz', euler_angles_rad)#.as_matrix()
-        #point = np.array([machine_center_now[0], machine_center_now[1], machine_center_now[2]])#????
-        #point = rotation.apply(point)
-        #machine_center_now = my_transform(little_SC=machine_center_now, big_SC=machine_center)
+        machine_center[3:6] = [math.radians(dd) for dd in machine_center[3:6]]
         m = self.redactor.current_machine
-        #machine_center_now[1] = machine_center_now[1] - m.DICT_AX_PARAMETERS['C']['LShoulder']
-
-
         center_AX1 = np.zeros(6)#C Axis
         m0 = np.zeros(6)
         m0[1] = m.DICT_AX_PARAMETERS['C']['LShoulder']
         print(f"m.DICT_AX_PARAMETERS['C']['t_angle'] = {m.DICT_AX_PARAMETERS['C']['t_angle']}")
-        m0[3:6] = m.DICT_AX_PARAMETERS['C']['t_angle']
+        m0[3:6] = [math.radians(dd) for dd in m.DICT_AX_PARAMETERS['C']['t_angle']]
+
         #m0[3] = -m0[3];        m0[4] = -m0[4];        m0[5] = -m0[5]
         print(f'm0 = {m0}')
+        #print()
         machine_center_now = my_transform(from_SC=center_AX1, to_SC=m0)
 
         print(f'8890 machine_center= {machine_center}')
 
-        #euler_angles = np.array([45, 0, 0])
-        #euler_angles_rad = np.radians(euler_angles)
-        #machine_center_now = np.zeros(6)
         print(f'8891 machine_center_now = {machine_center_now}')
         machine_center_now = my_transform(from_SC=machine_center_now, to_SC=machine_center)#верно работает
 
+        machine_center_now_return = [-m for m in machine_center_now]
+        #todo Это всё можно сделать !ОДИН! раз. То что ниже делаем постоянно
         print(f'777 point = {machine_center_now}')
-        machine_center_from_current_dot = np.zeros(6)
-        plane_rotation = machine_center_now[3:6]
-        plane_rotation = scipy.spatial.transform.Rotation.from_euler('xyz', plane_rotation).as_mrp()
-        print(f'444 plane_rotation = {plane_rotation}')
-        machine_center_from_current_dot = projection(p=plane_rotation, a=machine_center_now[0:3])
-        #здесь
-        print('machine_center_from_current_dot = ', machine_center_from_current_dot)
-        #TODO _______________________________________________
-        #for i1 in range(6):
-        #machine_center_now[1] = machine_center_now[1] - m.DICT_AX_PARAMETERS['C']['LShoulder']
-        #____________________________________________________
-        print('maybe this: ', m.DICT_AX_PARAMETERS['C']['LShoulder'])
-        print(f'369 machine_center_now = {machine_center_now}')
-        #Не работает
+        print(f'vvv 7 machine_center_now_return = {machine_center_now_return}')
+        #https://scask.ru/a_book_mm3d.php?id=60
+        #https://ychebnikkompgrafblog.wordpress.com/2-7-%D0%BF%D0%BE%D0%B2%D0%BE%D1%80%D0%BE%D1%82-%D0%B2%D0%BE%D0%BA%D1%80%D1%83%D0%B3-%D0%BF%D1%80%D0%BE%D0%B8%D0%B7%D0%B2%D0%BE%D0%BB%D1%8C%D0%BD%D0%BE%D0%B9-%D0%BE%D1%81%D0%B8-%D0%B2-%D0%BF%D1%80/
+        #todo сейчас я перенесу текущую точку в СК с данными machine_center_now
+
+        np_line_const = np.copy(np_line)
+
+        np_line[7] = 0#math.degrees(np_line[7])
+        np_line[8] = 0#math.degrees(np_line[8])#TODO можно отдельную функцию написать под радианы/градусы. Заодно лишние переменные убрать
+        np_line[9] = 0#math.degrees(np_line[9])
+        print(f'между тем np_line было равно {np_line}')
+        new_coord_const = my_transform(from_SC=np_line[4:10], to_SC=machine_center_now)#machine_center_now нужны радианы по идее
+        #new_coord_const = my_transform_new(from_SC=np_line[4:7], to_SC=machine_center_now)
+        print(f'2 между тем np_line было равно {np_line}')
+        #new_coord_const = list(new_coord_const)
+        print(f'779  point in  {machine_center_now} would be {new_coord_const}')
+
+
+
+        new_coord_const[3] = np_line_const[7]
+        new_coord_const[4] = np_line_const[8]
+        new_coord_const[5] = np_line_const[9]
+        p_ = np.zeros(9)
+        #p_[8] = math.degrees(np_line_const[9])  # 180#TODO Надо подумать, но позже/ Здесь только С получается
+        p_[8] = np_line_const[9]
+
+        print(f'*33** p_ = {p_}')
+        print(f'np_line = {np_line}')
+        new_coord = R_C_radians(p_, new_coord_const[0], new_coord_const[1], new_coord_const[2],)#radians
+        #new_coord = list(new_coord)
+        new_coord = [*new_coord, 0, 0, 0]
+        print(f'791  point in  {machine_center_now} would be {new_coord}, type = {type(new_coord)}')
+        #TODO дальше сместить
+        #куда?
+        print(f'machine_center_now_return = {machine_center_now_return}')
+        #machine_center_now_return[3] = -machine_center_now_return[3]
+        #если это итоговая координата, то она пока не нужна.
+        coord_in_base = my_transform_return(from_SC=new_coord, to_SC=machine_center_now)
+        #cur_v[-1][17:20] = coord_in_base
+        np_line[17:20] = coord_in_base
+        np_line[7:10] = np_line_const[7:10]
+
+        #np_line[7] = np_line_7
+        #np_line[8] = np_line_8
+        #np_line[9] = np_line_9
+        #machine_center_now_return =
+
+        print('Итоговая координата равна ', coord_in_base)
+        print('cur_v[-1] = ', cur_v[-1])
+        print('np_line   = ', np_line)
+        #g54_dict = g54_g59_AXIS[current_g_modal['SC']][8]
+        #g54_g59_AXIS
+        print(f'main_G549 = {main_G549}')
+        main_SC_coord = DictG549shift['G' + str(main_G549)]
+        print(f'main_SC_coord = {main_SC_coord}')
+        main_G549_ANGLES = False if (machine_center_now[3] == 0 and machine_center_now[4] == 0 and machine_center_now[5] == 0) else True
         if main_axis == 'C':
             # todo возможно получается однобоко. ибо для2х осей и более это не подойдёт. вроде.
+
+            if current_g_modal['SC'] == main_G549 and main_G549_ANGLES and current_g_modal['CYCLE800'] is None:
+                print(f"main_axis == 'C', CASE 0")
+                #zdes zapolnyaem
+                print('np_line999 = ', np_line)
+                delta = cur_v[cur_i, 9] - last_significant_line[9]  # уже в радианах
+                print(f"cur_v[cur_i, 9] = {cur_v[cur_i, 9]}")
+                print(f'last_significant_line[9] = {last_significant_line[9]}')
+                print('999delta = ', delta)
+                delta_plus = abs(delta)  # радианы
+                #TODO НЕТ
+                #cur_v[-1][17], cur_v[-1][18] = rotate_around_dot(origin=machine_center_now[0:2], point=last_significant_line[4:6], angle=delta_plus)
+                all_rounds_plus = math.floor(delta_plus / 2 / math.pi) * 2 * math.pi
+                print('all_rounds_plus = ', all_rounds_plus)
+                alpha = delta_plus - all_rounds_plus
+                if delta_plus == 0:
+                    print('ПОЛУНДРА БЛЭТ!')
+                    if np_line[9] != 0:
+                        #np_line[17:20] =
+
+                        return cur_v, 0
+                        #return np.insert(cur_v, cur_i, ark_np_array, axis=0), n
+                    #return None
+                elif delta_plus >= 2 * math.pi:
+                    alpha_segmenta = math.radians(15)
+                    print('alpha_segmenta = ', alpha_segmenta)
+                    n = math.floor(all_rounds_plus / alpha_segmenta)  # alpha_segmenta plus
+                    n = n + math.floor(alpha / alpha_segmenta)
+                elif delta_plus < 0.035:
+
+                    alpha_segmenta = delta_plus / 5
+                    print('alpha_segmenta = ', alpha_segmenta)
+                    n = math.floor(alpha / alpha_segmenta)
+                else:
+                    alpha_segmenta = math.radians(8)
+                    n = math.floor(alpha / alpha_segmenta)
+                #n = n - 1  # todo ???? может вернуть ради двойных краев движений? чтобы цвета не сбивались
+                print(f'006 np_line = {np_line}')
+                ark_np_array = np.full((n, axises), np_line)
+                print(f'007 np_line = {np_line}')
+                Lperp = cur_v[cur_i, n_p] - last_significant_line[n_p]
+                k_by_step = alpha_segmenta / delta_plus  # math.radians(delta_plus)
+                perp_step = Lperp * k_by_step
+                #Vstep = Vprep * k_by_step
+                #Hstep = Hprep * k_by_step
+                prev_alpha = last_significant_line[9]  # math.radians(last_significant_line[9])
+                pp = pp + perp_step
+                print(f'|||last_significant_line = {last_significant_line}')
+                print(f'|||np_line = {np_line}')
+                x_step = (np_line[4] - last_significant_line[4])/n
+                y_step = (np_line[5] - last_significant_line[5])/n
+                z_step = (np_line[6] - last_significant_line[6])/n
+                print(f'y_step = {y_step}')
+                print('delta = ', delta)
+                starting_angle = prev_alpha - alpha_segmenta
+                if delta <= math.pi:
+                    #if x_step == y_step == z_step == 0:
+
+                    print('starting_angle = ', starting_angle)
+                    #for k in range(n):
+                    #    resulting_angle = -alpha_segmenta * k + starting_angle
+                    #    p_[8] = resulting_angle
+                    #    print(f'resulting_angle = {resulting_angle}')
+                    #    #TODO Так нельзя! x_step должны применяться к СТАРТОВОЙ ТОЧКЕ! ДО ПЕРЕНОСА её в КООРДИНАТЫ СТОЛА
+                    #    new_coord = R_C_radians(p_, new_coord_const[0]+k*x_step, new_coord_const[1]+k*y_step, new_coord_const[2]+k*z_step, )
+                    #    new_coord = list(new_coord)
+                    #    ark_np_array[k, 17:20] = my_transform_return(from_SC=new_coord, to_SC=machine_center_now)#TODO Надо радианы
+                    #    #ark_np_array[k, n_p_new] = pp + k * perp_step
+                    #    ark_np_array[k, 16] = 5.
+                    #    #ark_np_array[k, 9] = math.degrees(resulting_angle)
+                    #    ark_np_array[k, 9] = resulting_angle
+                    ark_np_array = C_ROT_1(np_line, ark_np_array, n, alpha_segmenta, starting_angle, p_, x_step, y_step, z_step, new_coord_const,
+                                           machine_center_now, last_significant_line)
+
+                else:
+                    print('Альтернативно')
+
+                    #TODO Тут один хрен всё переделывать
+                    #starting_angle = prev_alpha + alpha_segmenta
+                    #print('this part working')
+                    #print('machine_center_now = ', machine_center_now)
+
+                    ark_np_array = turn_around_C(ark_np_array, last_significant_line, machine_center_now, n, starting_angle, alpha_segmenta, pp,
+                                                 perp_step, n_p_new)
+
+
+                #last_significant_line
+
+
+
+                #coord_in_base = my_transform_return(from_SC=new_coord, to_SC=machine_center_now)
+
+                print(f'-__cur_v = {cur_v}')
+                # cur_v[-1] =
+                return np.insert(cur_v, cur_i, ark_np_array, axis=0), n
+
+
+
+                #без преобразований вращения
+            elif current_g_modal['SC'] == main_G549 and main_G549_ANGLES: #current_g_modal['CYCLE800'] HERE
+                pass
+            elif current_g_modal['SC'] != main_G549 and current_g_modal['CYCLE800'] is None:#G55 и всё
+                pass
+            elif current_g_modal['SC'] != main_G549 and main_G549_ANGLES :#G54 но она повернута
+                pass
+            elif current_g_modal['SC'] != main_G549 :#G54 чисто
+                pass
+
+
             delta = cur_v[cur_i, 9] - last_significant_line[9]#уже в радианах
             delta_plus = abs(delta)#радианы
-#lkjlj
-            #point = last_significant_line[4:6]#????
-            #machine_center_now = rotation.apply(point)
-            #cur_v[-1][17:20] = rotation.apply(cur_v[-1][17:20])
+
             cur_v[-1][17], cur_v[-1][18] = rotate_around_dot(origin=machine_center_now[0:2], point=last_significant_line[4:6], angle=delta_plus)
             #TODO Что если вращать вокруг вектора  777 point = [200. -502.75 -78.49 -45. 0. 0.]
             #Rotation = scipy.spatial.transform.Rotation
@@ -441,7 +569,7 @@ class NumpyBox():
             #ph_corr = ph_corr + Hstep
             #pv_corr = pv_corr + Vstep
             pp = pp + perp_step
-
+                #херня
             if delta < 0:
                 starting_angle = prev_alpha -alpha_segmenta
                 for k in range(n):
@@ -455,10 +583,7 @@ class NumpyBox():
                 starting_angle = prev_alpha + alpha_segmenta
                 print('this part working')
                 print('machine_center_now = ', machine_center_now)
-
                 ark_np_array = turn_around_C(ark_np_array, last_significant_line, machine_center_now, n, starting_angle, alpha_segmenta, pp, perp_step, n_p_new)
-
-
                 #print("--- %s seconds ---" % (time.time() - start_time)) 5% slower than one line
         else:
             print('redactor add_ark_points failed')

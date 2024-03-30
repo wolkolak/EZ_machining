@@ -104,13 +104,20 @@ def fillRotTabs_AC(A_rotTabl, B_rotTabl, C_rotTabl, a, b, c, total):#навер�
 
 
 def fillRotTabs_C(A_rotTabl, B_rotTabl, C_rotTabl, a, b, c, total):#наверное тут косяк
+    #fillRotTabs_C(A_rotTabl, B_rotTabl, C_rotTabl, param_list[6], param_list[7], param_list[8], total)
     c = math.radians(c)
     C_rotTabl[0, 0] =  math.cos(c);  C_rotTabl[0, 1] = math.sin(c)
     C_rotTabl[1, 0] = -math.sin(c);  C_rotTabl[1, 1] = math.cos(c)
     total0 = total.dot(C_rotTabl)
     return total0
 
-
+def fillRotTabs_C_radians(A_rotTabl, B_rotTabl, C_rotTabl, a, b, c, total):#наверное тут косяк
+    #fillRotTabs_C(A_rotTabl, B_rotTabl, C_rotTabl, param_list[6], param_list[7], param_list[8], total)
+    #c = math.radians(c)
+    C_rotTabl[0, 0] =  math.cos(c);  C_rotTabl[0, 1] = math.sin(c)
+    C_rotTabl[1, 0] = -math.sin(c);  C_rotTabl[1, 1] = math.cos(c)
+    total0 = total.dot(C_rotTabl)
+    return total0
 
 
 
@@ -300,11 +307,15 @@ def R_AC(param_list, X, Y, Z):
 
 
 def R_C(param_list, X, Y, Z):
+    #print('do not need  R_C')
     total[0] = [X, Y, Z, 1]
     total0 = fillRotTabs_C(A_rotTabl, B_rotTabl, C_rotTabl, param_list[6], param_list[7], param_list[8], total)
     return total0[0][0], total0[0][1], total0[0][2]
 
-
+def R_C_radians(param_list, X, Y, Z):
+    total[0] = [X, Y, Z, 1]
+    total0 = fillRotTabs_C_radians(A_rotTabl, B_rotTabl, C_rotTabl, param_list[6], param_list[7], param_list[8], total)
+    return total0[0][0], total0[0][1], total0[0][2]
 
 
 def R_inverse_ABC(param_list, X, Y, Z):

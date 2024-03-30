@@ -256,8 +256,9 @@ def special_options_applying_new(self):  # and Fill visible_np with axises that 
                     #print('i_str сразу после ', i_str)
 
             # метка для оси С. Нужен универсальный поворот вокруг случайной оси. Потом добавить его для повернутой системы координат
-
-            elif need_reckon and v_i[C_axis] != last_significant_line[C_axis]:
+            elif need_reckon and (v_i[C_axis] != 0 or v_i[C_axis] != last_significant_line[C_axis]):
+                print('need_reckon and v_i[C_axis] != 0')
+            #elif need_reckon and v_i[C_axis] != last_significant_line[C_axis]:
                 # or v[i, C_axis] != 0)          (v[i, C_axis] is not np.nan or last_significant_line[C_axis] != 0):#is not np.NAN:  # для поворота вокруг С
                 #v_i = v[i]
 
@@ -267,7 +268,7 @@ def special_options_applying_new(self):  # and Fill visible_np with axises that 
                 v_i[17:] = turn_around_C(v_i[4], v_i[5], v_i[6], v_i[9])  # работает с большими углами
                 # print('|turn_around_C = ', v_i[17:])
 
-                if v_i[C_axis] != last_significant_line[C_axis]:  # todo сколько точек добавить
+                if True:#v_i[C_axis] != 0 or v_i[C_axis] != last_significant_line[C_axis]:  # todo сколько точек добавить
                     n_h, n_v, n_p = self.number_hor_vert_perp_from_plane('17')
                     n_h, n_v, n_p = self.n_h, self.n_v, self.n_p
                     #n_h, n_v, n_p = self.n_h, self.n_v, self.n_p TODO!!
@@ -277,7 +278,8 @@ def special_options_applying_new(self):  # and Fill visible_np with axises that 
                     #v_i = cur_v[cur_i]
                     #todo i нужно заменить на коунт внутри cur_v
 
-                    cur_v, n = self.add_ark_axis_points(cur_v, current_g_modal, last_significant_line, cur_i, n_h, n_v, n_p, min_ark_step, main_axis='C')#todo вышибло на ctrl+z, при этом отстуствовали поворотные точки. дичь
+                    cur_v, n = self.add_ark_axis_points(cur_v, current_g_modal, last_significant_line, cur_i, n_h, n_v, n_p, min_ark_step, main_axis='C', main_G549=main_G549, DictG549shift=DictG549shift)#todo вышибло на ctrl+z, при этом отстуствовали поворотные точки. дичь
+
                     #todo и ещё раз так же. + заметил что произошло это после смены одного станка на другой.
                     #self.frame_address_in_visible_pool[i_str:] = self.frame_address_in_visible_pool[i_str:] + n#todo frame_address_in_visible_pool возможжно, на помойку
                     #self.frame_address_in_visible_pool[i_str, 0] = self.frame_address_in_visible_pool[i_str, 0] - n
@@ -291,6 +293,9 @@ def special_options_applying_new(self):  # and Fill visible_np with axises that 
                     cur_frame_addresses = np.insert(cur_frame_addresses, cur_i, ark_np_array, axis=0)
                     cur_i = cur_i + n  # -1
                     #i = i + n
+                #else:
+                #    pass
+
         elif v_i[16] == 0:  # direct move type
             print('G28 or something')
             for k in range(4, 10):
